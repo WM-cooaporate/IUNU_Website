@@ -1,0 +1,290 @@
+/* =========================
+   AUTH PAGES
+========================= */
+
+.login-page,
+.register-page,
+.forgot-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+    background: #f5f5f3;
+    position: relative;
+}
+
+
+/* Background decoration */
+
+.login-page::before,
+.register-page::before,
+.forgot-page::before {
+    content: "";
+    position: absolute;
+    width: 420px;
+    height: 420px;
+    border-radius: 50%;
+    background: rgba(178, 153, 104, 0.08);
+    top: -180px;
+    right: -150px;
+}
+
+.login-page::after,
+.register-page::after,
+.forgot-page::after {
+    content: "";
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: rgba(60, 95, 105, 0.06);
+    bottom: -120px;
+    left: -100px;
+}
+
+
+/* =========================
+   CARD
+========================= */
+
+.login-box,
+.register-box,
+.forgot-box {
+    width: 100%;
+    max-width: 460px;
+    background: #ffffff;
+    padding: 45px 40px;
+    border: 1px solid #e7e3db;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08);
+    position: relative;
+    z-index: 2;
+}
+
+
+/* Register needs a little more space */
+
+.register-box {
+    max-width: 500px;
+}
+
+
+/* =========================
+   HEADINGS
+========================= */
+
+.login-box h1,
+.register-box h1,
+.forgot-box h1 {
+    margin: 0 0 10px;
+    color: #3f5f67;
+    font-size: 32px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+.login-box>p:first-of-type,
+.register-box>p:first-of-type,
+.forgot-box>p:first-of-type {
+    margin: 0 0 30px;
+    color: #777;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+
+/* =========================
+   FORM
+========================= */
+
+.login-box form,
+.register-box form,
+.forgot-box form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+
+/* =========================
+   FORM GROUP
+========================= */
+
+.login-box form>div,
+.register-box form>div,
+.forgot-box form>div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+
+/* =========================
+   LABEL
+========================= */
+
+.login-box label,
+.register-box label,
+.forgot-box label {
+    font-size: 13px;
+    color: #555;
+    font-weight: 500;
+}
+
+
+/* =========================
+   INPUT
+========================= */
+
+.login-box input,
+.register-box input,
+.forgot-box input {
+    width: 100%;
+    height: 48px;
+    padding: 0 14px;
+    border: 1px solid #d8d5cf;
+    background: #fff;
+    color: #333;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.25s ease;
+    box-sizing: border-box;
+}
+
+.login-box input::placeholder,
+.register-box input::placeholder,
+.forgot-box input::placeholder {
+    color: #aaa;
+}
+
+.login-box input:focus,
+.register-box input:focus,
+.forgot-box input:focus {
+    border-color: #3f5f67;
+    box-shadow: 0 0 0 3px rgba(63, 95, 103, 0.08);
+}
+
+
+/* =========================
+   BUTTON
+========================= */
+
+.login-box button,
+.register-box button,
+.forgot-box button {
+    width: 100%;
+    height: 48px;
+    margin-top: 5px;
+    border: none;
+    background: #3f5f67;
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.login-box button:hover,
+.register-box button:hover,
+.forgot-box button:hover {
+    background: #304c54;
+    transform: translateY(-1px);
+}
+
+.login-box button:active,
+.register-box button:active,
+.forgot-box button:active {
+    transform: translateY(0);
+}
+
+
+/* =========================
+   LINKS / BOTTOM TEXT
+========================= */
+
+.login-box>p:last-of-type,
+.register-box>p:last-of-type,
+.forgot-box>p:last-of-type {
+    margin: 22px 0 0;
+    text-align: center;
+    color: #777;
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.login-box a,
+.register-box a,
+.forgot-box a {
+    color: #3f5f67;
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 5px;
+    transition: color 0.2s ease;
+}
+
+.login-box a:hover,
+.register-box a:hover,
+.forgot-box a:hover {
+    color: #b29968;
+}
+
+
+/* Forgot password link */
+
+.login-box>p:nth-of-type(2) {
+    text-align: right;
+    margin-top: 15px;
+}
+
+.login-box>p:nth-of-type(2) a {
+    font-size: 13px;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 600px) {
+    .login-page,
+    .register-page,
+    .forgot-page {
+        padding: 25px 15px;
+    }
+    .login-box,
+    .register-box,
+    .forgot-box {
+        padding: 35px 25px;
+    }
+    .login-box h1,
+    .register-box h1,
+    .forgot-box h1 {
+        font-size: 27px;
+    }
+}
+
+@media (max-width: 400px) {
+    .login-box,
+    .register-box,
+    .forgot-box {
+        padding: 30px 20px;
+    }
+    .login-box h1,
+    .register-box h1,
+    .forgot-box h1 {
+        font-size: 24px;
+    }
+    .login-box input,
+    .register-box input,
+    .forgot-box input {
+        height: 45px;
+    }
+    .login-box button,
+    .register-box button,
+    .forgot-box button {
+        height: 45px;
+    }
+}

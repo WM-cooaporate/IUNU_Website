@@ -1,0 +1,230 @@
+/* ========================================
+   PROJECT PAGE
+======================================== */
+
+.project-page {
+    width: 100%;
+    overflow: hidden;
+    background: #f7f7f7;
+    color: #6f6f6f;
+}
+
+
+/* ========================================
+   HERO
+======================================== */
+
+.project-hero {
+    min-height: 430px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    background: linear-gradient( rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)), url("../assets/project-hero.jpg") center / cover no-repeat;
+}
+
+.project-hero-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 35px;
+}
+
+.project-hero h1 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 48px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+}
+
+
+/* ========================================
+   INTRO
+======================================== */
+
+.project-intro {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 70px 20px;
+}
+
+.project-intro .section-label {
+    margin-bottom: 18px;
+    color: #a49772;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.project-intro h2 {
+    margin: 0;
+    color: #315966;
+    font-size: 25px;
+    font-weight: 400;
+}
+
+
+/* ========================================
+   FEATURES
+======================================== */
+
+.project-features {
+    width: 100%;
+}
+
+.project-feature {
+    min-height: 360px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.project-feature:nth-child(even) {
+    background: #eeeeec;
+}
+
+.project-feature h3 {
+    margin: 0 0 15px;
+    color: #555;
+    font-size: 15px;
+    font-weight: 400;
+}
+
+.project-feature p {
+    max-width: 650px;
+    margin: 0;
+    color: #888;
+    font-size: 11px;
+    line-height: 1.8;
+}
+
+
+/* ========================================
+   CONTACT / CTA
+======================================== */
+
+.project-contact {
+    min-height: 430px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 100px 20px 80px;
+    text-align: center;
+}
+
+.project-contact h2 {
+    margin: 0 0 12px;
+    color: #666;
+    font-size: 24px;
+    font-weight: 400;
+}
+
+.project-contact>p {
+    margin: 0 0 25px;
+    color: #888;
+    font-size: 11px;
+}
+
+
+/* ========================================
+   NEWSLETTER
+======================================== */
+
+.project-newsletter {
+    width: 100%;
+    max-width: 570px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.project-newsletter input {
+    width: 100%;
+    height: 38px;
+    padding: 0 12px;
+    border: 1px solid #d4d4d4;
+    background: #ffffff;
+    outline: none;
+    color: #555;
+    font-family: inherit;
+    font-size: 11px;
+    transition: border-color 0.2s ease;
+}
+
+.project-newsletter input:focus {
+    border-color: #315966;
+}
+
+.project-newsletter input::placeholder {
+    color: #aaa;
+}
+
+.project-newsletter button {
+    width: 80px;
+    height: 38px;
+    border: none;
+    background: #85827a;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.25s ease, transform 0.2s ease;
+}
+
+.project-newsletter button:hover {
+    background: #315966;
+    transform: translateY(-1px);
+}
+
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 768px) {
+    .project-hero {
+        min-height: 350px;
+    }
+    .project-hero-content {
+        padding: 0 25px;
+    }
+    .project-hero h1 {
+        font-size: 36px;
+    }
+    .project-intro {
+        min-height: 250px;
+        padding: 55px 20px;
+    }
+    .project-feature {
+        min-height: 300px;
+        padding: 50px 25px;
+    }
+    .project-contact {
+        padding: 80px 20px 60px;
+    }
+}
+
+@media (max-width: 480px) {
+    .project-hero {
+        min-height: 300px;
+    }
+    .project-hero h1 {
+        font-size: 30px;
+    }
+    .project-intro h2 {
+        font-size: 22px;
+    }
+    .project-feature h3 {
+        font-size: 14px;
+    }
+    .project-contact h2 {
+        font-size: 21px;
+    }
+}
