@@ -1,0 +1,93 @@
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+
+spring:
+  application:
+    name: real-estate-backend
+
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/iunu_real_estate?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=false}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+      connection-timeout: 20000
+
+  jpa:
+    hibernate:
+      # Flyway (below) owns the schema. Hibernate only ever validates it
+      # matches the entities - it must never auto-generate/alter DDL.
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+    show-sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:}
+    access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION_MS:900000} # 15 minutes
+    issuer: ${JWT_ISSUER:iunu-real-estate-api}
+
+  security:
+    max-failed-attempts: ${MAX_FAILED_LOGIN_ATTEMPTS:5}
+    lock-duration-minutes: ${ACCOUNT_LOCK_DURATION_MINUTES:15}
+    reset-token-expiry-minutes: ${RESET_TOKEN_EXPIRY_MINUTES:30}
+    refresh-token-expiry-days: ${REFRESH_TOKEN_EXPIRY_DAYS:7}
+    trust-forwarded-header: ${TRUST_FORWARDED_HEADER:false}
+
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+
+  mail:
+    enabled: ${MAIL_ENABLED:false}
+    from: ${MAIL_FROM:no-reply@iunu-eg.com}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: INFO
+    com.iunu.realestate: INFO
+    org.springframework.security: WARN
