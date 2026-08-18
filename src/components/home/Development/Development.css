@@ -1,0 +1,131 @@
+.development-section {
+    width: 100%;
+    background: #f7f7f7;
+}
+
+
+/* =========================
+   MAIN IMAGE
+========================= */
+
+.development-main-image {
+    width: 100%;
+    height: 520px;
+    overflow: hidden;
+}
+
+.development-main-image img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.6s ease;
+}
+
+.development-main-image:hover img {
+    transform: scale(1.02);
+}
+
+
+/* =========================
+   CONTENT
+========================= */
+
+.development-content {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px 20px 15px;
+}
+
+.development-content h2 {
+    margin: 0;
+    color: #6d6d6d;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.development-content p {
+    margin: 20px auto 0;
+    color: #777;
+    font-size: 10px;
+    line-height: 1.7;
+}
+
+
+/* =========================
+   GALLERY
+========================= */
+
+.development-gallery {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px 60px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+}
+
+.development-gallery-item {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+}
+
+.development-gallery-item img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.development-gallery-item:hover img {
+    transform: scale(1.08);
+}
+
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 900px) {
+    .development-main-image {
+        height: 420px;
+    }
+    .development-gallery {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        padding-bottom: 50px;
+    }
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 650px) {
+    .development-main-image {
+        height: 300px;
+    }
+    .development-content {
+        padding: 18px 15px 15px;
+    }
+    .development-content h2 {
+        font-size: 15px;
+    }
+    .development-content p {
+        font-size: 10px;
+        margin-top: 15px;
+    }
+    .development-gallery {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+        padding: 0 15px 45px;
+    }
+}

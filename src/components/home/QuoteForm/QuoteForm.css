@@ -1,0 +1,190 @@
+.quote-section {
+    width: 100%;
+    background: #f7f7f7;
+    padding: 40px 30px 100px;
+}
+
+.quote-container {
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+
+/* =========================
+   HEADER
+========================= */
+
+.quote-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.quote-header h2 {
+    margin: 0;
+    color: #315966;
+    font-size: 22px;
+    font-weight: 400;
+}
+
+.quote-header p {
+    margin: 12px 0 0;
+    color: #888;
+    font-size: 9px;
+}
+
+
+/* =========================
+   FORM
+========================= */
+
+.quote-form {
+    width: 100%;
+}
+
+.quote-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 10px;
+}
+
+.quote-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.quote-field label {
+    margin-bottom: 5px;
+    color: #666;
+    font-size: 8px;
+}
+
+.quote-field input,
+.quote-field select {
+    width: 100%;
+    height: 29px;
+    border: 1px solid #d4d4d4;
+    background: #ffffff;
+    padding: 0 10px;
+    color: #666;
+    font-family: inherit;
+    font-size: 8px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.quote-field input::placeholder {
+    color: #a9b8bc;
+}
+
+.quote-field select {
+    color: #9aafb4;
+    cursor: pointer;
+}
+
+.quote-field input:focus,
+.quote-field select:focus {
+    border-color: #8b9b9f;
+    box-shadow: 0 0 0 2px rgba(49, 89, 102, 0.06);
+}
+
+
+/* =========================
+   FULL WIDTH FIELD
+========================= */
+
+.quote-full-field {
+    margin-top: 2px;
+}
+
+.quote-full-field select {
+    width: 100%;
+}
+
+
+/* =========================
+   SUBMIT
+========================= */
+
+.quote-submit {
+    display: flex;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+.quote-submit button {
+    min-width: 55px;
+    height: 28px;
+    border: none;
+    background: #85837b;
+    color: #ffffff;
+    padding: 0 14px;
+    font-family: inherit;
+    font-size: 7px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.quote-submit button:hover {
+    background: #315966;
+    transform: translateY(-1px);
+}
+
+.quote-submit button:active {
+    transform: translateY(0);
+}
+
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 900px) {
+    .quote-section {
+        padding: 40px 20px 70px;
+    }
+    .quote-container {
+        max-width: 800px;
+    }
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 650px) {
+    .quote-section {
+        padding: 35px 15px 60px;
+    }
+    .quote-header h2 {
+        font-size: 20px;
+    }
+    .quote-header p {
+        font-size: 9px;
+        line-height: 1.6;
+    }
+    .quote-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    .quote-field label {
+        font-size: 9px;
+    }
+    .quote-field input,
+    .quote-field select {
+        height: 36px;
+        font-size: 10px;
+    }
+    .quote-submit {
+        margin-top: 18px;
+    }
+    .quote-submit button {
+        height: 34px;
+        min-width: 75px;
+        font-size: 8px;
+    }
+}
