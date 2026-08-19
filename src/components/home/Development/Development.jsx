@@ -1,76 +1,230 @@
+import { useEffect, useRef } from "react";
 import "./Development.css";
-
 const galleryImages = [
   {
     id: 1,
-    src: "/src/assets/gallery-1.jpg",
+    src: "/images/assets/1.jpg",
     alt: "IUNU Development interior",
   },
   {
     id: 2,
-    src: "/src/assets/gallery-2.jpg",
+    src: "/images/assets/2.jpg",
     alt: "IUNU Development interior",
   },
   {
     id: 3,
-    src: "/src/assets/gallery-3.jpg",
+    src: "/images/assets/3.jpg",
     alt: "IUNU Development pool",
   },
   {
     id: 4,
-    src: "/src/assets/gallery-4.jpg",
+    src: "/images/assets/4.jpg",
     alt: "IUNU Development buildings",
   },
   {
     id: 5,
-    src: "/src/assets/gallery-5.jpg",
+    src: "/images/assets/5.jpg",
     alt: "IUNU Development exterior",
   },
   {
     id: 6,
-    src: "/src/assets/gallery-6.jpg",
+    src: "/images/assets/6.jpg",
     alt: "IUNU Development playground",
   },
 ];
-
 function Development() {
+  const sectionRef = useRef(null);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section) return;
+
+    const elements = section.querySelectorAll(
+      ".development-reveal"
+    );
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.15,
+      }
+    );
+
+    elements.forEach((element) => {
+      observer.observe(element);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section className="development-section">
+    <section
+      ref={sectionRef}
+      className="development-section"
+    >
+      {/* =========================
+          INTRO
+      ========================= */}
 
-      {/* Main Image */}
-      <div className="development-main-image">
-        <img
-          src="/src/assets/development.jpg"
-          alt="IUNU Development"
-        />
-      </div>
+      <div className="development-intro development-reveal">
 
-      {/* Content */}
-      <div className="development-content">
+        <div className="development-intro-label">
+          IUNU DEVELOPMENTS
+        </div>
 
-        <h2>IUNU Development</h2>
+        <div className="development-intro-content">
 
-        <p>
-          Explore our thoughtful real estate developments designed
-          with purpose and lasting impact.
-        </p>
+          <h2>
+            Designed with
+            <br />
+            <span>purpose.</span>
+          </h2>
 
-      </div>
+          <div className="development-intro-text">
 
-      {/* Gallery */}
-      <div className="development-gallery">
-
-        {galleryImages.map((image) => (
-          <div
-            className="development-gallery-item"
-            key={image.id}
-          >
-            <img
-              src={image.src}
-              alt={image.alt}
-            />
+            <p>
+              We create considered spaces where architecture,
+              community and everyday life come together.
+            </p>
           </div>
-        ))}
+
+        </div>
+
+      </div>
+
+
+      {/* =========================
+          FEATURED DEVELOPMENT
+      ========================= */}
+
+      <div className="development-feature development-reveal">
+
+        <div className="development-feature-image">
+
+        <img
+  src="/images/dev.jpg"
+  alt="IUNU Development"
+/>
+
+          <div className="development-image-overlay"></div>
+
+          <div className="development-image-caption">
+            <span>
+              FEATURED DEVELOPMENT
+            </span>
+
+            <strong>
+              IUNU
+            </strong>
+          </div>
+
+        </div>
+
+
+        <div className="development-feature-content">
+
+          <span className="development-eyebrow">
+            OUR APPROACH
+          </span>
+
+          <h3>
+            Spaces that
+            <br />
+            <em>remain.</em>
+          </h3>
+
+          <p>
+            Every IUNU development is shaped around a
+            simple idea: create places that feel relevant
+            today and remain meaningful tomorrow.
+          </p>
+
+          <div className="development-details">
+
+            <div>
+              <span>01</span>
+              <p>
+                Thoughtful Architecture
+              </p>
+            </div>
+
+            <div>
+              <span>02</span>
+              <p>
+                Lasting Quality
+              </p>
+            </div>
+
+            <div>
+              <span>03</span>
+              <p>
+                Human-Centered Spaces
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      {/* =========================
+          GALLERY
+      ========================= */}
+
+      <div className="development-gallery-wrapper">
+
+        <div className="development-gallery-header development-reveal">
+
+          <div>
+            <span className="development-eyebrow">
+              THE IUNU VISION
+            </span>
+
+            <h3>
+              A glimpse into
+              <br />
+              what we create.
+            </h3>
+          </div>
+
+          <p>
+            From refined interiors to carefully planned
+            outdoor spaces, every detail contributes to
+            the experience.
+          </p>
+
+        </div>
+
+
+        <div className="development-gallery">
+
+          {galleryImages.map((image, index) => (
+            <div
+              className={`development-gallery-item development-reveal development-gallery-item-${index + 1}`}
+              key={image.id}
+            >
+              <img
+                src={image.src}
+                alt={image.alt}
+              />
+
+              <div className="development-gallery-number">
+                0{index + 1}
+              </div>
+            </div>
+          ))}
+
+        </div>
 
       </div>
 

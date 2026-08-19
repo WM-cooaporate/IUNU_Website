@@ -1,95 +1,185 @@
+/* ========================================
+   LEGACY SECTION
+======================================== */
+
 .legacy-section {
+    position: relative;
     width: 100%;
-    background: #f7f7f7;
-    padding: 35px 30px 78px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    background: var(--color-light);
+    padding: 140px 40px 150px;
+    overflow: hidden;
 }
+
+
+/* ========================================
+   CONTENT
+======================================== */
 
 .legacy-content {
     width: 100%;
-    max-width: 900px;
+    max-width: 850px;
+    margin: 0 auto;
     text-align: center;
 }
 
 .legacy-label {
-    display: block;
-    color: #9a8f72;
-    font-size: 9px;
-    font-weight: 400;
-    letter-spacing: 0.8px;
+    display: inline-block;
+    color: var(--color-gold);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2.5px;
     text-transform: uppercase;
-    margin-bottom: 12px;
+    margin-bottom: 24px;
 }
 
 .legacy-content h2 {
     margin: 0;
-    color: #315966;
-    font-size: 22px;
-    font-weight: 400;
+    color: var(--color-primary);
+    font-size: clamp(36px, 4vw, 58px);
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: -1.5px;
 }
 
 .legacy-content p {
-    margin: 28px auto 0;
-    max-width: 700px;
-    color: #777;
-    font-size: 11px;
-    font-weight: 400;
-    line-height: 1.7;
+    max-width: 650px;
+    margin: 30px auto 0;
+    color: var(--color-muted);
+    font-size: 15px;
+    font-weight: 300;
+    line-height: 1.9;
 }
 
+
+/* ========================================
+   IMAGE
+======================================== */
+
 .legacy-image-wrapper {
+    position: relative;
     width: 100%;
-    max-width: 1180px;
-    margin-top: 12px;
+    max-width: 1250px;
+    height: 560px;
+    margin: 80px auto 0;
     overflow: hidden;
 }
 
 .legacy-image {
     display: block;
     width: 100%;
-    height: 275px;
+    height: 100%;
     object-fit: cover;
     object-position: center;
-    transition: transform 0.6s ease;
+    transform: scale(1.03);
+    transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
+
+
+/* ========================================
+   IMAGE OVERLAY
+======================================== */
+
+.legacy-image-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient( to top, rgba(0, 0, 0, 0.48), rgba(0, 0, 0, 0.05) 55%, rgba(0, 0, 0, 0));
+    pointer-events: none;
+}
+
+
+/* ========================================
+   IMAGE HOVER
+======================================== */
 
 .legacy-image-wrapper:hover .legacy-image {
-    transform: scale(1.02);
+    transform: scale(1.08);
 }
 
 
-/* Tablet */
+/* ========================================
+   IMAGE CAPTION
+======================================== */
+
+.legacy-image-caption {
+    position: absolute;
+    left: 35px;
+    right: 35px;
+    bottom: 30px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #ffffff;
+    font-size: 10px;
+    letter-spacing: 2px;
+}
+
+.legacy-image-caption span:first-child {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.legacy-image-caption span:last-child {
+    font-size: 9px;
+}
+
+
+/* ========================================
+   TABLET
+======================================== */
 
 @media (max-width: 900px) {
     .legacy-section {
-        padding: 35px 20px 60px;
+        padding: 100px 25px 110px;
     }
-    .legacy-image {
-        height: 240px;
+    .legacy-content h2 {
+        font-size: clamp(34px, 6vw, 48px);
+    }
+    .legacy-content p {
+        font-size: 14px;
+    }
+    .legacy-image-wrapper {
+        height: 430px;
+        margin-top: 60px;
     }
 }
 
 
-/* Mobile */
+/* ========================================
+   MOBILE
+======================================== */
 
 @media (max-width: 650px) {
     .legacy-section {
-        padding: 30px 15px 50px;
+        padding: 80px 16px 85px;
+    }
+    .legacy-label {
+        font-size: 8px;
+        letter-spacing: 2px;
+        margin-bottom: 18px;
     }
     .legacy-content h2 {
-        font-size: 20px;
+        font-size: 34px;
+        line-height: 1.15;
+        letter-spacing: -0.8px;
     }
     .legacy-content p {
-        margin-top: 20px;
-        font-size: 10px;
+        margin-top: 22px;
+        padding: 0 10px;
+        font-size: 12px;
         line-height: 1.8;
     }
     .legacy-image-wrapper {
-        margin-top: 15px;
+        height: 360px;
+        margin-top: 45px;
     }
-    .legacy-image {
-        height: 180px;
+    .legacy-image-caption {
+        left: 20px;
+        right: 20px;
+        bottom: 20px;
+    }
+    .legacy-image-caption span:last-child {
+        font-size: 8px;
     }
 }

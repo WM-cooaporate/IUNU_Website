@@ -1,16 +1,47 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./QuoteForm.css";
 
+const initialFormData = {
+  name: "",
+  phone: "",
+  city: "",
+  email: "",
+  project: "",
+  whatsapp: "",
+  spaceType: "",
+};
+
 function QuoteForm() {
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    city: "",
-    email: "",
-    project: "",
-    whatsapp: "",
-    spaceType: "",
-  });
+  const [formData, setFormData] = useState(initialFormData);
+  const [submitted, setSubmitted] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  const sectionRef = useRef(null);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(section);
+        }
+      },
+      {
+        threshold: 0.15,
+        rootMargin: "0px 0px -60px 0px",
+      }
+    );
+
+    observer.observe(section);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -19,6 +50,10 @@ function QuoteForm() {
       ...previousData,
       [name]: value,
     }));
+
+    if (submitted) {
+      setSubmitted(false);
+    }
   };
 
   const handleSubmit = (event) => {
@@ -26,32 +61,37 @@ function QuoteForm() {
 
     console.log("Quote Request:", formData);
 
-    alert("Your request has been submitted successfully.");
-
-    setFormData({
-      name: "",
-      phone: "",
-      city: "",
-      email: "",
-      project: "",
-      whatsapp: "",
-      spaceType: "",
-    });
+    setSubmitted(true);
+    setFormData(initialFormData);
   };
 
   return (
-    <section className="quote-section">
-
+    <section
+      ref={sectionRef}
+      className={`quote-section ${isVisible ? "quote-section-visible" : ""}`}
+    >
       <div className="quote-container">
 
+        {/* Header */}
         <div className="quote-header">
-          <h2>Request A Quote</h2>
+
+          <span className="quote-eyebrow">
+            LET'S TALK
+          </span>
+
+          <h2>
+            Request a <em>quote.</em>
+          </h2>
 
           <p>
-            Fill in your details and we will be in touch shortly.
+            Tell us a little about what you're looking for
+            and our team will be in touch shortly.
           </p>
+
         </div>
 
+
+        {/* Form */}
         <form
           className="quote-form"
           onSubmit={handleSubmit}
@@ -75,6 +115,7 @@ function QuoteForm() {
                 required
               />
             </div>
+
 
             <div className="quote-field">
               <label htmlFor="phone">
@@ -107,12 +148,13 @@ function QuoteForm() {
                 id="city"
                 name="city"
                 type="text"
-                placeholder="Enter your City"
+                placeholder="Enter your city"
                 value={formData.city}
                 onChange={handleChange}
                 required
               />
             </div>
+
 
             <div className="quote-field">
               <label htmlFor="email">
@@ -137,6 +179,7 @@ function QuoteForm() {
           <div className="quote-row">
 
             <div className="quote-field">
+
               <label htmlFor="project">
                 Project
               </label>
@@ -148,6 +191,7 @@ function QuoteForm() {
                 onChange={handleChange}
                 required
               >
+
                 <option value="">
                   Select your option
                 </option>
@@ -163,22 +207,27 @@ function QuoteForm() {
                 <option value="administrative">
                   Administrative
                 </option>
+
               </select>
+
             </div>
 
+
             <div className="quote-field">
+
               <label htmlFor="whatsapp">
-                What's App Number
+                WhatsApp number
               </label>
 
               <input
                 id="whatsapp"
                 name="whatsapp"
                 type="tel"
-                placeholder="Enter your What's App Number"
+                placeholder="Enter your WhatsApp number"
                 value={formData.whatsapp}
                 onChange={handleChange}
               />
+
             </div>
 
           </div>
@@ -198,6 +247,7 @@ function QuoteForm() {
               onChange={handleChange}
               required
             >
+
               <option value="">
                 Select your option
               </option>
@@ -217,6 +267,7 @@ function QuoteForm() {
               <option value="commercial">
                 Commercial Space
               </option>
+
             </select>
 
           </div>
@@ -226,15 +277,28 @@ function QuoteForm() {
           <div className="quote-submit">
 
             <button type="submit">
-              SUBMIT
+              <span>
+                SUBMIT REQUEST
+              </span>
+
+              <span className="quote-submit-arrow">
+                →
+              </span>
             </button>
 
           </div>
 
+
+          {/* Success */}
+          {submitted && (
+            <div className="quote-success">
+              Thank you. Your request has been received.
+            </div>
+          )}
+
         </form>
 
       </div>
-
     </section>
   );
 }

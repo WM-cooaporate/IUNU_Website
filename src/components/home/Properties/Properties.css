@@ -1,0 +1,449 @@
+/* =========================
+   PROPERTIES SECTION
+========================= */
+
+.properties-section {
+    width: 100%;
+    background: #f7f7f5;
+    padding: 110px 30px 100px;
+    overflow: hidden;
+}
+
+
+/* =========================
+   HEADER
+========================= */
+
+.properties-header {
+    max-width: 1200px;
+    margin: 0 auto 70px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 60px;
+}
+
+.properties-header-left {
+    flex: 1;
+}
+
+.properties-header-right {
+    width: 330px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+
+/* Eyebrow */
+
+.properties-eyebrow {
+    display: block;
+    color: #9a8f72;
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 1.5px;
+    margin-bottom: 20px;
+}
+
+
+/* Heading */
+
+.properties-header h2 {
+    margin: 0;
+    color: #315966;
+    font-size: clamp(38px, 4vw, 58px);
+    line-height: 1.05;
+    font-weight: 300;
+    letter-spacing: -1.5px;
+}
+
+.properties-header h2 em {
+    color: #315966;
+    font-style: normal;
+}
+
+
+/* Description */
+
+.properties-header-right p {
+    margin: 0;
+    color: #777;
+    font-size: 11px;
+    line-height: 1.8;
+    max-width: 300px;
+}
+
+
+/* Number */
+
+.properties-header-number {
+    margin-top: 35px;
+    color: #315966;
+    font-size: 10px;
+    letter-spacing: 1px;
+    position: relative;
+    padding-left: 45px;
+}
+
+.properties-header-number::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 32px;
+    height: 1px;
+    background: #9a8f72;
+}
+
+
+/* =========================
+   GRID
+========================= */
+
+.properties-grid {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 70px 30px;
+}
+
+
+/* =========================
+   CARD
+========================= */
+
+.property-card {
+    min-width: 0;
+}
+
+
+/* Make second card slightly lower
+   for editorial layout */
+
+.property-card-2 {
+    margin-top: 90px;
+}
+
+
+/* =========================
+   IMAGE
+========================= */
+
+.property-image-wrapper {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 520px;
+    overflow: hidden;
+    text-decoration: none;
+    background: #dededb;
+}
+
+.property-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100% !important;
+    max-width: none;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+    margin: 0;
+    padding: 0;
+    transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+
+/* Overlay */
+
+.property-image-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient( to bottom, rgba(0, 0, 0, 0.25), transparent 35%, rgba(0, 0, 0, 0.5));
+    opacity: 0.8;
+    transition: opacity 0.5s ease;
+}
+
+
+/* Hover */
+
+.property-image-wrapper:hover .property-image {
+    transform: scale(1.045);
+}
+
+.property-image-wrapper:hover .property-image-overlay {
+    opacity: 1;
+}
+
+
+/* =========================
+   IMAGE TOP
+========================= */
+
+.property-image-top {
+    position: absolute;
+    top: 22px;
+    left: 24px;
+    right: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 2;
+}
+
+.property-image-top span {
+    color: #ffffff;
+    font-size: 8px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    padding: 7px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+
+/* =========================
+   IMAGE BOTTOM
+========================= */
+
+.property-image-bottom {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    bottom: 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #ffffff;
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    z-index: 2;
+}
+
+.property-arrow {
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+}
+
+.property-image-wrapper:hover .property-arrow {
+    background: #ffffff;
+    color: #315966;
+    transform: translateX(4px);
+}
+
+
+/* =========================
+   CONTENT
+========================= */
+
+.property-content {
+    padding: 22px 4px 0;
+}
+
+.property-location {
+    color: #9a8f72;
+    font-size: 8px;
+    letter-spacing: 1.3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.property-content h3 {
+    margin: 0;
+    color: #315966;
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+.property-content p {
+    margin: 12px 0 0;
+    max-width: 520px;
+    color: #777;
+    font-size: 10px;
+    line-height: 1.7;
+}
+
+
+/* =========================
+   FOOTER
+========================= */
+
+.properties-footer {
+    max-width: 1200px;
+    margin: 90px auto 0;
+    padding-top: 28px;
+    border-top: 1px solid #dcdcd8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.properties-footer>span {
+    color: #9a8f72;
+    font-size: 8px;
+    letter-spacing: 1.3px;
+}
+
+.properties-footer a {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: #315966;
+    text-decoration: none;
+    font-size: 9px;
+    letter-spacing: 1px;
+    transition: gap 0.3s ease;
+}
+
+.properties-footer a span {
+    font-size: 16px;
+}
+
+.properties-footer a:hover {
+    gap: 22px;
+}
+
+
+/* =========================
+   REVEAL ANIMATION
+========================= */
+
+.properties-reveal {
+    opacity: 0;
+    transform: translateY(45px);
+    transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.properties-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
+/* =========================
+   STAGGER
+========================= */
+
+.property-card-2 {
+    transition-delay: 0.12s;
+}
+
+
+/* =========================
+   LOADING / ERROR
+========================= */
+
+.properties-loading,
+.properties-error,
+.properties-empty {
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #777;
+    font-size: 11px;
+}
+
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 900px) {
+    .properties-section {
+        padding: 80px 20px 75px;
+    }
+    .properties-header {
+        margin-bottom: 50px;
+        gap: 30px;
+    }
+    .properties-header h2 {
+        font-size: 40px;
+    }
+    .properties-header-right {
+        width: 270px;
+    }
+    .properties-grid {
+        gap: 50px 20px;
+    }
+    .property-image-wrapper {
+        height: 400px;
+    }
+    .property-card-2 {
+        margin-top: 50px;
+    }
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 650px) {
+    .properties-section {
+        padding: 65px 15px 60px;
+    }
+    .properties-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+    .properties-header h2 {
+        font-size: 34px;
+    }
+    .properties-header-right {
+        width: 100%;
+    }
+    .properties-header-right p {
+        max-width: 330px;
+    }
+    .properties-header-number {
+        margin-top: 20px;
+    }
+    .properties-grid {
+        grid-template-columns: 1fr;
+        gap: 45px;
+    }
+    .property-card-2 {
+        margin-top: 0;
+    }
+    .property-image-wrapper {
+        height: 400px;
+    }
+    .property-image-top {
+        top: 18px;
+        left: 18px;
+        right: 18px;
+    }
+    .property-image-bottom {
+        left: 18px;
+        right: 18px;
+        bottom: 18px;
+    }
+    .property-content {
+        padding-top: 18px;
+    }
+    .property-content h3 {
+        font-size: 20px;
+    }
+    .properties-footer {
+        margin-top: 60px;
+        align-items: flex-start;
+        gap: 20px;
+    }
+    .properties-footer>span {
+        max-width: 130px;
+        line-height: 1.5;
+    }
+}

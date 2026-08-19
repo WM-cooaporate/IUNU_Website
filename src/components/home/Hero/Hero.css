@@ -1,72 +1,268 @@
+/* =========================
+   HERO
+========================= */
+
 .hero {
     position: relative;
-    min-height: 650px;
+    min-height: calc(100vh - var(--navbar-height));
+    height: 780px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
     background-image: url("/images/home_hero.jpg");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    overflow: hidden;
+    color: var(--color-white);
 }
+
+
+/* =========================
+   OVERLAY
+========================= */
 
 .hero-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.42);
-    z-index: 0;
+    background: linear-gradient( 90deg, rgba(17, 17, 17, 0.55) 0%, rgba(17, 17, 17, 0.25) 50%, rgba(17, 17, 17, 0.45) 100%);
+    z-index: 1;
 }
+
+
+/* =========================
+   HERO CONTENT
+========================= */
 
 .hero-content {
     position: relative;
-    z-index: 1;
+    z-index: 2;
+    width: min(900px, 90%);
     text-align: center;
-    color: #ffffff;
-    transform: translateY(-15px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: translateY(-20px);
 }
+
+
+/* =========================
+   EYEBROW
+========================= */
+
+.hero-eyebrow {
+    margin-bottom: 22px;
+    font-size: 11px;
+    font-weight: var(--font-medium);
+    letter-spacing: 4px;
+    color: rgba(255, 255, 255, 0.85);
+    animation: heroFadeUp 1s ease both;
+}
+
+
+/* =========================
+   TITLE
+========================= */
 
 .hero-content h1 {
     margin: 0;
-    font-size: clamp(38px, 5vw, 62px);
-    font-weight: 400;
-    letter-spacing: -1px;
+    font-size: clamp(48px, 7vw, 92px);
+    line-height: 1.05;
+    font-weight: var(--font-light);
+    letter-spacing: -2px;
+    animation: heroFadeUp 1s ease 0.15s both;
 }
+
+
+/* =========================
+   DESCRIPTION
+========================= */
 
 .hero-content p {
-    margin-top: 28px;
-    font-size: clamp(18px, 2vw, 27px);
-    font-weight: 400;
-    letter-spacing: 0.2px;
+    margin: 28px 0 0;
+    max-width: 650px;
+    font-size: clamp(17px, 2vw, 24px);
+    line-height: 1.6;
+    font-weight: var(--font-light);
+    letter-spacing: 0.3px;
+    color: rgba(255, 255, 255, 0.9);
+    animation: heroFadeUp 1s ease 0.3s both;
 }
 
 
-/* Tablet */
+/* =========================
+   BUTTON
+========================= */
 
-@media (max-width: 900px) {
-    .hero {
-        min-height: 450px;
+.hero-button {
+    margin-top: 42px;
+    min-width: 205px;
+    height: 52px;
+    padding: 0 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    color: var(--color-white);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: var(--font-medium);
+    letter-spacing: 1.5px;
+    transition: background-color var(--transition-normal), color var(--transition-normal), border-color var(--transition-normal), transform var(--transition-normal);
+    animation: heroFadeUp 1s ease 0.45s both;
+}
+
+.hero-button:hover {
+    background: var(--color-white);
+    border-color: var(--color-white);
+    color: var(--color-primary);
+    transform: translateY(-3px);
+}
+
+
+/* =========================
+   BUTTON ARROW
+========================= */
+
+.hero-button-arrow {
+    font-size: 18px;
+    line-height: 1;
+    transition: transform var(--transition-fast);
+}
+
+.hero-button:hover .hero-button-arrow {
+    transform: translateX(5px);
+}
+
+
+/* =========================
+   SCROLL INDICATOR
+========================= */
+
+.hero-scroll {
+    position: absolute;
+    z-index: 2;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    animation: heroFadeIn 1s ease 1s both;
+}
+
+.hero-scroll-line {
+    width: 1px;
+    height: 42px;
+    background: rgba(255, 255, 255, 0.7);
+    animation: scrollLine 2s ease-in-out infinite;
+}
+
+.hero-scroll-text {
+    font-size: 8px;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+
+/* =========================
+   HERO ANIMATIONS
+========================= */
+
+@keyframes heroFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes heroFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes scrollLine {
+    0%,
+    100% {
+        transform: scaleY(0.65);
+        transform-origin: top;
+        opacity: 0.5;
+    }
+    50% {
+        transform: scaleY(1);
+        transform-origin: top;
+        opacity: 1;
     }
 }
 
 
-/* Mobile */
+/* =========================
+   TABLET
+========================= */
 
-@media (max-width: 650px) {
+@media (max-width: 1024px) {
     .hero {
-        min-height: 430px;
+        height: 700px;
+        min-height: 650px;
         background-position: center;
     }
     .hero-content {
-        padding: 0 20px;
+        width: 85%;
+    }
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 650px) {
+    .hero {
+        height: calc(100svh - var(--navbar-height));
+        min-height: 580px;
+        background-position: center;
+    }
+    .hero-overlay {
+        background: linear-gradient( 180deg, rgba(17, 17, 17, 0.35) 0%, rgba(17, 17, 17, 0.55) 100%);
+    }
+    .hero-content {
+        width: 90%;
+        transform: translateY(-10px);
+    }
+    .hero-eyebrow {
+        margin-bottom: 18px;
+        font-size: 9px;
+        letter-spacing: 3px;
     }
     .hero-content h1 {
-        font-size: 40px;
+        font-size: clamp(42px, 13vw, 58px);
+        line-height: 1.05;
+        letter-spacing: -1.5px;
     }
     .hero-content p {
         margin-top: 20px;
-        font-size: 18px;
-        line-height: 1.5;
+        font-size: 16px;
+        line-height: 1.55;
+        max-width: 340px;
+    }
+    .hero-button {
+        margin-top: 32px;
+        height: 48px;
+        min-width: 190px;
+        font-size: 9px;
+    }
+    .hero-scroll {
+        bottom: 22px;
     }
 }

@@ -16,17 +16,26 @@ function LegacySection() {
 
         <p>
           IUNU Development focuses on thoughtful real estate projects
-          designed with purpose and lasting impact.
+          designed with purpose, character, and lasting impact.
         </p>
 
       </div>
 
       <div className="legacy-image-wrapper">
+
+        <div className="legacy-image-overlay"></div>
+
         <img
           src="/images/legacy.jpg"
           alt="IUNU Development"
           className="legacy-image"
         />
+
+        <div className="legacy-image-caption">
+          <span>01</span>
+          <span>ENDURING SPACES</span>
+        </div>
+
       </div>
 
     </section>
