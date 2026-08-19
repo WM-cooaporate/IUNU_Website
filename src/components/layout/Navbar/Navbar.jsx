@@ -14,10 +14,7 @@ function Navbar() {
     user = null;
   }
 
-  const homePath =
-    token && user?.role === "ADMIN"
-      ? "/admin"
-      : token && user?.role === "USER"
+  const homePath = token && user?.role === "USER"
         ? "/home"
         : "/login";
 
