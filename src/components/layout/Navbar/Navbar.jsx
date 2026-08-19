@@ -2,43 +2,24 @@ import { NavLink, Link } from "react-router-dom";
 import "./Navbar.css";
 
 function Navbar() {
-
-  const token = localStorage.getItem("accessToken");
-  const userData = localStorage.getItem("user");
-
-  let user;
-
-  try {
-    user = userData ? JSON.parse(userData) : null;
-  } catch {
-    user = null;
-  }
-
-  const homePath = token && user?.role === "USER"
-        ? "/home"
-        : "/login";
-
   return (
     <header className="navbar">
 
       <div className="navbar-container">
 
         {/* Logo */}
-
         <Link
-          to={homePath}
+          to="/home"
           className="navbar-logo"
         >
           IUNU
         </Link>
 
-
         {/* Navigation */}
-
         <nav className="navbar-menu">
 
           <NavLink
-            to={homePath}
+            to="/home"
             end
             className={({ isActive }) =>
               isActive
@@ -48,7 +29,6 @@ function Navbar() {
           >
             HOME
           </NavLink>
-
 
           <NavLink
             to="/project"
@@ -61,7 +41,6 @@ function Navbar() {
             PROJECT
           </NavLink>
 
-
           <NavLink
             to="/about"
             className={({ isActive }) =>
@@ -73,7 +52,6 @@ function Navbar() {
             ABOUT
           </NavLink>
 
-
           <NavLink
             to="/contact"
             className={({ isActive }) =>
@@ -84,7 +62,6 @@ function Navbar() {
           >
             CONTACT
           </NavLink>
-
 
           <NavLink
             to="/blank"
@@ -99,9 +76,7 @@ function Navbar() {
 
         </nav>
 
-
         {/* Phone */}
-
         <a
           href="tel:17337"
           className="navbar-phone"
@@ -111,7 +86,6 @@ function Navbar() {
           </span>
 
           17337
-
         </a>
 
       </div>
