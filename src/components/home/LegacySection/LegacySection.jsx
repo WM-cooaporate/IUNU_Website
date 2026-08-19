@@ -23,7 +23,7 @@ function LegacySection() {
 
       <div className="legacy-image-wrapper">
         <img
-          src="/src/assets/legacy.jpg"
+          src="/images/legacy.jpg"
           alt="IUNU Development"
           className="legacy-image"
         />

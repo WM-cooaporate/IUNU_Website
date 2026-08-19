@@ -4,15 +4,15 @@ import "./Navbar.css";
 function Navbar() {
   return (
     <header className="navbar">
-
       <div className="navbar-container">
 
         {/* Logo */}
-        <Link
-          to="/home"
-          className="navbar-logo"
-        >
-          IUNU
+        <Link to="/home" className="navbar-logo">
+          <img
+            src="/images/Logo.png"
+            alt="IUNU Developments"
+            className="navbar-logo-image"
+          />
         </Link>
 
         {/* Navigation */}
@@ -63,7 +63,6 @@ function Navbar() {
             CONTACT
           </NavLink>
 
-
         </nav>
 
         {/* Phone */}
@@ -79,7 +78,6 @@ function Navbar() {
         </a>
 
       </div>
-
     </header>
   );
 }
