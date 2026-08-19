@@ -1,0 +1,210 @@
+/* =========================
+   NAVBAR
+========================= */
+
+.navbar {
+    width: 100%;
+    height: 62px;
+    background: #ffffff;
+    position: relative;
+    z-index: 1000;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.navbar-container {
+    width: 100%;
+    height: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+}
+
+
+/* =========================
+   LOGO
+========================= */
+
+.navbar-logo {
+    min-width: 100px;
+    color: #8b805f;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+}
+
+
+/* =========================
+   MENU
+========================= */
+
+.navbar-menu {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+}
+
+
+/* =========================
+   NAV LINKS
+========================= */
+
+.nav-link {
+    position: relative;
+    color: #31505c;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.4px;
+    transition: color 0.3s ease;
+}
+
+
+/* Hover */
+
+.nav-link:hover {
+    color: #9a8a64;
+}
+
+
+/* =========================
+   CURRENT PAGE
+========================= */
+
+.nav-link-active {
+    color: #9a8a64;
+}
+
+
+/* Underline */
+
+.nav-link-active::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -9px;
+    height: 1px;
+    background: #9a8a64;
+    animation: underlineAppear 0.25s ease;
+}
+
+
+/* =========================
+   UNDERLINE ANIMATION
+========================= */
+
+@keyframes underlineAppear {
+    from {
+        transform: scaleX(0);
+        opacity: 0;
+    }
+    to {
+        transform: scaleX(1);
+        opacity: 1;
+    }
+}
+
+
+/* =========================
+   PHONE
+========================= */
+
+.navbar-phone {
+    width: 102px;
+    height: 34px;
+    border: 1px solid #31505c;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    color: #31505c;
+    text-decoration: none;
+    font-size: 11px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.navbar-phone:hover {
+    background: #31505c;
+    color: #ffffff;
+}
+
+.phone-icon {
+    font-size: 14px;
+}
+
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 900px) {
+    .navbar-container {
+        padding: 0 18px;
+    }
+    .navbar-menu {
+        gap: 18px;
+    }
+    .nav-link {
+        font-size: 10px;
+    }
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 650px) {
+    .navbar {
+        height: auto;
+    }
+    .navbar-container {
+        min-height: 60px;
+        flex-wrap: wrap;
+        gap: 15px;
+        padding: 12px 16px;
+    }
+    .navbar-menu {
+        order: 3;
+        width: 100%;
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding-bottom: 4px;
+        gap: 22px;
+    }
+    .nav-link {
+        white-space: nowrap;
+    }
+    .nav-link-active::after {
+        bottom: -5px;
+    }
+    .navbar-phone {
+        width: 90px;
+        height: 30px;
+    }
+}
+
+.phone-icon {
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.phone-icon svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}

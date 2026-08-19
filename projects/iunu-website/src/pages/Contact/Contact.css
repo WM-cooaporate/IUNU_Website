@@ -1,0 +1,388 @@
+.contact-page {
+    min-height: 100vh;
+    background: #f7f7f6;
+    color: #77756e;
+}
+
+
+/* =========================
+   HERO
+========================= */
+
+.contact-hero {
+    min-height: 330px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.contact-hero h1 {
+    margin: 0 0 20px;
+    font-size: 58px;
+    font-weight: 500;
+    letter-spacing: -1px;
+}
+
+.contact-hero p {
+    margin: 0;
+    font-size: 17px;
+    color: #777;
+}
+
+
+/* =========================
+   CONTENT
+========================= */
+
+.contact-content {
+    max-width: 1150px;
+    margin: 0 auto;
+    padding: 40px 20px 100px;
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 90px;
+}
+
+
+/* =========================
+   HEADINGS
+========================= */
+
+.contact-content h2 {
+    margin: 0 0 30px;
+    font-size: 22px;
+    font-weight: 500;
+    color: #66645e;
+}
+
+
+/* =========================
+   FORM
+========================= */
+
+.contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+}
+
+.contact-form input,
+.contact-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #d6d4d0;
+    background: #fff;
+    padding: 14px 15px;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+}
+
+.contact-form input {
+    height: 48px;
+}
+
+.contact-form textarea {
+    min-height: 155px;
+    resize: vertical;
+}
+
+.contact-form input::placeholder,
+.contact-form textarea::placeholder {
+    color: #9b9994;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+    border-color: #99968e;
+}
+
+.contact-form button {
+    align-self: flex-start;
+    margin-top: 5px;
+    min-width: 145px;
+    height: 48px;
+    border: none;
+    border-radius: 25px;
+    background: #d5cec4;
+    color: #77736c;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.contact-form button:hover {
+    background: #aaa69e;
+    color: white;
+}
+
+
+/* =========================
+   CONTACT INFORMATION
+========================= */
+
+.contact-description {
+    margin: -10px 0 55px;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #777;
+}
+
+.contact-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px 50px;
+}
+
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    line-height: 1.7;
+}
+
+.info-icon {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    color: #a29d93;
+    font-size: 18px;
+}
+
+.info-item span {
+    display: block;
+    font-size: 14px;
+    color: #777;
+}
+
+
+/* =========================
+   SOCIAL NETWORK
+========================= */
+
+.social-section {
+    margin-top: 70px;
+    padding-top: 25px;
+    border-top: 1px solid #ddd9d3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.social-section>span {
+    font-size: 15px;
+    color: #77756e;
+}
+
+
+/* =========================
+   SOCIAL ICONS
+========================= */
+
+.social-links {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.social-link {
+    width: 40px;
+    height: 40px;
+    border: 1.5px solid #85847d;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #85847d;
+    background: transparent;
+    text-decoration: none;
+    box-sizing: border-box;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+}
+
+
+/* =========================
+   SVG
+========================= */
+
+.social-link svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+/* =========================
+   FACEBOOK
+========================= */
+
+.social-link:first-child svg {
+    width: 19px;
+    height: 19px;
+    fill: currentColor;
+    stroke: none;
+}
+
+
+/* =========================
+   INSTAGRAM
+========================= */
+
+.social-link:nth-child(2) svg {
+    width: 19px;
+    height: 19px;
+}
+
+
+/* =========================
+   WHATSAPP
+========================= */
+
+.social-link:nth-child(3) svg {
+    width: 20px;
+    height: 20px;
+}
+
+
+/* =========================
+   EMAIL
+========================= */
+
+
+/* مهم:
+   Email مش Active بشكل ثابت */
+
+.social-link.email {
+    background: transparent;
+    color: #85847d;
+}
+
+.social-link.email svg {
+    width: 20px;
+    height: 20px;
+}
+
+
+/* =========================
+   HOVER
+========================= */
+
+.social-link:hover {
+    background: #85847d;
+    color: #ffffff;
+    border-color: #85847d;
+    transform: translateY(-2px);
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+    .contact-content {
+        grid-template-columns: 1fr;
+        gap: 70px;
+    }
+    .contact-hero h1 {
+        font-size: 45px;
+    }
+}
+
+@media (max-width: 600px) {
+    .contact-hero {
+        min-height: 250px;
+    }
+    .contact-hero h1 {
+        font-size: 38px;
+    }
+    .contact-hero p {
+        font-size: 15px;
+    }
+    .contact-content {
+        padding: 30px 15px 70px;
+    }
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+    .contact-info-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    .social-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+    .social-links {
+        gap: 15px;
+    }
+    .social-link {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+
+/* =========================
+   INFO ICONS
+========================= */
+
+.info-icon {
+    width: 44px;
+    height: 50px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    color: #a29d93;
+}
+
+
+/* SVG */
+
+.info-icon svg {
+    width: 30px;
+    height: 30px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+/* Building */
+
+.info-icon-building svg {
+    width: 31px;
+    height: 31px;
+}
+
+
+/* Home */
+
+.info-icon-home svg {
+    width: 24px;
+    height: 24px;
+}
