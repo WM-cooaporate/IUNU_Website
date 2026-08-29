@@ -138,7 +138,6 @@
     font-weight: 300;
     line-height: 0.98;
     letter-spacing: -2.5px;
-    transition-delay: 0.3s;
 }
 
 .about-hero h1 em {
@@ -298,8 +297,8 @@
 
 .about-story-content {
     padding: 100px 8%;
-    background: #315966;
-    color: #fff;
+    background: #9A8F72;
+    color: #000;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -571,7 +570,6 @@
         line-height: 1.85;
         margin-bottom: 45px;
     }
-    /* Values become one column */
     .about-values {
         grid-template-columns: 1fr;
         gap: 38px;
@@ -644,4 +642,8 @@
     .about-story-image img {
         transition: none;
     }
+}
+
+.about-page main {
+    padding-bottom: 110px;
 }
