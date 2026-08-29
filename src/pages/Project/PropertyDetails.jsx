@@ -170,12 +170,9 @@ function PropertyDetails() {
                     IUNU
                   </div>
                 )}
-
-                <span
-                  className={`property-details-status property-details-status-${property.status?.toLowerCase()}`}
-                >
-                  {property.status?.replaceAll("_", " ")}
-                </span>
+<span className="property-details-status">
+  {property.status?.replaceAll("_", " ")}
+</span>
 
               </div>
 

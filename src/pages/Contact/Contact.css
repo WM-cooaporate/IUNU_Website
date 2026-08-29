@@ -1,328 +1,608 @@
+/* =========================================================
+   CONTACT PAGE
+========================================================= */
+
 .contact-page {
     min-height: 100vh;
     background: #f7f7f6;
     color: #77756e;
+    overflow: hidden;
 }
 
 
-/* =========================
+/* =========================================================
    HERO
-========================= */
+========================================================= */
 
 .contact-hero {
-    min-height: 330px;
+    min-height: 390px;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 60px 20px;
+    padding: 80px 24px 60px;
+    position: relative;
+}
+
+.contact-hero::before {
+    content: "";
+    position: absolute;
+    width: 420px;
+    height: 420px;
+    border-radius: 50%;
+    background: rgba(213, 206, 196, 0.16);
+    filter: blur(10px);
+    top: -220px;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+.contact-hero-content {
+    position: relative;
+    z-index: 1;
+    animation: contactHeroReveal 0.9s ease both;
+}
+
+.contact-eyebrow,
+.section-label {
+    display: block;
+    margin-bottom: 18px;
+    color: #9a8a64;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 3px;
 }
 
 .contact-hero h1 {
     margin: 0 0 20px;
-    font-size: 58px;
+    color: #66645e;
+    font-size: clamp(42px, 6vw, 64px);
+    line-height: 1;
     font-weight: 500;
-    letter-spacing: -1px;
+    letter-spacing: -2px;
 }
 
 .contact-hero p {
-    margin: 0;
-    font-size: 17px;
-    color: #777;
+    max-width: 540px;
+    margin: 0 auto;
+    color: #85827b;
+    font-size: 16px;
+    line-height: 1.8;
 }
 
 
-/* =========================
+/* =========================================================
    CONTENT
-========================= */
+========================================================= */
 
 .contact-content {
-    max-width: 1150px;
+    width: min(1150px, calc(100% - 40px));
     margin: 0 auto;
-    padding: 40px 20px 100px;
+    padding: 50px 0 110px;
     display: grid;
-    grid-template-columns: 1fr 1.15fr;
-    gap: 90px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: 100px;
 }
 
 
-/* =========================
-   HEADINGS
-========================= */
+/* =========================================================
+   SECTION HEADING
+========================================================= */
 
-.contact-content h2 {
-    margin: 0 0 30px;
-    font-size: 22px;
-    font-weight: 500;
+.section-heading {
+    margin-bottom: 40px;
+}
+
+.section-heading h2 {
+    margin: 0 0 14px;
     color: #66645e;
+    font-size: 27px;
+    line-height: 1.25;
+    font-weight: 500;
+}
+
+.section-heading p {
+    max-width: 480px;
+    margin: 0;
+    color: #85827b;
+    font-size: 14px;
+    line-height: 1.8;
 }
 
 
-/* =========================
-   FORM
-========================= */
+/* =========================================================
+   FORM SECTION
+========================================================= */
+
+.contact-form-section {
+    animation: contactContentReveal 0.8s 0.15s ease both;
+}
 
 .contact-form {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 21px;
 }
 
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 22px;
+    gap: 20px;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-field label {
+    color: #706e68;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
 }
 
 .contact-form input,
 .contact-form textarea {
     width: 100%;
     box-sizing: border-box;
-    border: 1px solid #d6d4d0;
-    background: #fff;
-    padding: 14px 15px;
+    border: 1px solid #dedbd5;
+    border-radius: 0;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 15px 16px;
+    color: #66645e;
     font-family: inherit;
     font-size: 14px;
     outline: none;
+    transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 .contact-form input {
-    height: 48px;
+    height: 50px;
 }
 
 .contact-form textarea {
-    min-height: 155px;
+    min-height: 160px;
     resize: vertical;
+    line-height: 1.7;
 }
 
 .contact-form input::placeholder,
 .contact-form textarea::placeholder {
-    color: #9b9994;
+    color: #aaa7a0;
+}
+
+.contact-form input:hover,
+.contact-form textarea:hover {
+    border-color: #c8c4bc;
 }
 
 .contact-form input:focus,
 .contact-form textarea:focus {
-    border-color: #99968e;
+    border-color: #a9a49a;
+    background: #ffffff;
+    box-shadow: 0 6px 24px rgba(80, 76, 68, 0.06);
+    transform: translateY(-1px);
 }
 
-.contact-form button {
+
+/* =========================================================
+   SUBMIT BUTTON
+========================================================= */
+
+.contact-submit {
     align-self: flex-start;
-    margin-top: 5px;
-    min-width: 145px;
-    height: 48px;
+    min-width: 165px;
+    height: 50px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
     border: none;
-    border-radius: 25px;
+    border-radius: 28px;
     background: #d5cec4;
-    color: #77736c;
-    font-size: 13px;
-    font-weight: 600;
+    color: #706c65;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.3px;
     cursor: pointer;
-    transition: 0.3s ease;
+    transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.contact-form button:hover {
-    background: #aaa69e;
-    color: white;
+.contact-submit svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.3s ease;
+}
+
+.contact-submit:hover {
+    background: #85827b;
+    color: #ffffff;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(80, 76, 68, 0.12);
+}
+
+.contact-submit:hover svg {
+    transform: translateX(4px);
+}
+
+.contact-submit:active {
+    transform: translateY(-1px);
 }
 
 
-/* =========================
-   CONTACT INFORMATION
-========================= */
+/* =========================================================
+   PROPERTY INQUIRY
+========================================================= */
 
-.contact-description {
-    margin: -10px 0 55px;
-    font-size: 15px;
-    line-height: 1.7;
-    color: #777;
+.contact-property-info {
+    margin: -5px 0 32px;
+    padding: 22px 23px;
+    border: 1px solid #e2dfd9;
+    border-left: 2px solid #b3a98f;
+    background: rgba(255, 255, 255, 0.55);
+    animation: propertyReveal 0.6s ease both;
+}
+
+.property-inquiry-label {
+    display: block;
+    margin-bottom: 10px;
+    color: #9a8a64;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+}
+
+.contact-property-info strong {
+    display: block;
+    margin-bottom: 8px;
+    color: #31505c;
+    font-size: 18px;
+    line-height: 1.4;
+    font-weight: 400;
+}
+
+.contact-property-info small {
+    display: block;
+    margin-top: 5px;
+    color: #888680;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.contact-property-info p {
+    margin: 0;
+    color: #888680;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+.property-loading {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.loading-line {
+    display: block;
+    height: 9px;
+    border-radius: 10px;
+    background: linear-gradient( 90deg, #e8e5df 25%, #f5f3ef 50%, #e8e5df 75%);
+    background-size: 200% 100%;
+    animation: loadingShimmer 1.4s infinite;
+}
+
+.loading-small {
+    width: 90px;
+}
+
+.loading-medium {
+    width: 180px;
+}
+
+.loading-large {
+    width: 260px;
+}
+
+
+/* =========================================================
+   INFORMATION SECTION
+========================================================= */
+
+.contact-info-section {
+    animation: contactContentReveal 0.8s 0.3s ease both;
 }
 
 .contact-info-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 40px 50px;
+    gap: 38px 45px;
 }
 
 .info-item {
     display: flex;
     align-items: flex-start;
-    gap: 18px;
-    line-height: 1.7;
+    gap: 17px;
+    animation: infoItemReveal 0.7s ease both;
+}
+
+.info-item:nth-child(1) {
+    animation-delay: 0.35s;
+}
+
+.info-item:nth-child(2) {
+    animation-delay: 0.45s;
+}
+
+.info-item:nth-child(3) {
+    animation-delay: 0.55s;
+}
+
+.info-item:nth-child(4) {
+    animation-delay: 0.65s;
 }
 
 .info-icon {
-    width: 30px;
-    height: 30px;
+    width: 44px;
+    height: 48px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: white;
+    background: #ffffff;
     color: #a29d93;
-    font-size: 18px;
+    transition: transform 0.3s ease, background 0.3s ease, color 0.3s ease;
 }
 
-.info-item span {
+.info-icon svg {
+    width: 25px;
+    height: 25px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.45;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.info-item:hover .info-icon {
+    background: #85827b;
+    color: #ffffff;
+    transform: translateY(-3px);
+}
+
+.info-label {
     display: block;
-    font-size: 14px;
-    color: #777;
+    margin-bottom: 7px;
+    color: #9a8a64;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1.8px;
+}
+
+.info-value {
+    display: block;
+    color: #77756e;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.info-secondary {
+    display: block;
+    margin-top: 3px;
+    color: #99968f;
+    font-size: 11px;
+    line-height: 1.6;
 }
 
 
-/* =========================
-   SOCIAL NETWORK
-========================= */
+/* =========================================================
+   SOCIAL
+========================================================= */
 
 .social-section {
-    margin-top: 70px;
+    margin-top: 65px;
     padding-top: 25px;
-    border-top: 1px solid #ddd9d3;
+    border-top: 1px solid #dedbd5;
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
-.social-section>span {
-    font-size: 15px;
+.social-title {
     color: #77756e;
+    font-size: 14px;
 }
-
-
-/* =========================
-   SOCIAL ICONS
-========================= */
 
 .social-links {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 13px;
 }
 
 .social-link {
     width: 40px;
     height: 40px;
-    border: 1.5px solid #85847d;
-    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #85847d;
+    border: 1px solid #aaa69e;
+    border-radius: 50%;
     background: transparent;
+    color: #85827b;
     text-decoration: none;
-    box-sizing: border-box;
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+    transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
 }
 
-
-/* =========================
-   SVG
-========================= */
-
 .social-link svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     fill: none;
     stroke: currentColor;
-    stroke-width: 1.7;
+    stroke-width: 1.6;
     stroke-linecap: round;
     stroke-linejoin: round;
 }
 
-
-/* =========================
-   FACEBOOK
-========================= */
-
 .social-link:first-child svg {
-    width: 19px;
-    height: 19px;
     fill: currentColor;
     stroke: none;
 }
 
-
-/* =========================
-   INSTAGRAM
-========================= */
-
-.social-link:nth-child(2) svg {
-    width: 19px;
-    height: 19px;
-}
-
-
-/* =========================
-   WHATSAPP
-========================= */
-
-.social-link:nth-child(3) svg {
-    width: 20px;
-    height: 20px;
-}
-
-
-/* =========================
-   EMAIL
-========================= */
-
-
-/* مهم:
-   Email مش Active بشكل ثابت */
-
-.social-link.email {
-    background: transparent;
-    color: #85847d;
-}
-
-.social-link.email svg {
-    width: 20px;
-    height: 20px;
-}
-
-
-/* =========================
-   HOVER
-========================= */
-
 .social-link:hover {
-    background: #85847d;
+    background: #85827b;
+    border-color: #85827b;
     color: #ffffff;
-    border-color: #85847d;
-    transform: translateY(-2px);
+    transform: translateY(-4px);
+}
+
+.social-link:nth-child(1):hover {
+    transition-delay: 0s;
+}
+
+.social-link:nth-child(2):hover {
+    transition-delay: 0.02s;
+}
+
+.social-link:nth-child(3):hover {
+    transition-delay: 0.04s;
+}
+
+.social-link:nth-child(4):hover {
+    transition-delay: 0.06s;
 }
 
 
-/* =========================
-   RESPONSIVE
-========================= */
+/* =========================================================
+   ANIMATIONS
+========================================================= */
 
-@media (max-width: 900px) {
+@keyframes contactHeroReveal {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes contactContentReveal {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes infoItemReveal {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes propertyReveal {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes loadingShimmer {
+    from {
+        background-position: 200% 0;
+    }
+    to {
+        background-position: -200% 0;
+    }
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 950px) {
     .contact-content {
         grid-template-columns: 1fr;
-        gap: 70px;
+        gap: 85px;
     }
-    .contact-hero h1 {
-        font-size: 45px;
+    .contact-info-section {
+        max-width: 700px;
+    }
+    .contact-hero {
+        min-height: 340px;
     }
 }
 
-@media (max-width: 600px) {
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 650px) {
     .contact-hero {
-        min-height: 250px;
+        min-height: 290px;
+        padding: 70px 20px 50px;
     }
     .contact-hero h1 {
-        font-size: 38px;
+        font-size: 42px;
+        letter-spacing: -1.5px;
     }
     .contact-hero p {
-        font-size: 15px;
+        font-size: 14px;
+        line-height: 1.7;
     }
     .contact-content {
-        padding: 30px 15px 70px;
+        width: min(100% - 30px, 1150px);
+        padding: 30px 0 70px;
+        gap: 65px;
+    }
+    .section-heading {
+        margin-bottom: 32px;
+    }
+    .section-heading h2 {
+        font-size: 23px;
+    }
+    .section-heading p {
+        font-size: 13px;
     }
     .form-row {
         grid-template-columns: 1fr;
-        gap: 18px;
+        gap: 20px;
+    }
+    .contact-form input {
+        height: 48px;
+    }
+    .contact-form textarea {
+        min-height: 145px;
+    }
+    .contact-submit {
+        width: 100%;
     }
     .contact-info-grid {
         grid-template-columns: 1fr;
@@ -333,86 +613,59 @@
         align-items: flex-start;
         gap: 20px;
     }
-    .social-links {
-        gap: 15px;
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 400px) {
+    .contact-hero h1 {
+        font-size: 37px;
     }
-    .social-link {
+    .contact-eyebrow,
+    .section-label {
+        font-size: 9px;
+        letter-spacing: 2.5px;
+    }
+    .contact-property-info {
+        padding: 18px;
+    }
+    .contact-property-info strong {
+        font-size: 16px;
+    }
+    .info-item {
+        gap: 13px;
+    }
+    .info-icon {
         width: 40px;
-        height: 40px;
+        height: 44px;
+    }
+    .info-value {
+        font-size: 12px;
     }
 }
 
 
-/* =========================
-   INFO ICONS
-========================= */
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
 
-.info-icon {
-    width: 44px;
-    height: 50px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #ffffff;
-    color: #a29d93;
-}
-
-
-/* SVG */
-
-.info-icon svg {
-    width: 30px;
-    height: 30px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.6;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-
-/* Building */
-
-.info-icon-building svg {
-    width: 31px;
-    height: 31px;
-}
-
-
-/* Home */
-
-.info-icon-home svg {
-    width: 24px;
-    height: 24px;
-}
-
-.contact-property-info {
-    margin-bottom: 30px;
-    padding: 20px;
-    border: 1px solid #e5e5e5;
-    background: #f7f7f7;
-}
-
-.contact-property-info span {
-    display: block;
-    margin-bottom: 8px;
-    color: #9a8a64;
-    font-size: 9px;
-    letter-spacing: 2px;
-}
-
-.contact-property-info strong {
-    display: block;
-    margin-bottom: 7px;
-    color: #31505c;
-    font-size: 18px;
-    font-weight: 400;
-}
-
-.contact-property-info small {
-    display: block;
-    margin-top: 5px;
-    color: #888680;
-    font-size: 10px;
+@media (prefers-reduced-motion: reduce) {
+    .contact-hero-content,
+    .contact-form-section,
+    .contact-info-section,
+    .info-item,
+    .contact-property-info {
+        animation: none;
+    }
+    .contact-submit,
+    .contact-submit svg,
+    .info-icon,
+    .social-link,
+    .contact-form input,
+    .contact-form textarea {
+        transition: none;
+    }
 }

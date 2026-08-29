@@ -4,40 +4,39 @@
 
 :root {
     /* =========================
-     IUNU BRAND COLORS
-  ========================= */
+       IUNU BRAND COLORS
+    ========================= */
     --color-primary: #31505c;
     --color-primary-dark: #263f49;
     --color-gold: #9a8a64;
     --color-gold-light: #b5a77f;
-    --color-white: #ffffff;
-    --color-black: #111111;
-    --color-text: #31505c;
-    --color-text-muted: #6f7b80;
-    --color-border: #e8e8e8;
-    --color-background: #f8f7f4;
+    --color-blue-muted: #9fb5bd;
+    --color-beige: #c8b9a5;
+    --color-beige-light: #ddd6cc;
     /* =========================
-     NEUTRALS
-  ========================= */
+       NEUTRALS
+    ========================= */
     --color-white: #ffffff;
     --color-black: #111111;
     --color-background: #f7f7f5;
     --color-background-soft: #f1f0ec;
-    --color-text: #243b44;
+    --color-text: #31505c;
+    --color-text-dark: #243b44;
     --color-text-light: #6c777b;
     --color-text-muted: #8a9194;
     --color-border: #e5e5e2;
+    --color-border-dark: #d6d1c8;
     /* =========================
-     TYPOGRAPHY
-  ========================= */
+       TYPOGRAPHY
+    ========================= */
     --font-primary: "Poppins", sans-serif;
     --font-light: 300;
     --font-regular: 400;
     --font-medium: 500;
     --font-semibold: 600;
     /* =========================
-     FONT SIZES
-  ========================= */
+       FONT SIZES
+    ========================= */
     --text-xs: 11px;
     --text-sm: 13px;
     --text-md: 16px;
@@ -47,14 +46,14 @@
     --text-3xl: 56px;
     --text-4xl: 72px;
     /* =========================
-     LAYOUT
-  ========================= */
+       LAYOUT
+    ========================= */
     --container-width: 1400px;
     --container-padding: 28px;
     --navbar-height: 62px;
     /* =========================
-     SPACING
-  ========================= */
+       SPACING
+    ========================= */
     --space-xs: 8px;
     --space-sm: 16px;
     --space-md: 24px;
@@ -63,26 +62,27 @@
     --space-2xl: 96px;
     --space-3xl: 140px;
     /* =========================
-     RADIUS
-  ========================= */
+       RADIUS
+    ========================= */
     --radius-sm: 4px;
     --radius-md: 8px;
     --radius-lg: 14px;
     --radius-xl: 24px;
+    --radius-pill: 999px;
     /* =========================
-     SHADOWS
-  ========================= */
+       SHADOWS
+    ========================= */
     --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.06);
     --shadow-medium: 0 20px 50px rgba(0, 0, 0, 0.1);
     /* =========================
-     TRANSITIONS
-  ========================= */
+       TRANSITIONS
+    ========================= */
     --transition-fast: 0.25s ease;
     --transition-normal: 0.4s ease;
     --transition-slow: 0.8s ease;
     /* =========================
-     Z-INDEX
-  ========================= */
+       Z-INDEX
+    ========================= */
     --z-base: 1;
     --z-content: 10;
     --z-navbar: 1000;

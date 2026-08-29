@@ -5,7 +5,7 @@
 .legacy-section {
     position: relative;
     width: 100%;
-    background: var(--color-light);
+    background: var(--color-background);
     padding: 140px 40px 150px;
     overflow: hidden;
 }
@@ -44,7 +44,7 @@
 .legacy-content p {
     max-width: 650px;
     margin: 30px auto 0;
-    color: var(--color-muted);
+    color: var(--color-text-light);
     font-size: 15px;
     font-weight: 300;
     line-height: 1.9;

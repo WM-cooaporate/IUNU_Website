@@ -9,7 +9,6 @@ import "./Contact.css";
 
 function Contact() {
   const [searchParams] = useSearchParams();
-
   const propertyId = searchParams.get("property");
 
   const [property, setProperty] = useState(null);
@@ -24,16 +23,13 @@ function Contact() {
   });
 
   useEffect(() => {
-    if (!propertyId) {
-      return;
-    }
+    if (!propertyId) return;
 
     const loadProperty = async () => {
       try {
         setPropertyLoading(true);
 
-        const data =
-          await propertyServices.getPropertyById(propertyId);
+        const data = await propertyServices.getPropertyById(propertyId);
 
         setProperty(data);
       } catch (error) {
@@ -67,300 +63,270 @@ function Contact() {
 
   return (
     <div className="contact-page">
-
       <Navbar />
 
       <main>
-
-        {/* HERO */}
-
+        {/* ================= HERO ================= */}
         <section className="contact-hero">
+          <div className="contact-hero-content">
+            <span className="contact-eyebrow">CONTACT US</span>
 
-          <h1>Get In Touch</h1>
+            <h1>Get In Touch</h1>
 
-          <p>
-            We're here to answer your queries.
-          </p>
-
+            <p>
+              We're here to answer your questions and help you find
+              the right property.
+            </p>
+          </div>
         </section>
 
-
-        {/* CONTACT CONTENT */}
-
+        {/* ================= CONTENT ================= */}
         <section className="contact-content">
-
-          {/* FORM */}
-
+          {/* ================= FORM ================= */}
           <div className="contact-form-section">
+            <div className="section-heading">
+              <span className="section-label">SEND A MESSAGE</span>
 
-            <h2>
-              {property
-                ? `Interested in ${property.title}`
-                : "Visit Our Office"}
-            </h2>
+              <h2>
+                {property
+                  ? `Interested in ${property.title}`
+                  : "Visit Our Office"}
+              </h2>
+
+              <p>
+                Fill in your details and our team will get back to you
+                shortly.
+              </p>
+            </div>
 
             {/* PROPERTY INFO */}
-
             {propertyId && (
               <div className="contact-property-info">
-
                 {propertyLoading ? (
-                  <p>
-                    Loading property information...
-                  </p>
+                  <div className="property-loading">
+                    <span className="loading-line loading-small" />
+                    <span className="loading-line loading-large" />
+                    <span className="loading-line loading-medium" />
+                  </div>
                 ) : property ? (
                   <>
-                    <span>
+                    <span className="property-inquiry-label">
                       PROPERTY INQUIRY
                     </span>
 
-                    <strong>
-                      {property.title}
-                    </strong>
+                    <strong>{property.title}</strong>
 
                     {property.location && (
-                      <small>
-                        {property.location}
-                      </small>
+                      <small>{property.location}</small>
                     )}
 
                     {property.price != null && (
                       <small>
-                        {Number(
-                          property.price
-                        ).toLocaleString()} EGP
+                        {Number(property.price).toLocaleString()} EGP
                       </small>
                     )}
                   </>
                 ) : (
-                  <p>
-                    Property information unavailable.
-                  </p>
+                  <p>Property information unavailable.</p>
                 )}
-
               </div>
             )}
 
-
-            <form
-              className="contact-form"
-              onSubmit={handleSubmit}
-            >
-
+            <form className="contact-form" onSubmit={handleSubmit}>
               <div className="form-row">
+                <div className="form-field">
+                  <label htmlFor="firstName">First name</label>
 
-                <input
-                  type="text"
-                  name="firstName"
-                  placeholder="First name"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  required
-                />
+                  <input
+                    id="firstName"
+                    type="text"
+                    name="firstName"
+                    placeholder="Your first name"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
 
-                <input
-                  type="text"
-                  name="lastName"
-                  placeholder="Last name"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  required
-                />
+                <div className="form-field">
+                  <label htmlFor="lastName">Last name</label>
 
+                  <input
+                    id="lastName"
+                    type="text"
+                    name="lastName"
+                    placeholder="Your last name"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
               </div>
 
-
               <div className="form-row">
+                <div className="form-field">
+                  <label htmlFor="phone">Phone</label>
 
-                <input
-                  type="tel"
-                  name="phone"
-                  placeholder="Phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                />
+                  <input
+                    id="phone"
+                    type="tel"
+                    name="phone"
+                    placeholder="Your phone number"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
 
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
+                <div className="form-field">
+                  <label htmlFor="email">Email</label>
 
+                  <input
+                    id="email"
+                    type="email"
+                    name="email"
+                    placeholder="Your email address"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
               </div>
 
+              <div className="form-field">
+                <label htmlFor="message">Message</label>
 
-              <textarea
-                name="message"
-                placeholder={
-                  property
-                    ? `I'm interested in ${property.title}...`
-                    : "Message"
-                }
-                value={formData.message}
-                onChange={handleChange}
-                required
-              />
+                <textarea
+                  id="message"
+                  name="message"
+                  placeholder={
+                    property
+                      ? `I'm interested in ${property.title}...`
+                      : "Tell us how we can help..."
+                  }
+                  value={formData.message}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
+              <button className="contact-submit" type="submit">
+                <span>SEND MESSAGE</span>
 
-              <button type="submit">
-                SEND MESSAGE
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12h13" />
+                  <path d="m13 6 6 6-6 6" />
+                </svg>
               </button>
-
             </form>
-
           </div>
 
-
-          {/* INFORMATION */}
-
+          {/* ================= INFORMATION ================= */}
           <div className="contact-info-section">
+            <div className="section-heading">
+              <span className="section-label">STAY CONNECTED</span>
 
-            <h2>
-              Follow Us Online
-            </h2>
+              <h2>Follow Us Online</h2>
 
-            <p className="contact-description">
-              Connect with us on social media for updates.
-            </p>
-
+              <p>
+                Connect with us on social media and stay updated with
+                our latest properties and news.
+              </p>
+            </div>
 
             <div className="contact-info-grid">
-
+              {/* PHONE */}
               <div className="info-item">
-
                 <div className="info-icon">
-                  ☎
+                  <svg viewBox="0 0 24 24">
+                    <path d="M6.5 3.5h3l1.5 4-2 1.5a14 14 0 0 0 6 6l1.5-2 4 1.5v3c0 1-1 2-2 2C10.5 19.5 4.5 13.5 4.5 5.5c0-1 1-2 2-2Z" />
+                  </svg>
                 </div>
 
                 <div>
-                  <span>
-                    17337
-                  </span>
+                  <span className="info-label">PHONE</span>
+                  <span className="info-value">17337</span>
                 </div>
-
               </div>
 
-
+              {/* EMAIL */}
               <div className="info-item">
-
                 <div className="info-icon">
-                  ✉
+                  <svg viewBox="0 0 24 24">
+                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                    <path d="m4 7 8 6 8-6" />
+                  </svg>
                 </div>
 
                 <div>
-                  <span>
+                  <span className="info-label">EMAIL</span>
+                  <span className="info-value">
                     info@iunu-eg.com
                   </span>
                 </div>
-
               </div>
 
-
+              {/* HOURS */}
               <div className="info-item">
-
-                <div className="info-icon info-icon-building">
-
-                  <svg
-                    viewBox="0 0 64 64"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-
-                    <path d="M18 54V20L32 12L46 20V54" />
-
-                    <path d="M12 54H52" />
-
-                    <path d="M24 28H28" />
-
-                    <path d="M36 28H40" />
-
-                    <path d="M24 36H28" />
-
-                    <path d="M36 36H40" />
-
-                    <path d="M24 44H28" />
-
-                    <path d="M36 44H40" />
-
-                    <path d="M29 54V44H35V54" />
-
+                <div className="info-icon">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="4" y="3" width="16" height="18" rx="2" />
+                    <path d="M8 7h8" />
+                    <path d="M8 11h3" />
+                    <path d="M13 11h3" />
+                    <path d="M8 15h3" />
+                    <path d="M13 15h3" />
                   </svg>
-
                 </div>
 
                 <div>
+                  <span className="info-label">WORKING HOURS</span>
 
-                  <span>
+                  <span className="info-value">
                     Saturday - Thursday
                   </span>
 
-                  <span>
+                  <span className="info-secondary">
                     11:00 AM to 07:00 PM
                   </span>
-
                 </div>
-
               </div>
 
-
+              {/* ADDRESS */}
               <div className="info-item">
-
-                <div className="info-icon info-icon-home">
-
-                  <svg
-                    viewBox="0 0 64 64"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-
-                    <path d="M20 30L32 18L44 30" />
-
-                    <path d="M23 28V47H41V28" />
-
-                    <path d="M29 47V36H35V47" />
-
+                <div className="info-icon">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M4 10 12 3l8 7" />
+                    <path d="M6 9v11h12V9" />
+                    <path d="M10 20v-6h4v6" />
                   </svg>
-
                 </div>
 
                 <div>
+                  <span className="info-label">OUR OFFICE</span>
 
-                  <span>
-                    Plot No. 306 307, Galaxy Mall,
-                    South 90th Street, second floor,
-                    Fifth Settlement, New Cairo,
-                    Egypt
+                  <span className="info-value">
+                    Plot No. 306 307, Galaxy Mall, South 90th Street,
+                    second floor, Fifth Settlement, New Cairo, Egypt
                   </span>
-
                 </div>
-
               </div>
-
             </div>
 
-
             {/* SOCIAL */}
-
             <div className="social-section">
-
-              <span>
-                Social Network
-              </span>
+              <span className="social-title">Social Network</span>
 
               <div className="social-links">
-
                 <a
                   href="#"
                   aria-label="Facebook"
                   className="social-link"
                 >
                   <svg viewBox="0 0 24 24">
-                    <path d="M14 8h3V4h-3c-3.3 0-5 1.7-5 5v3H6v4h3v8h4v-8h3.5l.5-4H13V9c0-.7.3-1 1-1z" />
+                    <path d="M14 8h3V4h-3c-3.3 0-5 1.7-5 5v3H6v4h3v8h4v-8h3.5l.5-4H13V9c0-.7.3-1 1-1Z" />
                   </svg>
                 </a>
-
 
                 <a
                   href="#"
@@ -368,7 +334,6 @@ function Contact() {
                   className="social-link"
                 >
                   <svg viewBox="0 0 24 24">
-
                     <rect
                       x="3"
                       y="3"
@@ -377,11 +342,7 @@ function Contact() {
                       rx="5"
                     />
 
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="4"
-                    />
+                    <circle cx="12" cy="12" r="4" />
 
                     <circle
                       cx="17.5"
@@ -389,10 +350,8 @@ function Contact() {
                       r="1"
                       className="fill-icon"
                     />
-
                   </svg>
                 </a>
-
 
                 <a
                   href="#"
@@ -400,23 +359,18 @@ function Contact() {
                   className="social-link"
                 >
                   <svg viewBox="0 0 24 24">
+                    <path d="M20 11.5a8 8 0 0 1-11.8 7.1L4 20l1.4-4.1A8 8 0 1 1 20 11.5Z" />
 
-                    <path d="M20 11.5a8 8 0 0 1-11.8 7.1L4 20l1.4-4.1A8 8 0 1 1 20 11.5z" />
-
-                    <path d="M9 8.5c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.7 1.6c.1.2.1.4-.1.6l-.5.6c-.1.1-.1.3 0 .5.4.7 1 1.3 1.7 1.7.2.1.4.1.5 0l.6-.6c.2-.2.4-.2.6-.1l1.5.7c.2.1.3.3.3.5v.5c0 .3-.1.5-.4.7-.4.3-1 .5-1.5.4-1.1-.2-2.3-.9-3.4-2-1-1-1.7-2.2-2-3.4-.1-.6.1-1.1.4-1.5z" />
-
+                    <path d="M9 8.5c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.7 1.6c.1.2.1.4-.1.6l-.5.6c-.1.1-.1.3 0 .5.4.7 1 1.3 1.7 1.7.2.1.4.1.5 0l.6-.6c.2-.2.4-.2.6-.1l1.5.7c.2.1.3.3.3.5v.5c0 .3-.1.5-.4.7-.4.3-1 .5-1.5.4-1.1-.2-2.3-.9-3.4-2-1-1-1.7-2.2-2-3.4-.1-.6.1-1.1.4-1.5Z" />
                   </svg>
                 </a>
-
 
                 <a
                   href="#"
                   aria-label="Email"
-                  className="social-link email"
+                  className="social-link"
                 >
-
                   <svg viewBox="0 0 24 24">
-
                     <rect
                       x="3"
                       y="5"
@@ -426,23 +380,15 @@ function Contact() {
                     />
 
                     <path d="m4 7 8 6 8-6" />
-
                   </svg>
-
                 </a>
-
               </div>
-
             </div>
-
           </div>
-
         </section>
-
       </main>
 
       <Footer />
-
     </div>
   );
 }
