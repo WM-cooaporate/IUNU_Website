@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./Development.css";
 const galleryImages = [
   {
@@ -34,6 +34,20 @@ const galleryImages = [
 ];
 function Development() {
   const sectionRef = useRef(null);
+  const galleryRef = useRef(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const scrollGallery = (direction) => {
+    const gallery = galleryRef.current;
+    const firstItem = gallery?.querySelector(".development-gallery-item");
+
+    if (!gallery || !firstItem) return;
+
+    gallery.scrollBy({
+      left: direction * (firstItem.offsetWidth + 18),
+      behavior: "smooth",
+    });
+  };
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -63,6 +77,40 @@ function Development() {
     });
 
     return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedImage) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setSelectedImage(null);
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [selectedImage]);
+
+  useEffect(() => {
+    const gallery = galleryRef.current;
+
+    if (!gallery) return undefined;
+
+    const interval = window.setInterval(() => {
+      const reachedEnd =
+        gallery.scrollLeft + gallery.clientWidth >= gallery.scrollWidth - 2;
+
+      gallery.scrollTo({
+        left: reachedEnd ? 0 : gallery.scrollLeft + gallery.clientWidth * 0.8,
+        behavior: "smooth",
+      });
+    }, 4500);
+
+    return () => window.clearInterval(interval);
   }, []);
 
   return (
@@ -206,12 +254,34 @@ function Development() {
         </div>
 
 
-        <div className="development-gallery">
+        <div className="development-gallery-controls" aria-label="Gallery controls">
+          <button
+            type="button"
+            className="development-gallery-control"
+            onClick={() => scrollGallery(-1)}
+            aria-label="Previous images"
+          >
+            <span aria-hidden="true">&#8592;</span>
+          </button>
+          <button
+            type="button"
+            className="development-gallery-control"
+            onClick={() => scrollGallery(1)}
+            aria-label="Next images"
+          >
+            <span aria-hidden="true">&#8594;</span>
+          </button>
+        </div>
+
+        <div className="development-gallery" ref={galleryRef}>
 
           {galleryImages.map((image, index) => (
-            <div
+            <button
+              type="button"
               className={`development-gallery-item development-reveal development-gallery-item-${index + 1}`}
               key={image.id}
+              onClick={() => setSelectedImage(image)}
+              aria-label={`Open ${image.alt}`}
             >
               <img
                 src={image.src}
@@ -221,12 +291,37 @@ function Development() {
               <div className="development-gallery-number">
                 0{index + 1}
               </div>
-            </div>
+            </button>
           ))}
 
         </div>
 
       </div>
+
+      {selectedImage && (
+        <div
+          className="development-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image preview"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button
+            type="button"
+            className="development-lightbox-close"
+            onClick={() => setSelectedImage(null)}
+            aria-label="Close image preview"
+          >
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <img
+            className="development-lightbox-image"
+            src={selectedImage.src}
+            alt={selectedImage.alt}
+            onClick={(event) => event.stopPropagation()}
+          />
+        </div>
+      )}
 
     </section>
   );
