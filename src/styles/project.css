@@ -141,14 +141,15 @@
     width: 100%;
     max-width: 570px;
     display: flex;
-    flex-direction: column;
-    gap: 15px;
+    flex-direction: row;
+    gap: 10px;
 }
 
 .project-newsletter input {
-    width: 100%;
-    height: 38px;
-    padding: 0 12px;
+    flex: 1;
+    min-width: 0;
+    height: 44px;
+    padding: 0 15px;
     border: 1px solid #d4d4d4;
     background: #ffffff;
     outline: none;
@@ -167,10 +168,11 @@
 }
 
 .project-newsletter button {
-    width: 80px;
-    height: 38px;
+    width: 115px;
+    flex: 0 0 115px;
+    height: 44px;
     border: none;
-    background: #85827a;
+    background: #31505c;
     color: #ffffff;
     font-size: 10px;
     font-weight: 600;
@@ -179,7 +181,7 @@
 }
 
 .project-newsletter button:hover {
-    background: #315966;
+    background: #9a8a64;
     transform: translateY(-1px);
 }
 
