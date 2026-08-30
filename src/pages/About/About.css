@@ -58,7 +58,7 @@
 .about-hero {
     position: relative;
     min-height: 520px;
-    background-image: linear-gradient( rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.42)), url("/images/about/about-main.jpg");
+    background-image: linear-gradient( rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.42)), url("/images/About%20copy.jpg");
     background-size: cover;
     background-position: center;
     display: flex;
@@ -75,7 +75,7 @@
     content: "";
     position: absolute;
     inset: -5%;
-    background-image: url("/images/about/about-main.jpg");
+    background-image: url("/images/About%20copy.jpg");
     background-size: cover;
     background-position: center;
     z-index: 0;

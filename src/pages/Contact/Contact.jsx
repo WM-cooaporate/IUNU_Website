@@ -319,7 +319,7 @@ function Contact() {
 
               <div className="social-links">
                 <a
-                  href="#"
+                  href="https://www.facebook.com/iunudevelopments"
                   aria-label="Facebook"
                   className="social-link"
                 >
@@ -329,7 +329,7 @@ function Contact() {
                 </a>
 
                 <a
-                  href="#"
+                  href="https://www.instagram.com/iunu.eg/?hl=en"
                   aria-label="Instagram"
                   className="social-link"
                 >
@@ -354,7 +354,7 @@ function Contact() {
                 </a>
 
                 <a
-                  href="#"
+                  href="https://wa.me/201091218088"
                   aria-label="WhatsApp"
                   className="social-link"
                 >
@@ -366,7 +366,7 @@ function Contact() {
                 </a>
 
                 <a
-                  href="#"
+                  href="mailto:info@iunu-eg.com"
                   aria-label="Email"
                   className="social-link"
                 >

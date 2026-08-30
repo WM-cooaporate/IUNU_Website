@@ -220,6 +220,7 @@
     }
     .navbar-menu {
         order: 3;
+        flex: 0 0 100%;
         width: 100%;
         overflow-x: auto;
         justify-content: flex-start;

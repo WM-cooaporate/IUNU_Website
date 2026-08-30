@@ -132,14 +132,14 @@ function Contact() {
   <div className="social-links">
 
     {/* Facebook */}
-    <a href="#" aria-label="Facebook" className="social-link">
+    <a href="https://www.facebook.com/iunudevelopments" aria-label="Facebook" className="social-link">
       <svg viewBox="0 0 24 24">
         <path d="M14 8h3V4h-3c-3.3 0-5 1.7-5 5v3H6v4h3v8h4v-8h3.5l.5-4H13V9c0-.7.3-1 1-1z" />
       </svg>
     </a>
 
     {/* Instagram */}
-    <a href="#" aria-label="Instagram" className="social-link">
+    <a href="https://www.instagram.com/iunu.eg/?hl=en" aria-label="Instagram" className="social-link">
       <svg viewBox="0 0 24 24">
         <rect x="3" y="3" width="18" height="18" rx="5" />
         <circle cx="12" cy="12" r="4" />
@@ -148,7 +148,8 @@ function Contact() {
     </a>
 
     {/* WhatsApp */}
-    <a href="#" aria-label="WhatsApp" className="social-link">
+    <a               href="https://wa.me/201091218088"
+ aria-label="WhatsApp" className="social-link">
       <svg viewBox="0 0 24 24">
         <path d="M20 11.5a8 8 0 0 1-11.8 7.1L4 20l1.4-4.1A8 8 0 1 1 20 11.5z" />
         <path d="M9 8.5c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.7 1.6c.1.2.1.4-.1.6l-.5.6c-.1.1-.1.3 0 .5.4.7 1 1.3 1.7 1.7.2.1.4.1.5 0l.6-.6c.2-.2.4-.2.6-.1l1.5.7c.2.1.3.3.3.5v.5c0 .3-.1.5-.4.7-.4.3-1 .5-1.5.4-1.1-.2-2.3-.9-3.4-2-1-1-1.7-2.2-2-3.4-.1-.6.1-1.1.4-1.5z" />
@@ -156,7 +157,7 @@ function Contact() {
     </a>
 
     {/* Email */}
-    <a href="#" aria-label="Email" className="social-link email">
+    <a href="mailto:info@iunu-eg.com" aria-label="Email" className="social-link email">
       <svg viewBox="0 0 24 24">
         <rect x="3" y="5" width="18" height="14" rx="2" />
         <path d="m4 7 8 6 8-6" />
