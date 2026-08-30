@@ -6,7 +6,7 @@
     min-height: 100vh;
     background: #f7f7f6;
     color: #77756e;
-    overflow: hidden;
+    overflow-x: clip;
 }
 
 

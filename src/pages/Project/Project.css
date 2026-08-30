@@ -7,7 +7,7 @@
     min-height: 100vh;
     background: #f7f7f7;
     color: #31505c;
-    overflow-x: hidden;
+    overflow: visible !important;
 }
 
 .project-page main {
