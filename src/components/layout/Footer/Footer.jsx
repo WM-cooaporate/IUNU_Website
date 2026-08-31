@@ -137,6 +137,16 @@ function Footer() {
               New Cairo, Egypt.
             </p>
 
+            <a
+              href="https://maps.app.goo.gl/NPCEMr9E54iVTeRv7?g_st=aw"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-map-link"
+            >
+              <span aria-hidden="true">↗</span>
+              View location on Google Maps
+            </a>
+
           </div>
 
         </div>

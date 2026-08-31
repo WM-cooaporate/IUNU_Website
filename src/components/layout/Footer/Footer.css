@@ -488,3 +488,31 @@
         width: 100%;
     }
 }
+
+.footer-map-link {
+    align-items: center;
+    border-bottom: 1px solid rgba(217, 211, 194, 0.5);
+    display: inline-flex;
+    gap: 8px;
+    margin-top: 20px;
+    padding-bottom: 6px;
+    color: #d9d3c2 !important;
+    font-size: 10px !important;
+    letter-spacing: 0.2px;
+}
+
+.footer-map-link span {
+    font-size: 14px;
+    line-height: 1;
+}
+
+.footer-map-link:hover,
+.footer-map-link:focus-visible {
+    border-color: #ffffff;
+    color: #ffffff !important;
+}
+
+.footer-map-link:focus-visible {
+    outline: 2px solid #d9d3c2;
+    outline-offset: 4px;
+}
