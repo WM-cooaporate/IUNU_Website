@@ -422,13 +422,14 @@
 
 .about-read-more {
     position: relative;
-    width: 125px;
-    height: 48px;
+    width: 170px;
+    height: 54px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
     border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
     background: transparent;
     color: #fff;
     font-size: 8px;

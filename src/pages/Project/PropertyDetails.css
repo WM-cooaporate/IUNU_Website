@@ -225,9 +225,14 @@
 }
 
 .property-contact-button {
-    display: inline-block;
-    padding: 14px 28px;
-    background: #7f7d75;
+    min-width: 170px;
+    height: 54px;
+    padding: 0 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    background: #31505c;
     color: #ffffff;
     font-size: 10px;
     letter-spacing: 1px;
@@ -237,6 +242,7 @@
 
 .property-contact-button:hover {
     background: #9a8a64;
+    transform: translateY(-3px);
 }
 
 
