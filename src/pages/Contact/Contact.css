@@ -4,9 +4,9 @@
 
 .contact-page {
     min-height: 100vh;
-    background: var(--color-surface-warm);
-    color: var(--color-text-light);
-    overflow-x: clip;
+    background: #f7f7f6;
+    color: #77756e;
+    overflow: hidden;
 }
 
 
@@ -67,7 +67,7 @@
 .contact-hero p {
     max-width: 540px;
     margin: 0 auto;
-    color: #667477;
+    color: #85827b;
     font-size: 16px;
     line-height: 1.8;
 }

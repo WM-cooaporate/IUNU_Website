@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import propertyServices from "../../../services/propertyServices";
+import demoProperties from "../../../data/demoProperties";
 import "./Properties.css";
 
 function Properties() {
-  const [properties, setProperties] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [properties, setProperties] = useState(demoProperties);
 
   const sectionRef = useRef(null);
 
@@ -20,12 +19,10 @@ function Properties() {
           JSON.stringify(data, null, 2)
         );
 
-        setProperties(data.content || []);
+        setProperties(data.content?.length ? data.content : demoProperties);
       } catch (error) {
         console.error("Properties error:", error);
-        setError("Failed to load properties.");
-      } finally {
-        setLoading(false);
+        setProperties(demoProperties);
       }
     };
 
@@ -61,26 +58,6 @@ function Properties() {
 
     return () => observer.disconnect();
   }, [properties]);
-
-  if (loading) {
-    return (
-      <section className="properties-section">
-        <div className="properties-loading">
-          Loading properties...
-        </div>
-      </section>
-    );
-  }
-
-  if (error) {
-    return (
-      <section className="properties-section">
-        <div className="properties-error">
-          {error}
-        </div>
-      </section>
-    );
-  }
 
   if (properties.length === 0) {
     return (
@@ -154,9 +131,10 @@ function Properties() {
               to={`/project/${property.id}`}
               className="property-image-wrapper"
             ><img
-  src="/images/hh.jpg"
-  alt={property.title}
-  className="property-image"
+              src={property.coverImageUrl || "/images/hh.jpg"}
+              alt={property.title}
+              className="property-image"
+              loading="lazy"
 />
 
               <div className="property-image-overlay"></div>

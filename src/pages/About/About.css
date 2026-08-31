@@ -6,7 +6,8 @@
     width: 100%;
     background: var(--color-surface-warm);
     color: var(--color-text-light);
-    overflow-x: clip;
+    overflow-x: clip !important;
+    overflow-y: visible !important;
 }
 
 

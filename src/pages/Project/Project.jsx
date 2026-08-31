@@ -3,11 +3,12 @@ import { Link } from "react-router-dom";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Footer from "../../components/layout/Footer/Footer";
 import propertyServices from "../../services/propertyServices";
+import demoProperties from "../../data/demoProperties";
 import "./Project.css";
 
 function Project() {
-  const [properties, setProperties] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [properties, setProperties] = useState(demoProperties);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -15,19 +16,18 @@ function Project() {
 
     const loadProperties = async () => {
       try {
-        setLoading(true);
         setError("");
 
         const data = await propertyServices.getProperties();
 
         if (!cancelled) {
-          setProperties(data.content || []);
+          setProperties(data.content?.length ? data.content : demoProperties);
         }
       } catch (error) {
         console.error("Properties loading error:", error);
 
         if (!cancelled) {
-          setError("Failed to load properties.");
+          setProperties(demoProperties);
         }
       } finally {
         if (!cancelled) {

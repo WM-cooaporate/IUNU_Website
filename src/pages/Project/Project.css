@@ -5,9 +5,9 @@
 .project-page {
     width: 100%;
     min-height: 100vh;
-    background: var(--color-surface-warm);
-    color: var(--color-text);
-    overflow: visible !important;
+    background: #f7f7f7;
+    color: #31505c;
+    overflow-x: hidden;
 }
 
 .project-page main {
@@ -520,7 +520,7 @@
     width: 100%;
     min-height: 500px;
     padding: 100px 30px;
-    background: #31505c;
+    background: linear-gradient(135deg, #315966 0%, #2b4a54 100%);
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 70px;
@@ -529,12 +529,36 @@
 }
 
 .project-feature {
+    position: relative;
     max-width: 350px;
+    min-height: 260px;
+    width: 100%;
+    padding: 42px 28px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.045);
     text-align: center;
     opacity: 0;
     transform: translateY(35px);
     animation: projectFeatureReveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     animation-delay: calc( var(--feature-index, 0) * 0.15s);
+    transition: transform 300ms ease, background-color 300ms ease, border-color 300ms ease;
+}
+
+.project-feature::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 42px;
+    height: 2px;
+    background: #9a8a64;
+    transform: translateX(-50%);
+}
+
+.project-feature:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.32);
+    transform: translateY(-5px);
 }
 
 .project-feature:nth-child(1) {
@@ -613,10 +637,11 @@
 
 .project-newsletter {
     width: 100%;
-    max-width: 600px;
+    max-width: 720px;
     margin: 0 auto;
     display: flex;
-    flex-direction: row;
+    align-items: stretch;
+    gap: 12px;
     opacity: 0;
     transform: translateY(20px);
     animation: projectFadeUp 0.8s ease forwards;
@@ -624,15 +649,17 @@
 }
 
 .project-newsletter input {
-    flex: 1;
-    height: 44px;
-    padding: 0 15px;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    height: 50px;
+    padding: 0 16px;
     border: 1px solid #d5d3cc;
     border-right: none;
     background: #ffffff;
     color: #31505c;
     font-family: "Poppins", sans-serif;
-    font-size: 10px;
+    font-size: 12px;
     outline: none;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
@@ -643,12 +670,13 @@
 
 .project-newsletter input:focus {
     border-color: #9a8a64;
-    box-shadow: 0 0 0 2px rgba(154, 138, 100, 0.08);
+    box-shadow: 0 0 0 3px rgba(154, 138, 100, 0.1);
 }
 
 .project-newsletter button {
-    width: 115px;
-    height: 44px;
+    width: 150px;
+    flex: 0 0 150px;
+    height: 50px;
     border: none;
     background: #31505c;
     color: #ffffff;
@@ -889,7 +917,7 @@
         font-size: 25px;
     }
     .project-newsletter {
-        flex-direction: row;
+        flex-direction: column;
         gap: 10px;
     }
     .project-newsletter input {
@@ -898,8 +926,7 @@
         border-right: 1px solid #d5d3cc;
     }
     .project-newsletter button {
-        width: 115px;
-        flex: 0 0 115px;
+        width: 100%;
     }
 }
 
