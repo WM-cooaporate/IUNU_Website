@@ -16,6 +16,7 @@ public record PropertyResponse(
         PropertyType type,
         PropertyStatus status,
         String location,
+        BigDecimal area,
         BigDecimal price,
         String coverImageUrl,
         List<String> imageUrls,
@@ -31,6 +32,7 @@ public record PropertyResponse(
                 property.getType(),
                 property.getStatus(),
                 property.getLocation(),
+                property.getArea(),
                 property.getPrice(),
                 property.getCoverImageUrl(),
                 // Copy while still inside the transaction: imageUrls is a lazy

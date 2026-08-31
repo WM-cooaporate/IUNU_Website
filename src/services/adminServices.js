@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8080/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+const REQUEST_TIMEOUT = 7000;
 
 const getAuthHeaders = () => {
     const token = localStorage.getItem("accessToken");
@@ -16,6 +17,7 @@ const adminServices = {
         const response = await axios.get(
             `${API_URL}/properties/admin`, {
                 headers: getAuthHeaders(),
+                timeout: REQUEST_TIMEOUT,
             }
         );
 
@@ -26,6 +28,7 @@ const adminServices = {
         const response = await axios.get(
             `${API_URL}/properties/admin/${id}`, {
                 headers: getAuthHeaders(),
+                timeout: REQUEST_TIMEOUT,
             }
         );
 
@@ -37,6 +40,7 @@ const adminServices = {
             `${API_URL}/properties`,
             propertyData, {
                 headers: getAuthHeaders(),
+                timeout: REQUEST_TIMEOUT,
             }
         );
 
@@ -48,6 +52,7 @@ const adminServices = {
             `${API_URL}/properties/${id}`,
             propertyData, {
                 headers: getAuthHeaders(),
+                timeout: REQUEST_TIMEOUT,
             }
         );
 
@@ -58,6 +63,7 @@ const adminServices = {
         await axios.delete(
             `${API_URL}/properties/${id}`, {
                 headers: getAuthHeaders(),
+                timeout: REQUEST_TIMEOUT,
             }
         );
     },

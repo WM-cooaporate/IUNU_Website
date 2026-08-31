@@ -239,6 +239,13 @@ function PropertyDetails() {
                 </div>
               )}
 
+              {property.area != null && (
+                <div className="property-information-location">
+                  <span>AREA</span>
+                  <strong>{Number(property.area).toLocaleString()} m²</strong>
+                </div>
+              )}
+
               <div className="property-information-price">
 
                 <span>PRICE</span>

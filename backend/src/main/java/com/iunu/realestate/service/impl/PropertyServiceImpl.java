@@ -63,6 +63,7 @@ public class PropertyServiceImpl implements PropertyService {
                 .type(request.type())
                 .status(request.status() != null ? request.status() : PropertyStatus.AVAILABLE)
                 .location(request.location())
+                .area(request.area())
                 .price(request.price())
                 .coverImageUrl(request.coverImageUrl())
                 .imageUrls(request.imageUrls() != null ? new ArrayList<>(request.imageUrls()) : new ArrayList<>())
@@ -86,6 +87,7 @@ public class PropertyServiceImpl implements PropertyService {
             property.setStatus(request.status());
         }
         property.setLocation(request.location());
+        property.setArea(request.area());
         property.setPrice(request.price());
         property.setCoverImageUrl(request.coverImageUrl());
         if (request.imageUrls() != null) {

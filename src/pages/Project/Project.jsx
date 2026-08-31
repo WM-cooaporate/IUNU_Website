@@ -224,6 +224,12 @@ function Project() {
                           </p>
                         )}
 
+                        {property.area != null && (
+                          <p className="project-property-location">
+                            {Number(property.area).toLocaleString()} m²
+                          </p>
+                        )}
+
                         {property.description && (
                           <p className="project-property-description">
                             {property.description}

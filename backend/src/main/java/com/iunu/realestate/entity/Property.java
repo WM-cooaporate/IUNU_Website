@@ -50,6 +50,9 @@ public class Property {
     @Column(length = 200)
     private String location;
 
+    @Column(precision = 12, scale = 2)
+    private BigDecimal area;
+
     @Column(precision = 14, scale = 2)
     private BigDecimal price;
 

@@ -27,6 +27,9 @@ public record PropertyRequest(
         @Size(max = 200)
         String location,
 
+        @DecimalMin(value = "0", inclusive = true, message = "Area cannot be negative")
+        BigDecimal area,
+
         @DecimalMin(value = "0", inclusive = true, message = "Price cannot be negative")
         BigDecimal price,
 
