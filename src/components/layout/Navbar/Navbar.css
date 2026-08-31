@@ -175,6 +175,10 @@
     outline-offset: 3px;
 }
 
+.navbar-menu-phone {
+    display: none;
+}
+
 
 /* =========================
    PHONE ICON
@@ -288,5 +292,34 @@
         width: 88px;
         height: 30px;
         font-size: 10px;
+    }
+    .navbar-desktop-phone {
+        display: none;
+    }
+    .navbar-menu-phone {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 8px;
+        padding: 13px 14px;
+        border: 1px solid var(--color-primary);
+        border-radius: var(--radius-pill);
+        color: var(--color-primary);
+        background: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        font-size: 11px;
+        letter-spacing: 0.4px;
+        transition: background-color var(--transition-normal), color var(--transition-normal), border-color var(--transition-normal);
+    }
+    .navbar-menu-phone:hover,
+    .navbar-menu-phone:focus-visible {
+        background: var(--color-gold);
+        border-color: var(--color-gold);
+        color: var(--color-white);
+    }
+    .navbar-menu-phone:focus-visible {
+        outline: 2px solid var(--color-gold);
+        outline-offset: 3px;
     }
 }

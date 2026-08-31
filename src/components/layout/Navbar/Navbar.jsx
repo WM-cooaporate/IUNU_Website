@@ -88,12 +88,17 @@ function Navbar() {
             CONTACT
           </NavLink>
 
+          <a href="tel:17337" className="navbar-menu-phone">
+            <span className="phone-icon" aria-hidden="true">☎</span>
+            <span>Hotline 17337</span>
+          </a>
+
         </nav>
 
         {/* Phone */}
         <a
           href="tel:17337"
-          className="navbar-phone"
+          className="navbar-phone navbar-desktop-phone"
         >
           <span className="phone-icon">
             ☎
