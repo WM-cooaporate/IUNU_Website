@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import adminServices from "../../services/adminServices";
 import authServices from "../../services/authServices";
+import demoProperties from "../../data/demoProperties";
 import "./AdminDashboard.css";
 
 const emptyForm = {
@@ -34,7 +35,7 @@ const getStoredUser = () => {
   }
 };
 
-function AdminLogin({ onLogin }) {
+function AdminLogin({ onLogin, onDemo }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -83,6 +84,7 @@ function AdminLogin({ onLogin }) {
             {submitting ? "Signing in..." : "Sign in"}
           </button>
         </form>
+        <button className="demo-button" type="button" onClick={onDemo}>Try demo dashboard</button>
         <Link className="admin-back-link" to="/home">Back to website</Link>
       </section>
     </main>
@@ -92,8 +94,9 @@ function AdminLogin({ onLogin }) {
 function AdminDashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(getStoredUser);
-  const [properties, setProperties] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [demoMode, setDemoMode] = useState(() => localStorage.getItem("adminDemoMode") === "true");
+  const [properties, setProperties] = useState(demoMode ? demoProperties : []);
+  const [loading, setLoading] = useState(!demoMode);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -119,14 +122,14 @@ function AdminDashboard() {
   };
 
   useEffect(() => {
-    if (user?.role !== "ADMIN") return undefined;
+    if (demoMode || user?.role !== "ADMIN") return undefined;
 
     const timeoutId = window.setTimeout(() => {
       loadProperties();
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, [user]);
+  }, [user, demoMode]);
 
   const filteredProperties = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -194,11 +197,19 @@ function AdminDashboard() {
     };
 
     try {
-      if (modal?.type === "edit") await adminServices.updateProperty(modal.id, payload);
-      else await adminServices.createProperty(payload);
-      await loadProperties();
+      if (demoMode) {
+        if (modal?.type === "edit") {
+          setProperties((current) => current.map((item) => item.id === modal.id ? { ...item, ...payload, createdAt: item.createdAt } : item));
+        } else {
+          setProperties((current) => [{ ...payload, id: `demo-admin-${Date.now()}`, createdAt: new Date().toISOString() }, ...current]);
+        }
+      } else {
+        if (modal?.type === "edit") await adminServices.updateProperty(modal.id, payload);
+        else await adminServices.createProperty(payload);
+        await loadProperties();
+      }
       setModal(null);
-      setSuccess(modal?.type === "edit" ? "Project updated successfully." : "Project created successfully.");
+      setSuccess(`${modal?.type === "edit" ? "Project updated" : "Project created"} successfully${demoMode ? " in demo mode" : ""}.`);
     } catch (requestError) {
       setError(requestError.response?.data?.message || "Unable to save this project.");
     } finally {
@@ -211,9 +222,9 @@ function AdminDashboard() {
     setError("");
     setSuccess("");
     try {
-      await adminServices.deleteProperty(property.id);
+      if (!demoMode) await adminServices.deleteProperty(property.id);
       setProperties((current) => current.filter((item) => item.id !== property.id));
-      setSuccess("Project deleted successfully.");
+      setSuccess(`Project deleted successfully${demoMode ? " in demo mode" : ""}.`);
     } catch (requestError) {
       setError(requestError.response?.data?.message || "Unable to delete this project.");
     }
@@ -225,7 +236,15 @@ function AdminDashboard() {
     navigate("/admin");
   };
 
-  if (!user || user.role !== "ADMIN") return <AdminLogin onLogin={setUser} />;
+  const handleDemoMode = () => {
+    authServices.logout();
+    localStorage.setItem("adminDemoMode", "true");
+    setDemoMode(true);
+    setProperties(demoProperties);
+    setLoading(false);
+  };
+
+  if ((!user || user.role !== "ADMIN") && !demoMode) return <AdminLogin onLogin={setUser} onDemo={handleDemoMode} />;
 
   return (
     <div className="admin-page">
@@ -236,8 +255,8 @@ function AdminDashboard() {
           <div><h1>Projects</h1><p>Manage the public project catalogue</p></div>
         </div>
         <div className="admin-user">
-          <div className="admin-user-info"><span className="admin-user-name">{user.fullName || user.email}</span><span className="admin-user-role">ADMINISTRATOR</span></div>
-          <button className="logout-button" type="button" onClick={handleLogout}>Log out</button>
+          <div className="admin-user-info"><span className="admin-user-name">{demoMode ? "Demo Administrator" : user.fullName || user.email}</span><span className="admin-user-role">{demoMode ? "DEMO MODE" : "ADMINISTRATOR"}</span></div>
+          <button className="logout-button" type="button" onClick={demoMode ? () => { localStorage.removeItem("adminDemoMode"); setDemoMode(false); } : handleLogout}>{demoMode ? "Exit demo" : "Log out"}</button>
         </div>
       </header>
 

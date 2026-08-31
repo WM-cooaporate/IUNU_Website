@@ -924,6 +924,25 @@
     min-height: 48px;
 }
 
+.demo-button {
+    width: 100%;
+    min-height: 48px;
+    margin-top: 12px;
+    border: 1px solid #d8d3c7;
+    background: #f8f7f3;
+    color: #31505c;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.demo-button:hover {
+    border-color: #9a8a64;
+    background: #fff;
+    color: #9a8a64;
+}
+
 .admin-back-link {
     display: block;
     margin-top: 22px;
