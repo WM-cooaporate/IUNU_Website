@@ -20,12 +20,15 @@
     --color-black: #111111;
     --color-background: #f7f7f5;
     --color-background-soft: #f1f0ec;
+    --color-surface: #ffffff;
+    --color-surface-warm: #f5f4ef;
     --color-text: #31505c;
     --color-text-dark: #243b44;
     --color-text-light: #6c777b;
     --color-text-muted: #8a9194;
     --color-border: #e5e5e2;
     --color-border-dark: #d6d1c8;
+    --color-gray-200: #e5e5e2;
     /* =========================
        TYPOGRAPHY
     ========================= */
@@ -34,6 +37,8 @@
     --font-regular: 400;
     --font-medium: 500;
     --font-semibold: 600;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
     /* =========================
        FONT SIZES
     ========================= */
@@ -74,12 +79,14 @@
     ========================= */
     --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.06);
     --shadow-medium: 0 20px 50px rgba(0, 0, 0, 0.1);
+    --shadow-navbar: 0 8px 28px rgba(36, 59, 68, 0.08);
     /* =========================
        TRANSITIONS
     ========================= */
     --transition-fast: 0.25s ease;
     --transition-normal: 0.4s ease;
     --transition-slow: 0.8s ease;
+    --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
     /* =========================
        Z-INDEX
     ========================= */

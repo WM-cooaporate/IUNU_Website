@@ -1,7 +1,12 @@
+import { useState } from "react";
 import { NavLink, Link } from "react-router-dom";
 import "./Navbar.css";
 
 function Navbar() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const closeMenu = () => setMenuOpen(false);
+
   return (
     <header className="navbar">
       <div className="navbar-container">
@@ -16,7 +21,23 @@ function Navbar() {
         </Link>
 
         {/* Navigation */}
-        <nav className="navbar-menu">
+        <button
+          type="button"
+          className={`navbar-toggle${menuOpen ? " is-open" : ""}`}
+          aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={menuOpen}
+          aria-controls="main-navigation"
+          onClick={() => setMenuOpen((isOpen) => !isOpen)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+
+        <nav
+          id="main-navigation"
+          className={`navbar-menu${menuOpen ? " is-open" : ""}`}
+        >
 
           <NavLink
             to="/home"
@@ -26,6 +47,7 @@ function Navbar() {
                 ? "nav-link nav-link-active"
                 : "nav-link"
             }
+            onClick={closeMenu}
           >
             HOME
           </NavLink>
@@ -37,6 +59,7 @@ function Navbar() {
                 ? "nav-link nav-link-active"
                 : "nav-link"
             }
+            onClick={closeMenu}
           >
             PROJECT
           </NavLink>
@@ -48,6 +71,7 @@ function Navbar() {
                 ? "nav-link nav-link-active"
                 : "nav-link"
             }
+            onClick={closeMenu}
           >
             ABOUT
           </NavLink>
@@ -59,6 +83,7 @@ function Navbar() {
                 ? "nav-link nav-link-active"
                 : "nav-link"
             }
+            onClick={closeMenu}
           >
             CONTACT
           </NavLink>

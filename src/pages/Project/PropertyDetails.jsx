@@ -3,23 +3,31 @@ import { Link, useParams } from "react-router-dom";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Footer from "../../components/layout/Footer/Footer";
 import propertyServices from "../../services/propertyServices";
+import demoProperties from "../../data/demoProperties";
 import "./PropertyDetails.css";
 
 function PropertyDetails() {
   const { id } = useParams();
+  const demoProperty = demoProperties.find(
+    (item) => item.id === id
+  );
 
-  const [property, setProperty] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [property, setProperty] = useState(demoProperty || null);
+  const [loading, setLoading] = useState(!demoProperty);
   const [error, setError] = useState("");
 
-  const [selectedImage, setSelectedImage] = useState("");
+  const [selectedImage, setSelectedImage] = useState(
+    demoProperty?.coverImageUrl || demoProperty?.imageUrls?.[0] || ""
+  );
 
   useEffect(() => {
     let cancelled = false;
 
     const loadProperty = async () => {
       try {
-        setLoading(true);
+        if (!demoProperty) {
+          setLoading(true);
+        }
         setError("");
 
         const data = await propertyServices.getPropertyById(id);
@@ -37,7 +45,10 @@ function PropertyDetails() {
         console.error("Property details error:", error);
 
         if (!cancelled) {
-          if (error.response?.status === 404) {
+          if (demoProperty) {
+            setProperty(demoProperty);
+            setError("");
+          } else if (error.response?.status === 404) {
             setError("Property not found.");
           } else {
             setError("Failed to load property details.");
@@ -55,7 +66,7 @@ function PropertyDetails() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, demoProperty]);
 
   if (loading) {
     return (

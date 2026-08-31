@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import "./Footer.css";
 
 function Footer() {
@@ -75,21 +76,21 @@ function Footer() {
               EXPLORE
             </span>
 
-            <a href="/">
+            <Link to="/home">
               Home
-            </a>
+            </Link>
 
-            <a href="/about">
+            <Link to="/about">
               About Us
-            </a>
+            </Link>
 
-            <a href="/projects">
+            <Link to="/project">
               Projects
-            </a>
+            </Link>
 
-            <a href="/contact">
+            <Link to="/contact">
               Contact
-            </a>
+            </Link>
 
           </div>
 
@@ -209,7 +210,7 @@ function Footer() {
 
             {/* WhatsApp */}
             <a
-              href="https://wa.me/+20 10 91218088"
+              href="https://wa.me/201091218088"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="WhatsApp"

@@ -80,7 +80,7 @@ function About() {
 
               <div className="about-image-inner">
                 <img
-                  src="/images/about/about-main.jpg"
+                  src="/images/About%20copy.jpg"
                   alt="IUNU Development"
                 />
               </div>
@@ -129,7 +129,7 @@ function About() {
 
             <div className="about-story-image-inner">
               <img
-                src="/images/about/about-building.jpg"
+                src="/images/legacy.jpg"
                 alt="IUNU Development project"
               />
             </div>

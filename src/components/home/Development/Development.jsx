@@ -34,19 +34,13 @@ const galleryImages = [
 ];
 function Development() {
   const sectionRef = useRef(null);
-  const galleryRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
-  const scrollGallery = (direction) => {
-    const gallery = galleryRef.current;
-    const firstItem = gallery?.querySelector(".development-gallery-item");
-
-    if (!gallery || !firstItem) return;
-
-    gallery.scrollBy({
-      left: direction * (firstItem.offsetWidth + 18),
-      behavior: "smooth",
-    });
+  const changeImage = (direction) => {
+    setActiveIndex((currentIndex) =>
+      (currentIndex + direction + galleryImages.length) % galleryImages.length
+    );
   };
 
   useEffect(() => {
@@ -96,19 +90,11 @@ function Development() {
   }, [selectedImage]);
 
   useEffect(() => {
-    const gallery = galleryRef.current;
-
-    if (!gallery) return undefined;
-
     const interval = window.setInterval(() => {
-      const reachedEnd =
-        gallery.scrollLeft + gallery.clientWidth >= gallery.scrollWidth - 2;
-
-      gallery.scrollTo({
-        left: reachedEnd ? 0 : gallery.scrollLeft + gallery.clientWidth * 0.8,
-        behavior: "smooth",
-      });
-    }, 4500);
+      setActiveIndex((currentIndex) =>
+        (currentIndex + 1) % galleryImages.length
+      );
+    }, 5500);
 
     return () => window.clearInterval(interval);
   }, []);
@@ -254,46 +240,67 @@ function Development() {
         </div>
 
 
-        <div className="development-gallery-controls" aria-label="Gallery controls">
-          <button
-            type="button"
-            className="development-gallery-control"
-            onClick={() => scrollGallery(-1)}
-            aria-label="Previous images"
-          >
-            <span aria-hidden="true">&#8592;</span>
-          </button>
-          <button
-            type="button"
-            className="development-gallery-control"
-            onClick={() => scrollGallery(1)}
-            aria-label="Next images"
-          >
-            <span aria-hidden="true">&#8594;</span>
-          </button>
-        </div>
-
-        <div className="development-gallery" ref={galleryRef}>
-
-          {galleryImages.map((image, index) => (
+        <div className="development-gallery-shell development-reveal">
+          <div className="development-gallery-stage">
             <button
               type="button"
-              className={`development-gallery-item development-reveal development-gallery-item-${index + 1}`}
-              key={image.id}
-              onClick={() => setSelectedImage(image)}
-              aria-label={`Open ${image.alt}`}
+              className="development-gallery-feature"
+              onClick={() => setSelectedImage(galleryImages[activeIndex])}
+              aria-label={`Open ${galleryImages[activeIndex].alt}`}
             >
               <img
-                src={image.src}
-                alt={image.alt}
+                src={galleryImages[activeIndex].src}
+                alt={galleryImages[activeIndex].alt}
               />
-
-              <div className="development-gallery-number">
-                0{index + 1}
-              </div>
+              <span className="development-gallery-feature-shade" />
+              <span className="development-gallery-feature-label">
+                IUNU / {String(activeIndex + 1).padStart(2, "0")}
+              </span>
+              <span className="development-gallery-feature-caption">
+                View image
+                <span aria-hidden="true">&#8599;</span>
+              </span>
             </button>
-          ))}
 
+            <div className="development-gallery-controls" aria-label="Gallery controls">
+              <span className="development-gallery-progress">
+                <strong>{String(activeIndex + 1).padStart(2, "0")}</strong>
+                <span>/ {String(galleryImages.length).padStart(2, "0")}</span>
+              </span>
+              <button
+                type="button"
+                className="development-gallery-control"
+                onClick={() => changeImage(-1)}
+                aria-label="Previous image"
+              >
+                <span aria-hidden="true">&#8592;</span>
+              </button>
+              <button
+                type="button"
+                className="development-gallery-control development-gallery-control-next"
+                onClick={() => changeImage(1)}
+                aria-label="Next image"
+              >
+                <span aria-hidden="true">&#8594;</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="development-gallery-thumbs" aria-label="Choose gallery image">
+            {galleryImages.map((image, index) => (
+              <button
+                type="button"
+                className={`development-gallery-thumb${index === activeIndex ? " is-active" : ""}`}
+                key={image.id}
+                onClick={() => setActiveIndex(index)}
+                aria-label={`Show image ${index + 1}`}
+                aria-pressed={index === activeIndex}
+              >
+                <img src={image.src} alt="" loading="lazy" />
+                <span>{String(index + 1).padStart(2, "0")}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
       </div>

@@ -4,9 +4,10 @@
 
 .about-page {
     width: 100%;
-    background: #f5f5f3;
-    color: #555;
-    overflow: hidden;
+    background: var(--color-surface-warm);
+    color: var(--color-text-light);
+    overflow-x: clip !important;
+    overflow-y: visible !important;
 }
 
 
@@ -58,7 +59,7 @@
 .about-hero {
     position: relative;
     min-height: 520px;
-    background-image: linear-gradient( rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.42)), url("/images/about/about-main.jpg");
+    background-image: linear-gradient( rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.42)), url("/images/About%20copy.jpg");
     background-size: cover;
     background-position: center;
     display: flex;
@@ -75,7 +76,7 @@
     content: "";
     position: absolute;
     inset: -5%;
-    background-image: url("/images/about/about-main.jpg");
+    background-image: url("/images/About%20copy.jpg");
     background-size: cover;
     background-position: center;
     z-index: 0;
@@ -297,8 +298,8 @@
 
 .about-story-content {
     padding: 100px 8%;
-    background: #9A8F72;
-    color: #000;
+    background: linear-gradient(135deg, #5f7d82 0%, #315966 100%);
+    color: var(--color-white);
     display: flex;
     flex-direction: column;
     justify-content: center;
