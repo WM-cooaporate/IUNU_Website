@@ -4,8 +4,8 @@
 
 .contact-page {
     min-height: 100vh;
-    background: #f7f7f6;
-    color: #77756e;
+    background: var(--color-surface-warm);
+    color: var(--color-text-light);
     overflow-x: clip;
 }
 
@@ -22,6 +22,7 @@
     text-align: center;
     padding: 80px 24px 60px;
     position: relative;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(245, 244, 239, 0.92));
 }
 
 .contact-hero::before {
@@ -41,7 +42,7 @@
 .contact-hero-content {
     position: relative;
     z-index: 1;
-    animation: contactHeroReveal 0.9s ease both;
+    animation: contactHeroReveal 0.65s var(--ease-smooth) both;
 }
 
 .contact-eyebrow,
@@ -56,7 +57,7 @@
 
 .contact-hero h1 {
     margin: 0 0 20px;
-    color: #66645e;
+    color: var(--color-primary);
     font-size: clamp(42px, 6vw, 64px);
     line-height: 1;
     font-weight: 500;
@@ -66,7 +67,7 @@
 .contact-hero p {
     max-width: 540px;
     margin: 0 auto;
-    color: #85827b;
+    color: #667477;
     font-size: 16px;
     line-height: 1.8;
 }
@@ -96,7 +97,7 @@
 
 .section-heading h2 {
     margin: 0 0 14px;
-    color: #66645e;
+    color: var(--color-primary);
     font-size: 27px;
     line-height: 1.25;
     font-weight: 500;
@@ -105,7 +106,7 @@
 .section-heading p {
     max-width: 480px;
     margin: 0;
-    color: #85827b;
+    color: var(--color-text-light);
     font-size: 14px;
     line-height: 1.8;
 }
@@ -116,7 +117,7 @@
 ========================================================= */
 
 .contact-form-section {
-    animation: contactContentReveal 0.8s 0.15s ease both;
+    animation: contactContentReveal 0.6s 0.08s var(--ease-smooth) both;
 }
 
 .contact-form {
@@ -150,7 +151,7 @@
     box-sizing: border-box;
     border: 1px solid #dedbd5;
     border-radius: 0;
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.9);
     padding: 15px 16px;
     color: #66645e;
     font-family: inherit;
@@ -202,8 +203,8 @@
     gap: 14px;
     border: none;
     border-radius: 28px;
-    background: #d5cec4;
-    color: #706c65;
+    background: var(--color-primary);
+    color: var(--color-white);
     font-family: inherit;
     font-size: 11px;
     font-weight: 700;
@@ -224,7 +225,7 @@
 }
 
 .contact-submit:hover {
-    background: #85827b;
+    background: var(--color-gold);
     color: #ffffff;
     transform: translateY(-3px);
     box-shadow: 0 12px 25px rgba(80, 76, 68, 0.12);
@@ -322,7 +323,7 @@
 ========================================================= */
 
 .contact-info-section {
-    animation: contactContentReveal 0.8s 0.3s ease both;
+    animation: contactContentReveal 0.6s 0.14s var(--ease-smooth) both;
 }
 
 .contact-info-grid {
@@ -335,7 +336,7 @@
     display: flex;
     align-items: flex-start;
     gap: 17px;
-    animation: infoItemReveal 0.7s ease both;
+    animation: infoItemReveal 0.5s var(--ease-smooth) both;
 }
 
 .info-item:nth-child(1) {

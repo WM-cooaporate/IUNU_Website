@@ -4,8 +4,8 @@
 
 .about-page {
     width: 100%;
-    background: #f5f5f3;
-    color: #555;
+    background: var(--color-surface-warm);
+    color: var(--color-text-light);
     overflow-x: clip;
 }
 
@@ -297,8 +297,8 @@
 
 .about-story-content {
     padding: 100px 8%;
-    background: #9A8F72;
-    color: #000;
+    background: linear-gradient(135deg, #5f7d82 0%, #315966 100%);
+    color: var(--color-white);
     display: flex;
     flex-direction: column;
     justify-content: center;

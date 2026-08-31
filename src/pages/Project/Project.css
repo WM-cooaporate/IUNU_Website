@@ -5,8 +5,8 @@
 .project-page {
     width: 100%;
     min-height: 100vh;
-    background: #f7f7f7;
-    color: #31505c;
+    background: var(--color-surface-warm);
+    color: var(--color-text);
     overflow: visible !important;
 }
 
@@ -26,7 +26,7 @@
     padding: 90px 30px;
     display: flex;
     align-items: center;
-    background: linear-gradient( 90deg, rgba(49, 80, 92, 0.98), rgba(49, 80, 92, 0.92));
+    background: linear-gradient(135deg, rgba(49, 89, 102, 0.96), rgba(49, 80, 92, 0.9));
     overflow: hidden;
 }
 
