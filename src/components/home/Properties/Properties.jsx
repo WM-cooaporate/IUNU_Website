@@ -103,9 +103,7 @@ function Properties() {
             lasting value.
           </p>
 
-          <span className="properties-header-number">
-            03
-          </span>
+         
 
         </div>
 
