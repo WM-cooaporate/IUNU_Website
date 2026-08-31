@@ -92,6 +92,10 @@ function Footer() {
               Contact
             </Link>
 
+            <Link to="/careers">
+              Careers
+            </Link>
+
           </div>
 
 

@@ -86,7 +86,7 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/properties/**").permitAll()
                         // Public lead-generation forms (contact, quote, newsletter)
                         .requestMatchers(org.springframework.http.HttpMethod.POST,
-                                "/api/contact", "/api/quotes", "/api/newsletter").permitAll()
+                                "/api/contact", "/api/quotes", "/api/newsletter", "/api/careers").permitAll()
                         // Health checks
                         .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         // API docs

@@ -88,6 +88,14 @@ function Navbar() {
             CONTACT
           </NavLink>
 
+          <NavLink
+            to="/careers"
+            className={({ isActive }) => isActive ? "nav-link nav-link-active" : "nav-link"}
+            onClick={closeMenu}
+          >
+            CAREERS
+          </NavLink>
+
           <a href="tel:17337" className="navbar-menu-phone">
             <span className="phone-icon" aria-hidden="true">☎</span>
             <span>Hotline 17337</span>

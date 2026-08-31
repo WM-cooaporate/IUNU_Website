@@ -57,7 +57,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
                 || path.equals("/api/auth/forgot-password") || path.equals("/api/auth/reset-password"))) {
             bucket = loginBuckets.computeIfAbsent(clientKey(request), k -> newLoginBucket());
         } else if ("POST".equals(method) && (path.equals("/api/contact") || path.equals("/api/quotes")
-                || path.equals("/api/newsletter"))) {
+                || path.equals("/api/newsletter") || path.equals("/api/careers"))) {
             bucket = writeBuckets.computeIfAbsent(clientKey(request), k -> newWriteBucket());
         }
 
