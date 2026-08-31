@@ -4,9 +4,10 @@
 
 .contact-page {
     min-height: 100vh;
-    background: #f7f7f6;
-    color: #77756e;
-    overflow: hidden;
+    background: var(--color-surface-warm);
+    color: var(--color-text-light);
+    overflow-x: visible !important;
+    overflow-y: visible !important;
 }
 
 
@@ -22,6 +23,7 @@
     text-align: center;
     padding: 80px 24px 60px;
     position: relative;
+    overflow: clip;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(245, 244, 239, 0.92));
 }
 

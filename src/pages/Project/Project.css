@@ -5,9 +5,10 @@
 .project-page {
     width: 100%;
     min-height: 100vh;
-    background: #f7f7f7;
-    color: #31505c;
-    overflow-x: hidden;
+    background: var(--color-surface-warm);
+    color: var(--color-text);
+    overflow-x: clip !important;
+    overflow-y: visible !important;
 }
 
 .project-page main {
