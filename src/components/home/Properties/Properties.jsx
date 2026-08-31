@@ -1,32 +1,40 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import propertyServices from "../../../services/propertyServices";
-import demoProperties from "../../../data/demoProperties";
+import { getDemoProperties, demoPropertiesUpdateEvent } from "../../../data/demoPropertyStorage";
 import "./Properties.css";
 
 function Properties() {
-  const [properties, setProperties] = useState(demoProperties);
+  const [properties, setProperties] = useState(getDemoProperties);
 
   const sectionRef = useRef(null);
 
   useEffect(() => {
     const loadProperties = async () => {
       try {
-        const data = await propertyServices.getProperties();
+        const demoMode = localStorage.getItem("adminDemoMode") === "true";
+        const data = await propertyServices.getAllProperties();
 
         console.log(
           "Properties API:",
           JSON.stringify(data, null, 2)
         );
 
-        setProperties(data.content?.length ? data.content : demoProperties);
+        const demoData = getDemoProperties();
+        setProperties(demoMode ? demoData : data.length ? data : demoData);
       } catch (error) {
         console.error("Properties error:", error);
-        setProperties(demoProperties);
+        setProperties(getDemoProperties());
       }
     };
 
     loadProperties();
+  }, []);
+
+  useEffect(() => {
+    const refreshDemoProjects = () => setProperties(getDemoProperties());
+    window.addEventListener(demoPropertiesUpdateEvent, refreshDemoProjects);
+    return () => window.removeEventListener(demoPropertiesUpdateEvent, refreshDemoProjects);
   }, []);
 
   useEffect(() => {

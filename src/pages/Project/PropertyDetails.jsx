@@ -3,12 +3,12 @@ import { Link, useParams } from "react-router-dom";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Footer from "../../components/layout/Footer/Footer";
 import propertyServices from "../../services/propertyServices";
-import demoProperties from "../../data/demoProperties";
+import { getDemoProperties } from "../../data/demoPropertyStorage";
 import "./PropertyDetails.css";
 
 function PropertyDetails() {
   const { id } = useParams();
-  const demoProperty = demoProperties.find(
+  const demoProperty = getDemoProperties().find(
     (item) => item.id === id
   );
 

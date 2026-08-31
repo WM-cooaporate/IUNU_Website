@@ -24,6 +24,26 @@ const adminServices = {
         return response.data;
     },
 
+    getAllProperties: async() => {
+        const properties = [];
+        let page = 0;
+        while (true) {
+            const response = await axios.get(`${API_URL}/properties/admin`, {
+                params: { page, size: 50 },
+                headers: getAuthHeaders(),
+                timeout: REQUEST_TIMEOUT,
+            });
+            const data = response.data;
+
+            properties.push(...(data.content || []));
+            page += 1;
+
+            if (page >= (data.totalPages || 1)) break;
+        }
+
+        return properties;
+    },
+
     getPropertyById: async(id) => {
         const response = await axios.get(
             `${API_URL}/properties/admin/${id}`, {

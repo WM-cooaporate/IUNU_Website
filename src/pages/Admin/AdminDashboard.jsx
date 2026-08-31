@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import adminServices from "../../services/adminServices";
 import authServices from "../../services/authServices";
-import demoProperties from "../../data/demoProperties";
+import { getDemoProperties, saveDemoProperties } from "../../data/demoPropertyStorage";
 import "./AdminDashboard.css";
 
 const emptyForm = {
@@ -95,7 +95,7 @@ function AdminDashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(getStoredUser);
   const [demoMode, setDemoMode] = useState(() => localStorage.getItem("adminDemoMode") === "true");
-  const [properties, setProperties] = useState(demoMode ? demoProperties : []);
+  const [properties, setProperties] = useState(demoMode ? getDemoProperties() : []);
   const [loading, setLoading] = useState(!demoMode);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -108,8 +108,8 @@ function AdminDashboard() {
     setLoading(true);
     setError("");
     try {
-      const data = await adminServices.getProperties();
-      setProperties(data.content || []);
+      const data = await adminServices.getAllProperties();
+      setProperties(data);
     } catch (requestError) {
       if (requestError.response?.status === 401 || requestError.response?.status === 403) {
         authServices.logout();
@@ -199,9 +199,17 @@ function AdminDashboard() {
     try {
       if (demoMode) {
         if (modal?.type === "edit") {
-          setProperties((current) => current.map((item) => item.id === modal.id ? { ...item, ...payload, createdAt: item.createdAt } : item));
+          setProperties((current) => {
+            const next = current.map((item) => item.id === modal.id ? { ...item, ...payload, createdAt: item.createdAt } : item);
+            saveDemoProperties(next);
+            return next;
+          });
         } else {
-          setProperties((current) => [{ ...payload, id: `demo-admin-${Date.now()}`, createdAt: new Date().toISOString() }, ...current]);
+          setProperties((current) => {
+            const next = [{ ...payload, id: `demo-admin-${Date.now()}`, createdAt: new Date().toISOString() }, ...current];
+            saveDemoProperties(next);
+            return next;
+          });
         }
       } else {
         if (modal?.type === "edit") await adminServices.updateProperty(modal.id, payload);
@@ -211,7 +219,15 @@ function AdminDashboard() {
       setModal(null);
       setSuccess(`${modal?.type === "edit" ? "Project updated" : "Project created"} successfully${demoMode ? " in demo mode" : ""}.`);
     } catch (requestError) {
-      setError(requestError.response?.data?.message || "Unable to save this project.");
+      const message = requestError.response?.data?.message;
+      setError(
+        message ||
+          (requestError.code === "ERR_NETWORK"
+            ? "The server is not connected. Start the backend or use the demo dashboard."
+            : requestError.response?.status === 401
+              ? "Your admin session has expired. Please sign in again."
+              : "Unable to save this project.")
+      );
     } finally {
       setSaving(false);
     }
@@ -223,7 +239,11 @@ function AdminDashboard() {
     setSuccess("");
     try {
       if (!demoMode) await adminServices.deleteProperty(property.id);
-      setProperties((current) => current.filter((item) => item.id !== property.id));
+      setProperties((current) => {
+        const next = current.filter((item) => item.id !== property.id);
+        if (demoMode) saveDemoProperties(next);
+        return next;
+      });
       setSuccess(`Project deleted successfully${demoMode ? " in demo mode" : ""}.`);
     } catch (requestError) {
       setError(requestError.response?.data?.message || "Unable to delete this project.");
@@ -240,7 +260,9 @@ function AdminDashboard() {
     authServices.logout();
     localStorage.setItem("adminDemoMode", "true");
     setDemoMode(true);
-    setProperties(demoProperties);
+    const demoData = getDemoProperties();
+    setProperties(demoData);
+    saveDemoProperties(demoData);
     setLoading(false);
   };
 

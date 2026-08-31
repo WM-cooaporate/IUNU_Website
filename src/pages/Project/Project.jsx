@@ -3,11 +3,11 @@ import { Link } from "react-router-dom";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Footer from "../../components/layout/Footer/Footer";
 import propertyServices from "../../services/propertyServices";
-import demoProperties from "../../data/demoProperties";
+import { getDemoProperties, demoPropertiesUpdateEvent } from "../../data/demoPropertyStorage";
 import "./Project.css";
 
 function Project() {
-  const [properties, setProperties] = useState(demoProperties);
+  const [properties, setProperties] = useState(getDemoProperties);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -18,16 +18,18 @@ function Project() {
       try {
         setError("");
 
-        const data = await propertyServices.getProperties();
+        const demoMode = localStorage.getItem("adminDemoMode") === "true";
+        const data = await propertyServices.getAllProperties();
 
         if (!cancelled) {
-          setProperties(data.content?.length ? data.content : demoProperties);
+          const demoData = getDemoProperties();
+          setProperties(demoMode ? demoData : data.length ? data : demoData);
         }
       } catch (error) {
         console.error("Properties loading error:", error);
 
         if (!cancelled) {
-          setProperties(demoProperties);
+          setProperties(getDemoProperties());
         }
       } finally {
         if (!cancelled) {
@@ -41,6 +43,12 @@ function Project() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    const refreshDemoProjects = () => setProperties(getDemoProperties());
+    window.addEventListener(demoPropertiesUpdateEvent, refreshDemoProjects);
+    return () => window.removeEventListener(demoPropertiesUpdateEvent, refreshDemoProjects);
   }, []);
 
   return (
