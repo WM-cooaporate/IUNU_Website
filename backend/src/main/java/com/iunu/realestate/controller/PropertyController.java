@@ -4,6 +4,7 @@ import com.iunu.realestate.dto.request.PropertyRequest;
 import com.iunu.realestate.dto.response.PropertyResponse;
 import com.iunu.realestate.entity.PropertyType;
 import com.iunu.realestate.service.PropertyService;
+import com.iunu.realestate.service.ImageStorageService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -15,6 +16,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Tag(name = "Properties")
 @RestController
@@ -23,6 +27,14 @@ import org.springframework.web.bind.annotation.*;
 public class PropertyController {
 
     private final PropertyService propertyService;
+    private final ImageStorageService imageStorageService;
+
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping(value = "/images", consumes = "multipart/form-data")
+    public ResponseEntity<List<String>> uploadImages(@RequestParam("files") List<MultipartFile> files) {
+        return ResponseEntity.ok(files.stream().map(imageStorageService::store).distinct().toList());
+    }
 
     @GetMapping
     public ResponseEntity<Page<PropertyResponse>> list(

@@ -73,6 +73,10 @@ app:
 
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
 
+  file-storage:
+    location: ${UPLOAD_LOCATION:uploads}
+    public-base-url: ${PUBLIC_API_URL:http://localhost:8080}
+
   mail:
     enabled: ${MAIL_ENABLED:false}
     from: ${MAIL_FROM:no-reply@iunu-eg.com}

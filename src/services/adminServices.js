@@ -12,6 +12,10 @@ const getAuthHeaders = () => {
     };
 };
 
+const getUploadHeaders = () => ({
+    Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+});
+
 const adminServices = {
     getProperties: async() => {
         const response = await axios.get(
@@ -42,6 +46,16 @@ const adminServices = {
         }
 
         return properties;
+    },
+
+    uploadPropertyImages: async(files) => {
+        const formData = new FormData();
+        files.forEach((file) => formData.append("files", file));
+        const response = await axios.post(`${API_URL}/properties/images`, formData, {
+            headers: getUploadHeaders(),
+            timeout: REQUEST_TIMEOUT,
+        });
+        return response.data;
     },
 
     getPropertyById: async(id) => {

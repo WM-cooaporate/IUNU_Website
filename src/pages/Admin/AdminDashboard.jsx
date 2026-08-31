@@ -103,6 +103,7 @@ function AdminDashboard() {
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState(emptyForm);
+  const [imageFiles, setImageFiles] = useState([]);
 
   const loadProperties = async () => {
     setLoading(true);
@@ -152,6 +153,7 @@ function AdminDashboard() {
 
   const openCreate = () => {
     setForm(emptyForm);
+    setImageFiles([]);
     setModal("create");
     setError("");
   };
@@ -169,6 +171,7 @@ function AdminDashboard() {
       imageUrls: (property.imageUrls || []).join("\n"),
       published: property.published !== false,
     });
+    setImageFiles([]);
     setModal({ type: "edit", id: property.id });
     setError("");
   };
@@ -178,12 +181,25 @@ function AdminDashboard() {
     setForm((current) => ({ ...current, [name]: type === "checkbox" ? checked : value }));
   };
 
+  const handleImageFiles = (event) => {
+    setImageFiles(Array.from(event.target.files || []));
+  };
+
   const handleSave = async (event) => {
     event.preventDefault();
     setSaving(true);
     setError("");
     setSuccess("");
-    const payload = {
+    try {
+      let uploadedImages = [];
+      if (imageFiles.length > 0) {
+        if (demoMode) {
+          throw new Error("Image upload requires the backend. Exit demo mode and sign in to upload local files.");
+        }
+        uploadedImages = await adminServices.uploadPropertyImages(imageFiles);
+      }
+
+      const payload = {
       title: form.title.trim(),
       description: form.description.trim(),
       type: form.type,
@@ -191,12 +207,13 @@ function AdminDashboard() {
       location: form.location.trim(),
       area: form.area === "" ? null : Number(form.area),
       price: form.price === "" ? null : Number(form.price),
-      coverImageUrl: form.coverImageUrl.trim() || null,
-      imageUrls: form.imageUrls.split("\n").map((url) => url.trim()).filter(Boolean),
+      coverImageUrl: uploadedImages[0] || form.coverImageUrl.trim() || null,
+      imageUrls: uploadedImages.length > 0
+        ? uploadedImages
+        : form.imageUrls.split("\n").map((url) => url.trim()).filter(Boolean),
       published: form.published,
-    };
+      };
 
-    try {
       if (demoMode) {
         if (modal?.type === "edit") {
           setProperties((current) => {
@@ -222,6 +239,7 @@ function AdminDashboard() {
       const message = requestError.response?.data?.message;
       setError(
         message ||
+          (!requestError.response && requestError.message) ||
           (requestError.code === "ERR_NETWORK"
             ? "The server is not connected. Start the backend or use the demo dashboard."
             : requestError.response?.status === 401
@@ -297,7 +315,7 @@ function AdminDashboard() {
         </section>
       </main>
 
-      {modal && <div className="admin-modal-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null); }}><section className="admin-modal" role="dialog" aria-modal="true" aria-labelledby="project-form-title"><div className="admin-modal-header"><div><span className="admin-eyebrow">{modal.type === "edit" ? "UPDATE PROJECT" : "NEW PROJECT"}</span><h2 id="project-form-title">{modal.type === "edit" ? "Edit project" : "Add project"}</h2></div><button className="modal-close" type="button" onClick={() => setModal(null)} aria-label="Close form">×</button></div><form className="property-form" onSubmit={handleSave}><div className="form-grid"><label className="form-field"><span>Project name *</span><input name="title" value={form.title} onChange={updateField} placeholder="IUNU Residence" required maxLength={200} /></label><label className="form-field"><span>Location</span><input name="location" value={form.location} onChange={updateField} placeholder="New Cairo" maxLength={200} /></label><label className="form-field form-field-full"><span>Description</span><textarea name="description" value={form.description} onChange={updateField} placeholder="Describe the project..." rows="5" maxLength={20000} /></label><label className="form-field"><span>Area of unit (m²)</span><input name="area" type="number" min="0" step="0.01" value={form.area} onChange={updateField} placeholder="120000" /></label><label className="form-field"><span>Project type *</span><select name="type" value={form.type} onChange={updateField}><option value="RESIDENTIAL">Residential</option><option value="COMMERCIAL">Commercial</option><option value="ADMINISTRATIVE">Administrative</option></select></label><label className="form-field"><span>Status</span><select name="status" value={form.status} onChange={updateField}><option value="AVAILABLE">Available</option><option value="COMING_SOON">Coming soon</option><option value="SOLD_OUT">Sold out</option></select></label><label className="form-field"><span>Price (optional)</span><input name="price" type="number" min="0" step="0.01" value={form.price} onChange={updateField} placeholder="Price on request" /></label><label className="form-field form-field-full"><span>Cover image URL</span><input name="coverImageUrl" type="url" value={form.coverImageUrl} onChange={updateField} placeholder="https://.../cover.jpg" /></label><label className="form-field form-field-full"><span>Project photos</span><textarea name="imageUrls" value={form.imageUrls} onChange={updateField} placeholder="Add one image URL per line" rows="4" /><small>Use one public JPG or PNG URL per line. The first image is used as the cover if no cover is provided.</small></label><label className="form-checkbox"><input name="published" type="checkbox" checked={form.published} onChange={updateField} /><span>Publish this project on the website</span></label></div><div className="admin-modal-actions"><button className="cancel-button" type="button" onClick={() => setModal(null)}>Cancel</button><button className="save-button" type="submit" disabled={saving}>{saving ? "Saving..." : modal.type === "edit" ? "Update project" : "Save project"}</button></div></form></section></div>}
+      {modal && <div className="admin-modal-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null); }}><section className="admin-modal" role="dialog" aria-modal="true" aria-labelledby="project-form-title"><div className="admin-modal-header"><div><span className="admin-eyebrow">{modal.type === "edit" ? "UPDATE PROJECT" : "NEW PROJECT"}</span><h2 id="project-form-title">{modal.type === "edit" ? "Edit project" : "Add project"}</h2></div><button className="modal-close" type="button" onClick={() => setModal(null)} aria-label="Close form">×</button></div><form className="property-form" onSubmit={handleSave}><div className="form-grid"><label className="form-field"><span>Project name *</span><input name="title" value={form.title} onChange={updateField} placeholder="IUNU Residence" required maxLength={200} /></label><label className="form-field"><span>Location</span><input name="location" value={form.location} onChange={updateField} placeholder="New Cairo" maxLength={200} /></label><label className="form-field form-field-full"><span>Description</span><textarea name="description" value={form.description} onChange={updateField} placeholder="Describe the project..." rows="5" maxLength={20000} /></label><label className="form-field"><span>Area of unit (m²)</span><input name="area" type="number" min="0" step="0.01" value={form.area} onChange={updateField} placeholder="120000" /></label><label className="form-field"><span>Project type *</span><select name="type" value={form.type} onChange={updateField}><option value="RESIDENTIAL">Residential</option><option value="COMMERCIAL">Commercial</option><option value="ADMINISTRATIVE">Administrative</option></select></label><label className="form-field"><span>Status</span><select name="status" value={form.status} onChange={updateField}><option value="AVAILABLE">Available</option><option value="COMING_SOON">Coming soon</option><option value="SOLD_OUT">Sold out</option></select></label><label className="form-field"><span>Price (optional)</span><input name="price" type="number" min="0" step="0.01" value={form.price} onChange={updateField} placeholder="Price on request" /></label><label className="form-field form-field-full"><span>Project photos</span><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={handleImageFiles} /><small>Select JPG, PNG or WEBP files from your device. The first selected image becomes the cover. Existing images stay unchanged when no new files are selected.{imageFiles.length > 0 ? ` ${imageFiles.length} file${imageFiles.length === 1 ? "" : "s"} selected.` : ""}</small></label><label className="form-checkbox"><input name="published" type="checkbox" checked={form.published} onChange={updateField} /><span>Publish this project on the website</span></label></div><div className="admin-modal-actions"><button className="cancel-button" type="button" onClick={() => setModal(null)}>Cancel</button><button className="save-button" type="submit" disabled={saving}>{saving ? "Saving..." : modal.type === "edit" ? "Update project" : "Save project"}</button></div></form></section></div>}
     </div>
   );
 }
