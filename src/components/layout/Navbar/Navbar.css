@@ -71,9 +71,11 @@
 }
 
 .navbar-toggle {
-    display: block;
-    order: 2;
-    margin-left: auto;
+    display: none;
+    border: 0;
+    background: transparent;
+    padding: 8px;
+    cursor: pointer;
 }
 
 .navbar-toggle span {
@@ -244,9 +246,8 @@
     }
     .navbar-toggle {
         display: block;
-        <<<<<<< ours order: 3;
-        =======order: 2;
-        >>>>>>>theirs margin-left: auto;
+        order: 2;
+        margin-left: auto;
     }
     .navbar-toggle.is-open span:nth-child(1) {
         transform: translateY(6px) rotate(45deg);

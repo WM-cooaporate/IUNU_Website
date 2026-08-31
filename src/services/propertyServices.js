@@ -6,17 +6,17 @@ const REQUEST_TIMEOUT = 5000;
 
 const propertyServices = {
     getProperties: async() => {
-        const response = await axios.get(
-            `${API_URL}/properties`
-        );
+        const response = await axios.get(`${API_URL}/properties`, {
+            timeout: REQUEST_TIMEOUT,
+        });
 
         return response.data;
     },
 
     getPropertyById: async(id) => {
-        const response = await axios.get(
-            `${API_URL}/properties/${id}`
-        );
+        const response = await axios.get(`${API_URL}/properties/${id}`, {
+            timeout: REQUEST_TIMEOUT,
+        });
 
         return response.data;
     },
