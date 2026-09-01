@@ -26,7 +26,9 @@ const translations = {
     "Thank you. Your application has been sent to our team.": "شكرًا لك. تم إرسال طلبك إلى فريقنا.",
     "Bring your talent, curiosity and ambition to a team shaping enduring spaces for tomorrow.": "ساهم بموهبتك وفضولك وطموحك مع فريق يصنع مساحات تدوم للمستقبل.",
     "We are always interested in meeting thoughtful people who care about quality, collaboration and the future of development.": "نسعد دائمًا بالتعرف على أشخاص يهتمون بالجودة والتعاون ومستقبل التطوير.",
-    "Complete the form and our team will review your application.": "أكمل النموذج وسيقوم فريقنا بمراجعة طلبك.", "SENDING...": "جارٍ الإرسال...", "PDF, DOC or DOCX up to 5 MB": "PDF أو DOC أو DOCX حتى 5 ميجابايت",
+    "Complete the form and our team will review your application.": "أكمل النموذج وسيقوم فريقنا بمراجعة طلبك.", "SENDING...": "جارٍ الإرسال...", "PDF only, up to 5 MB": "ملف PDF فقط، حتى 5 ميجابايت",
+    "The CV file is too large. Please choose a PDF under 5 MB.": "ملف السيرة الذاتية كبير جدًا. اختر ملف PDF أقل من 5 ميجابايت.",
+    "We could not send your application right now. Please try again or email info@iunu-eg.com.": "تعذر إرسال طلبك حاليًا. حاول مرة أخرى أو راسل info@iunu-eg.com.",
     "We create considered spaces where architecture, community and everyday life come together.": "نصنع مساحات مدروسة تجتمع فيها العمارة والمجتمع والحياة اليومية.",
     "IUNU Development focuses on thoughtful real estate projects designed with purpose, character, and lasting impact.": "تركز إيونو للتطوير على مشروعات عقارية مدروسة ذات هدف وشخصية وتأثير دائم.",
     "All Rights Reserved.": "جميع الحقوق محفوظة.", "Home": "الرئيسية", "About Us": "من نحن", "Projects": "المشروعات", "Contact": "تواصل معنا", "Careers": "الوظائف", "EXPLORE": "استكشف", "FIND US": "موقعنا"

@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Locale;
+
 @Tag(name = "Careers")
 @RestController
 @RequestMapping("/api/careers")
@@ -32,6 +34,12 @@ public class CareerController {
                 || !StringUtils.hasText(phone) || !StringUtils.hasText(position)
                 || !StringUtils.hasText(message)) {
             return ResponseEntity.badRequest().build();
+        }
+        if (resume != null && !resume.isEmpty()
+                && (!"application/pdf".equalsIgnoreCase(resume.getContentType())
+                || resume.getOriginalFilename() == null
+                || !resume.getOriginalFilename().toLowerCase(Locale.ROOT).endsWith(".pdf"))) {
+            return ResponseEntity.unprocessableEntity().build();
         }
         careerService.sendApplication(fullName, email, phone, position, message, resume);
         return ResponseEntity.accepted().build();

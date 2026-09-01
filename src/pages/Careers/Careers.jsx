@@ -26,13 +26,13 @@ function Careers() {
     try {
       await careerServices.apply(form);
       setForm(initialForm);
-      setStatus({ type: "success", text: "Thank you. Your application has been sent to our team." });
+      setStatus({ type: "success", text: t("Thank you. Your application has been sent to our team.") });
     } catch (error) {
       setStatus({
         type: "error",
         text: error.response?.status === 413
-          ? "The CV file is too large. Please choose a file under 5 MB."
-          : "We could not send your application right now. Please try again or email info@iunu-eg.com.",
+          ? t("The CV file is too large. Please choose a PDF under 5 MB.")
+          : t("We could not send your application right now. Please try again or email info@iunu-eg.com."),
       });
     } finally {
       setSubmitting(false);
@@ -75,7 +75,7 @@ function Careers() {
                 <label>{t("Position")}<input name="position" value={form.position} onChange={handleChange} placeholder={t("Position of interest")} required /></label>
               </div>
               <label>{t("Message")}<textarea name="message" value={form.message} onChange={handleChange} placeholder={t("Tell us a little about your experience...")} rows="5" required /></label>
-              <label className="careers-file-field">{t("CV / Resume")} <input name="resume" type="file" accept=".pdf,.doc,.docx" onChange={handleChange} /><small>{form.resume ? form.resume.name : t("PDF, DOC or DOCX up to 5 MB")}</small></label>
+              <label className="careers-file-field">{t("CV / Resume")} <input name="resume" type="file" accept="application/pdf,.pdf" onChange={handleChange} /><small>{form.resume ? form.resume.name : t("PDF only, up to 5 MB")}</small></label>
               {status.text && <div className={`careers-status careers-status-${status.type}`}>{status.text}</div>}
               <button className="careers-submit" type="submit" disabled={submitting}><span>{submitting ? t("SENDING...") : t("SUBMIT APPLICATION")}</span><span aria-hidden="true">↗</span></button>
             </form>
