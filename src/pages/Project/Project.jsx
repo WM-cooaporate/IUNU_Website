@@ -4,9 +4,11 @@ import Navbar from "../../components/layout/Navbar/Navbar";
 import Footer from "../../components/layout/Footer/Footer";
 import propertyServices from "../../services/propertyServices";
 import { getDemoProperties, demoPropertiesUpdateEvent } from "../../data/demoPropertyStorage";
+import { useLanguage } from "../../i18n/LanguageContext";
 import "./Project.css";
 
 function Project() {
+  const { t } = useLanguage();
   const [properties, setProperties] = useState(getDemoProperties);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -63,14 +65,13 @@ function Project() {
         <section className="project-hero">
           <div className="project-hero-content">
             <span className="project-hero-eyebrow">
-              IUNU DEVELOPMENTS
+              {t("IUNU DEVELOPMENTS")}
             </span>
 
-            <h1>Enduring Spaces for Tomorrow</h1>
+            <h1>{t("Enduring Spaces for Tomorrow")}</h1>
 
             <p>
-              Discover thoughtfully developed spaces designed
-              around quality, purpose, and lasting value.
+              {t("Discover thoughtfully developed spaces designed around quality, purpose, and lasting value.")}
             </p>
 
             <div className="project-hero-line" />
@@ -82,15 +83,14 @@ function Project() {
         ========================= */}
 
         <section className="project-intro">
-          <span className="project-section-eyebrow">
-            OUR APPROACH
+            <span className="project-section-eyebrow">
+            {t("OUR APPROACH")}
           </span>
 
-          <h2>Thoughtful Development</h2>
+          <h2>{t("Thoughtful Development")}</h2>
 
           <p>
-            We create enduring spaces that balance thoughtful
-            design, functionality, and long-term value.
+            {t("We create enduring spaces that balance thoughtful design, functionality, and long-term value.")}
           </p>
         </section>
 
@@ -101,10 +101,10 @@ function Project() {
         <section className="project-properties">
           <div className="project-properties-header">
             <span className="project-eyebrow">
-              OUR PROJECTS
+              {t("OUR PROJECTS")}
             </span>
 
-            <h2>Discover Our Properties</h2>
+            <h2>{t("Discover Our Properties")}</h2>
 
             <p>
               Explore the properties currently available

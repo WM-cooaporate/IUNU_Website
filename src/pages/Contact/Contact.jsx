@@ -4,10 +4,12 @@ import { useSearchParams } from "react-router-dom";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Footer from "../../components/layout/Footer/Footer";
 import propertyServices from "../../services/propertyServices";
+import { useLanguage } from "../../i18n/LanguageContext";
 
 import "./Contact.css";
 
 function Contact() {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const propertyId = searchParams.get("property");
 
@@ -69,9 +71,9 @@ function Contact() {
         {/* ================= HERO ================= */}
         <section className="contact-hero">
           <div className="contact-hero-content">
-            <span className="contact-eyebrow">CONTACT US</span>
+            <span className="contact-eyebrow">{t("CONTACT US")}</span>
 
-            <h1>Get In Touch</h1>
+            <h1>{t("Get In Touch")}</h1>
 
             <p>
               We're here to answer your questions and help you find
@@ -85,7 +87,7 @@ function Contact() {
           {/* ================= FORM ================= */}
           <div className="contact-form-section">
             <div className="section-heading">
-              <span className="section-label">SEND A MESSAGE</span>
+              <span className="section-label">{t("SEND A MESSAGE")}</span>
 
               <h2>
                 {property
@@ -135,7 +137,7 @@ function Contact() {
             <form className="contact-form" onSubmit={handleSubmit}>
               <div className="form-row">
                 <div className="form-field">
-                  <label htmlFor="firstName">First name</label>
+                    <label htmlFor="firstName">{t("First name")}</label>
 
                   <input
                     id="firstName"
@@ -149,7 +151,7 @@ function Contact() {
                 </div>
 
                 <div className="form-field">
-                  <label htmlFor="lastName">Last name</label>
+                    <label htmlFor="lastName">{t("Last name")}</label>
 
                   <input
                     id="lastName"
@@ -165,7 +167,7 @@ function Contact() {
 
               <div className="form-row">
                 <div className="form-field">
-                  <label htmlFor="phone">Phone</label>
+                  <label htmlFor="phone">{t("Phone")}</label>
 
                   <input
                     id="phone"
@@ -179,7 +181,7 @@ function Contact() {
                 </div>
 
                 <div className="form-field">
-                  <label htmlFor="email">Email</label>
+                  <label htmlFor="email">{t("Email")}</label>
 
                   <input
                     id="email"
@@ -194,7 +196,7 @@ function Contact() {
               </div>
 
               <div className="form-field">
-                <label htmlFor="message">Message</label>
+                <label htmlFor="message">{t("Message")}</label>
 
                 <textarea
                   id="message"
@@ -224,9 +226,9 @@ function Contact() {
           {/* ================= INFORMATION ================= */}
           <div className="contact-info-section">
             <div className="section-heading">
-              <span className="section-label">STAY CONNECTED</span>
+              <span className="section-label">{t("STAY CONNECTED")}</span>
 
-              <h2>Follow Us Online</h2>
+              <h2>{t("Follow Us Online")}</h2>
 
               <p>
                 Connect with us on social media and stay updated with

@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { NavLink, Link } from "react-router-dom";
+import { useLanguage } from "../../../i18n/LanguageContext";
 import "./Navbar.css";
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { language, setLanguage, t } = useLanguage();
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -49,7 +51,7 @@ function Navbar() {
             }
             onClick={closeMenu}
           >
-            HOME
+            {t("HOME")}
           </NavLink>
 
           <NavLink
@@ -61,7 +63,7 @@ function Navbar() {
             }
             onClick={closeMenu}
           >
-            PROJECT
+            {t("PROJECT")}
           </NavLink>
 
           <NavLink
@@ -73,7 +75,7 @@ function Navbar() {
             }
             onClick={closeMenu}
           >
-            ABOUT
+            {t("ABOUT")}
           </NavLink>
 
           <NavLink
@@ -85,7 +87,7 @@ function Navbar() {
             }
             onClick={closeMenu}
           >
-            CONTACT
+            {t("CONTACT")}
           </NavLink>
 
           <NavLink
@@ -93,12 +95,12 @@ function Navbar() {
             className={({ isActive }) => isActive ? "nav-link nav-link-active" : "nav-link"}
             onClick={closeMenu}
           >
-            CAREERS
+            {t("CAREERS")}
           </NavLink>
 
           <a href="tel:17337" className="navbar-menu-phone">
             <span className="phone-icon" aria-hidden="true">☎</span>
-            <span>Hotline 17337</span>
+            <span>{t("Hotline 17337")}</span>
           </a>
 
         </nav>
@@ -114,6 +116,15 @@ function Navbar() {
 
           17337
         </a>
+
+        <button
+          type="button"
+          className="navbar-language-toggle"
+          onClick={() => setLanguage(language === "en" ? "ar" : "en")}
+          aria-label={language === "en" ? "Switch to Arabic" : "التبديل إلى الإنجليزية"}
+        >
+          {language === "en" ? "AR" : "EN"}
+        </button>
 
       </div>
     </header>

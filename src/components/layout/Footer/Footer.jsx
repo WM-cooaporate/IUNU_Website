@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useLanguage } from "../../../i18n/LanguageContext";
 import "./Footer.css";
 
 function Footer() {
   const currentYear = new Date().getFullYear();
+  const { t } = useLanguage();
 
   const footerRef = useRef(null);
 
@@ -73,27 +75,27 @@ function Footer() {
           <div className="footer-column">
 
             <span className="footer-column-title">
-              EXPLORE
+              {t("EXPLORE")}
             </span>
 
             <Link to="/home">
-              Home
+              {t("Home")}
             </Link>
 
             <Link to="/about">
-              About Us
+              {t("About Us")}
             </Link>
 
             <Link to="/project">
-              Projects
+              {t("Projects")}
             </Link>
 
             <Link to="/contact">
-              Contact
+              {t("Contact")}
             </Link>
 
             <Link to="/careers">
-              Careers
+              {t("Careers")}
             </Link>
 
           </div>
@@ -103,7 +105,7 @@ function Footer() {
           <div className="footer-column footer-contact-column">
 
             <span className="footer-column-title">
-              CONTACT
+              {t("CONTACT")}
             </span>
 
             <a href="tel:17337">
@@ -129,7 +131,7 @@ function Footer() {
           <div className="footer-column footer-address-column">
 
             <span className="footer-column-title">
-              FIND US
+              {t("FIND US")}
             </span>
 
             <p>
@@ -148,7 +150,7 @@ function Footer() {
               className="footer-map-link"
             >
               <span aria-hidden="true">↗</span>
-              View location on Google Maps
+              {t("View location on Google Maps")}
             </a>
 
           </div>
@@ -265,7 +267,7 @@ function Footer() {
 
 
           <span className="footer-legal">
-            All Rights Reserved.
+            {t("All Rights Reserved.")}
           </span>
 
         </div>

@@ -71,6 +71,15 @@ img {
     height: auto;
 }
 
+html[dir="rtl"] body {
+    font-family: "Tahoma", "Arial", sans-serif;
+}
+
+html[dir="rtl"] .navbar-container,
+html[dir="rtl"] .footer-container {
+    direction: rtl;
+}
+
 button,
 input,
 textarea,
@@ -204,4 +213,11 @@ section {
     .page-transition {
         animation: none;
     }
+}
+html[dir="rtl"] body {
+    font-family: "Tahoma", "Arial", sans-serif;
+}
+
+html[dir="rtl"] .nav-link-active::after {
+    transform-origin: center;
 }

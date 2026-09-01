@@ -179,6 +179,16 @@
     display: none;
 }
 
+.navbar-language-toggle {
+    margin-left: 14px;
+    border: 0;
+    background: transparent;
+    color: var(--color-primary);
+    cursor: pointer;
+    font-size: 10px;
+    letter-spacing: 1px;
+}
+
 
 /* =========================
    PHONE ICON
@@ -295,6 +305,11 @@
     }
     .navbar-desktop-phone {
         display: none;
+    }
+    .navbar-language-toggle {
+        order: 1;
+        margin-left: auto;
+        padding: 8px 4px;
     }
     .navbar-menu-phone {
         display: flex;

@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
+import { useLanguage } from "../../../i18n/LanguageContext";
 import "./Hero.css";
 
 function Hero() {
+  const { t } = useLanguage();
   return (
     <section className="hero">
 
@@ -12,22 +14,22 @@ function Hero() {
       <div className="hero-content">
 
         <span className="hero-eyebrow">
-          IUNU DEVELOPMENTS
+          {t("IUNU DEVELOPMENTS")}
         </span>
 
         <h1>
-          Who we are
+          {t("Who we are")}
         </h1>
 
         <p>
-          We Are Crafting Signature Destinations
+          {t("We Are Crafting Signature Destinations")}
         </p>
 
         <Link
           to="/project"
           className="hero-button"
         >
-          <span>EXPLORE PROJECTS</span>
+          <span>{t("EXPLORE PROJECTS")}</span>
 
           <span className="hero-button-arrow">
             →
@@ -42,7 +44,7 @@ function Hero() {
         <span className="hero-scroll-line"></span>
 
         <span className="hero-scroll-text">
-          SCROLL TO EXPLORE
+          {t("SCROLL TO EXPLORE")}
         </span>
 
       </div>
