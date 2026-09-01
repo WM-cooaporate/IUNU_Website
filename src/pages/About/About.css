@@ -253,6 +253,200 @@
 
 
 /* =========================================
+   FOUNDER
+========================================= */
+
+.about-founder {
+    position: relative;
+    padding: 110px 7%;
+    background: linear-gradient( 135deg, #f4f1e9 0%, #ebe7dc 100%);
+    overflow: hidden;
+}
+
+
+/* =========================================
+   FOUNDER DECORATION
+========================================= */
+
+.about-founder::before {
+    content: "";
+    position: absolute;
+    width: 420px;
+    height: 420px;
+    top: -220px;
+    right: -180px;
+    border: 1px solid rgba(154, 143, 114, 0.2);
+    border-radius: 50%;
+}
+
+.about-founder::after {
+    content: "";
+    position: absolute;
+    width: 280px;
+    height: 280px;
+    bottom: -170px;
+    left: -130px;
+    border: 1px solid rgba(49, 89, 102, 0.12);
+    border-radius: 50%;
+}
+
+
+/* =========================================
+   FOUNDER CONTENT
+========================================= */
+
+.about-founder-content {
+    position: relative;
+    z-index: 2;
+    max-width: 1200px;
+    margin: auto;
+    display: grid;
+    grid-template-columns: minmax(320px, 0.9fr) minmax(320px, 1.1fr);
+    gap: 85px;
+    align-items: center;
+}
+
+
+/* =========================================
+   FOUNDER IMAGE
+========================================= */
+
+.about-founder-image {
+    width: 100%;
+    height: 560px;
+    overflow: hidden;
+    position: relative;
+    background: #202020;
+}
+
+.about-founder-image::after {
+    content: "";
+    position: absolute;
+    inset: 18px;
+    border: 1px solid rgba(217, 211, 194, 0.5);
+    pointer-events: none;
+    z-index: 2;
+}
+
+.about-founder-image-inner {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.about-founder-image img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: center top;
+    transition: transform 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.about-founder-image:hover img {
+    transform: scale(1.035);
+}
+
+
+/* =========================================
+   FOUNDER TEXT
+========================================= */
+
+.about-founder-text {
+    max-width: 560px;
+}
+
+.about-founder-text .about-section-label {
+    margin-bottom: 20px;
+}
+
+.about-founder-text h2 {
+    margin: 0 0 28px;
+    color: #315966;
+    font-size: clamp(40px, 4.5vw, 58px);
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -1.8px;
+}
+
+.about-founder-text h2 em {
+    color: #9a8f72;
+    font-style: normal;
+}
+
+.about-founder-text h3 {
+    margin: 0 0 25px;
+    color: #5f7d82;
+    font-size: 21px;
+    font-weight: 400;
+    letter-spacing: -0.3px;
+}
+
+.about-founder-text p {
+    max-width: 530px;
+    margin: 0 0 20px;
+    color: #6f7475;
+    font-size: 14px;
+    line-height: 1.95;
+}
+
+
+/* =========================================
+   FOUNDER LINE
+========================================= */
+
+.about-founder-line {
+    width: 70px;
+    height: 1px;
+    margin: 35px 0 22px;
+    background: #9a8f72;
+}
+
+.about-founder-signature {
+    display: block;
+    color: #315966;
+    font-size: 9px;
+    font-weight: 500;
+    line-height: 1.8;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+
+/* =========================================
+   FOUNDER ANIMATION DELAYS
+========================================= */
+
+.about-founder-text .about-section-label {
+    transition-delay: 0.05s;
+}
+
+.about-founder-text h2 {
+    transition-delay: 0.12s;
+}
+
+.about-founder-text h3 {
+    transition-delay: 0.2s;
+}
+
+.about-founder-text p:nth-of-type(1) {
+    transition-delay: 0.28s;
+}
+
+.about-founder-text p:nth-of-type(2) {
+    transition-delay: 0.36s;
+}
+
+.about-founder-line {
+    transition-delay: 0.44s;
+}
+
+.about-founder-signature {
+    transition-delay: 0.52s;
+}
+
+
+/* =========================================
    STORY
 ========================================= */
 
@@ -298,7 +492,7 @@
 
 .about-story-content {
     padding: 100px 8%;
-    background: linear-gradient(135deg, #5f7d82 0%, #315966 100%);
+    background: linear-gradient( 135deg, #5f7d82 0%, #315966 100%);
     color: var(--color-white);
     display: flex;
     flex-direction: column;
@@ -483,6 +677,9 @@
     .about-intro-content {
         max-width: 1200px;
     }
+    .about-founder-content {
+        max-width: 1200px;
+    }
     .about-story-content {
         padding-left: 9%;
         padding-right: 9%;
@@ -507,6 +704,20 @@
         height: 420px;
     }
     .about-intro-text {
+        max-width: 680px;
+    }
+    .about-founder {
+        padding: 90px 6%;
+    }
+    .about-founder-content {
+        max-width: 750px;
+        grid-template-columns: 1fr;
+        gap: 55px;
+    }
+    .about-founder-image {
+        height: 500px;
+    }
+    .about-founder-text {
         max-width: 680px;
     }
     .about-story {
@@ -558,6 +769,35 @@
         font-size: 13px;
         line-height: 1.85;
     }
+    /* FOUNDER */
+    .about-founder {
+        padding: 70px 20px;
+    }
+    .about-founder-content {
+        gap: 42px;
+    }
+    .about-founder-image {
+        height: 430px;
+    }
+    .about-founder-image::after {
+        inset: 12px;
+    }
+    .about-founder-text h2 {
+        font-size: 38px;
+        line-height: 1.05;
+        letter-spacing: -1px;
+    }
+    .about-founder-text h3 {
+        font-size: 19px;
+    }
+    .about-founder-text p {
+        font-size: 13px;
+        line-height: 1.85;
+    }
+    .about-founder-line {
+        margin-top: 30px;
+    }
+    /* STORY */
     .about-story-image {
         min-height: 380px;
     }
@@ -612,6 +852,18 @@
     .about-intro-image {
         height: 280px;
     }
+    .about-founder {
+        padding: 60px 18px;
+    }
+    .about-founder-image {
+        height: 380px;
+    }
+    .about-founder-text h2 {
+        font-size: 34px;
+    }
+    .about-founder-text p {
+        font-size: 12px;
+    }
     .about-story-image {
         min-height: 330px;
     }
@@ -641,10 +893,16 @@
         animation: none;
     }
     .about-intro-image img,
+    .about-founder-image img,
     .about-story-image img {
         transition: none;
     }
 }
+
+
+/* =========================================
+   PAGE BOTTOM SPACE
+========================================= */
 
 .about-page main {
     padding-bottom: 110px;
