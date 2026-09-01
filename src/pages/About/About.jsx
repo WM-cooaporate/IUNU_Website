@@ -41,17 +41,13 @@ function About() {
 
   return (
     <div className="about-page" ref={aboutPageRef}>
-
       <Navbar />
 
       <main>
-
         {/* ================= HERO ================= */}
 
         <section className="about-hero">
-
           <div className="about-hero-overlay">
-
             <span className="about-hero-label about-reveal">
               {t("IUNU DEVELOPMENTS")}
             </span>
@@ -61,78 +57,106 @@ function About() {
               <br />
               <em>{t("Enduring Spaces")}</em>
             </h1>
-
           </div>
-
         </section>
-
 
         {/* ================= INTRO ================= */}
 
         <section className="about-intro">
-
           <h2 className="about-reveal about-reveal-up">
             {t("Enduring Real Estate Solutions")}
           </h2>
 
-
           <div className="about-intro-content">
-
             <div className="about-intro-image about-reveal about-reveal-left">
-
               <div className="about-image-inner">
                 <img
                   src="/images/About%20copy.jpg"
                   alt="IUNU Development"
                 />
               </div>
-
             </div>
-
 
             <div className="about-intro-text about-reveal about-reveal-right">
 
               <span className="about-section-label">
-                {t("WHO WE ARE")}
+                WHO WE ARE
               </span>
 
               <h3>
-                {t("What's IUNU?")}
+                What's IUNU?
               </h3>
 
               <p>
-                {t("IUNU Developments is a distinguished real estate developer in Cairo, Egypt, inspired by the rich legacy of ancient Egyptian civilization. The name \"IUNU\", derived from the ancient Egyptian city of Heliopolis, reflects the company's commitment to blending cultural heritage with modern innovation.")}
+                IUNU Developments is a distinguished real estate
+                developer in Cairo, Egypt, inspired by the rich
+                legacy of ancient Egyptian civilization. The name
+                "IUNU", derived from the ancient Egyptian city of
+                Heliopolis, reflects the company's commitment to
+                blending cultural heritage with modern innovation.
               </p>
 
               <p>
-                {t("With a focus on crafting iconic residential and commercial projects, IUNU Developments is reshaping urban landscapes while honoring Egypt's timeless history.")}
+                With a focus on crafting iconic residential and
+                commercial projects, IUNU Developments is reshaping
+                urban landscapes while honoring Egypt's timeless
+                history.
               </p>
 
             </div>
 
+            <div className="about-founder-text">
+              <span className="about-section-label about-reveal about-reveal-up">
+                THE FOUNDER
+              </span>
+
+              <h2 className="about-reveal about-reveal-up">
+                Who is the
+                <br />
+                <em>Founder?</em>
+              </h2>
+
+              <h3 className="about-reveal about-reveal-up">
+                Mr. Wagdy Danial
+              </h3>
+
+              <p className="about-reveal about-reveal-up">
+                Mr. Wagdy Danial, a visionary entrepreneur from Upper Egypt, is
+                the founder of IUNU Developments, a real estate investment
+                company dedicated to transforming Cairo's urban landscape.
+              </p>
+
+              <p className="about-reveal about-reveal-up">
+                He began his career in 2006, drawing inspiration from the
+                architectural grandeur of the Pharaohs and aiming to create
+                modern developments that reflect the timeless elegance and
+                innovative spirit of ancient Egyptian civilization.
+              </p>
+
+              <div className="about-founder-line about-reveal about-reveal-up" />
+
+              <span className="about-founder-signature about-reveal about-reveal-up">
+                Founder & Chairman
+                <br />
+                IUNU Developments
+              </span>
+            </div>
           </div>
-
         </section>
-
 
         {/* ================= STORY ================= */}
 
         <section className="about-story">
-
           <div className="about-story-image about-reveal about-reveal-image">
-
             <div className="about-story-image-inner">
               <img
                 src="/images/legacy.jpg"
                 alt="IUNU Development project"
               />
             </div>
-
           </div>
 
-
           <div className="about-story-content">
-
             <span className="about-small-title about-reveal about-reveal-up">
               {t("ABOUT US")}
             </span>
@@ -142,16 +166,16 @@ function About() {
             </h2>
 
             <p className="about-reveal about-reveal-up">
-              {t("IUNU Development stands out in real estate for creating enduring spaces. With a focus on legacy and thoughtful development, each project reflects a commitment to purpose and quality.")}
+              IUNU Development stands out in real estate for
+              creating enduring spaces. With a focus on legacy
+              and thoughtful development, each project reflects
+              a commitment to purpose and quality.
             </p>
-
 
             {/* ================= VALUES ================= */}
 
             <div className="about-values">
-
               <div className="about-value about-reveal about-reveal-value">
-
                 <div className="value-icon value-icon-building">
                   <svg viewBox="0 0 64 64">
                     <path d="M12 25L38 12L55 21L29 35L12 25Z" />
@@ -167,12 +191,9 @@ function About() {
                 <h3>
                   {t("Thoughtfully Designed Spaces")}
                 </h3>
-
               </div>
 
-
               <div className="about-value about-reveal about-reveal-value">
-
                 <div className="value-icon value-icon-home">
                   <svg viewBox="0 0 64 64">
                     <path d="M10 30L32 11L54 30" />
@@ -184,12 +205,9 @@ function About() {
                 <h3>
                   {t("Quiet Confidence in Projects")}
                 </h3>
-
               </div>
 
-
               <div className="about-value about-reveal about-reveal-value">
-
                 <div className="value-icon value-icon-bulb">
                   <svg viewBox="0 0 64 64">
                     <path d="M22 38C18 35 16 30 17 25C18 17 24 12 32 12C40 12 46 17 47 25C48 30 46 35 42 38C40 40 39 42 39 45H25C25 42 24 40 22 38Z" />
@@ -201,27 +219,19 @@ function About() {
                 <h3>
                   {t("Inspired by Legacy")}
                 </h3>
-
               </div>
-
             </div>
-
 
             <button className="about-read-more about-reveal about-reveal-button">
               <span>READ MORE</span>
-              <span className="about-read-more-arrow">
-                →
-              </span>
+
+              <span className="about-read-more-arrow">→</span>
             </button>
-
           </div>
-
         </section>
-
       </main>
 
       <Footer />
-
     </div>
   );
 }
