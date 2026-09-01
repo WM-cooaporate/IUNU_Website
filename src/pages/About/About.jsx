@@ -1,11 +1,9 @@
 import { useEffect, useRef } from "react";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Footer from "../../components/layout/Footer/Footer";
-import { useLanguage } from "../../i18n/LanguageContext";
 import "./About.css";
 
 function About() {
-  const { t } = useLanguage();
   const aboutPageRef = useRef(null);
 
   useEffect(() => {
@@ -49,13 +47,13 @@ function About() {
         <section className="about-hero">
           <div className="about-hero-overlay">
             <span className="about-hero-label about-reveal">
-              {t("IUNU DEVELOPMENTS")}
+              IUNU DEVELOPMENTS
             </span>
 
             <h1 className="about-reveal about-reveal-up">
-              {t("Crafting")}
+              Crafting
               <br />
-              <em>{t("Enduring Spaces")}</em>
+              <em>Enduring Spaces</em>
             </h1>
           </div>
         </section>
@@ -64,7 +62,7 @@ function About() {
 
         <section className="about-intro">
           <h2 className="about-reveal about-reveal-up">
-            {t("Enduring Real Estate Solutions")}
+            Enduring Real Estate Solutions
           </h2>
 
           <div className="about-intro-content">
@@ -78,31 +76,38 @@ function About() {
             </div>
 
             <div className="about-intro-text about-reveal about-reveal-right">
+              <span className="about-section-label">WHO WE ARE</span>
 
-              <span className="about-section-label">
-                WHO WE ARE
-              </span>
-
-              <h3>
-                What's IUNU?
-              </h3>
+              <h3>What's IUNU?</h3>
 
               <p>
-                IUNU Developments is a distinguished real estate
-                developer in Cairo, Egypt, inspired by the rich
-                legacy of ancient Egyptian civilization. The name
-                "IUNU", derived from the ancient Egyptian city of
-                Heliopolis, reflects the company's commitment to
-                blending cultural heritage with modern innovation.
+                IUNU Developments is a distinguished real estate developer in
+                Cairo, Egypt, inspired by the rich legacy of ancient Egyptian
+                civilization. The name "IUNU", derived from the ancient
+                Egyptian city of Heliopolis, reflects the company's commitment
+                to blending cultural heritage with modern innovation.
               </p>
 
               <p>
-                With a focus on crafting iconic residential and
-                commercial projects, IUNU Developments is reshaping
-                urban landscapes while honoring Egypt's timeless
-                history.
+                With a focus on crafting iconic residential and commercial
+                projects, IUNU Developments is reshaping urban landscapes while
+                honoring Egypt's timeless history.
               </p>
+            </div>
+          </div>
+        </section>
 
+        {/* ================= FOUNDER ================= */}
+
+        <section className="about-founder">
+          <div className="about-founder-content">
+            <div className="about-founder-image about-reveal about-reveal-left">
+              <div className="about-founder-image-inner">
+                <img
+                  src="/images/founder.jpg"
+                  alt="Mr. Wagdy Danial - Founder of IUNU Developments"
+                />
+              </div>
             </div>
 
             <div className="about-founder-text">
@@ -158,18 +163,17 @@ function About() {
 
           <div className="about-story-content">
             <span className="about-small-title about-reveal about-reveal-up">
-              {t("ABOUT US")}
+              ABOUT US
             </span>
 
             <h2 className="about-reveal about-reveal-up">
-              {t("Enduring Real Estate Solutions")}
+              Enduring Real Estate Solutions
             </h2>
 
             <p className="about-reveal about-reveal-up">
-              IUNU Development stands out in real estate for
-              creating enduring spaces. With a focus on legacy
-              and thoughtful development, each project reflects
-              a commitment to purpose and quality.
+              IUNU Development stands out in real estate for creating enduring
+              spaces. With a focus on legacy and thoughtful development, each
+              project reflects a commitment to purpose and quality.
             </p>
 
             {/* ================= VALUES ================= */}
@@ -189,7 +193,11 @@ function About() {
                 </div>
 
                 <h3>
-                  {t("Thoughtfully Designed Spaces")}
+                  Thoughtfully
+                  <br />
+                  Designed
+                  <br />
+                  Spaces
                 </h3>
               </div>
 
@@ -203,7 +211,11 @@ function About() {
                 </div>
 
                 <h3>
-                  {t("Quiet Confidence in Projects")}
+                  Quiet
+                  <br />
+                  Confidence
+                  <br />
+                  in Projects
                 </h3>
               </div>
 
@@ -217,7 +229,9 @@ function About() {
                 </div>
 
                 <h3>
-                  {t("Inspired by Legacy")}
+                  Inspired
+                  <br />
+                  by Legacy
                 </h3>
               </div>
             </div>
