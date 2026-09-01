@@ -76,8 +76,7 @@ function Contact() {
             <h1>{t("Get In Touch")}</h1>
 
             <p>
-              We're here to answer your questions and help you find
-              the right property.
+              {t("We're here to answer your questions and help you find the right property.")}
             </p>
           </div>
         </section>
@@ -92,12 +91,11 @@ function Contact() {
               <h2>
                 {property
                   ? `Interested in ${property.title}`
-                  : "Visit Our Office"}
+                  : t("Visit Our Office")}
               </h2>
 
               <p>
-                Fill in your details and our team will get back to you
-                shortly.
+                {t("Fill in your details and our team will get back to you shortly.")}
               </p>
             </div>
 

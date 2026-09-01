@@ -1,9 +1,11 @@
 import { useEffect, useRef } from "react";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Footer from "../../components/layout/Footer/Footer";
+import { useLanguage } from "../../i18n/LanguageContext";
 import "./About.css";
 
 function About() {
+  const { t } = useLanguage();
   const aboutPageRef = useRef(null);
 
   useEffect(() => {
@@ -51,13 +53,13 @@ function About() {
           <div className="about-hero-overlay">
 
             <span className="about-hero-label about-reveal">
-              IUNU DEVELOPMENTS
+              {t("IUNU DEVELOPMENTS")}
             </span>
 
             <h1 className="about-reveal about-reveal-up">
-              Crafting
+              {t("Crafting")}
               <br />
-              <em>Enduring Spaces</em>
+              <em>{t("Enduring Spaces")}</em>
             </h1>
 
           </div>
@@ -70,7 +72,7 @@ function About() {
         <section className="about-intro">
 
           <h2 className="about-reveal about-reveal-up">
-            Enduring Real Estate Solutions
+            {t("Enduring Real Estate Solutions")}
           </h2>
 
 
@@ -91,27 +93,19 @@ function About() {
             <div className="about-intro-text about-reveal about-reveal-right">
 
               <span className="about-section-label">
-                WHO WE ARE
+                {t("WHO WE ARE")}
               </span>
 
               <h3>
-                What's IUNU?
+                {t("What's IUNU?")}
               </h3>
 
               <p>
-                IUNU Developments is a distinguished real estate
-                developer in Cairo, Egypt, inspired by the rich
-                legacy of ancient Egyptian civilization. The name
-                "IUNU", derived from the ancient Egyptian city of
-                Heliopolis, reflects the company's commitment to
-                blending cultural heritage with modern innovation.
+                {t("IUNU Developments is a distinguished real estate developer in Cairo, Egypt, inspired by the rich legacy of ancient Egyptian civilization. The name \"IUNU\", derived from the ancient Egyptian city of Heliopolis, reflects the company's commitment to blending cultural heritage with modern innovation.")}
               </p>
 
               <p>
-                With a focus on crafting iconic residential and
-                commercial projects, IUNU Developments is reshaping
-                urban landscapes while honoring Egypt's timeless
-                history.
+                {t("With a focus on crafting iconic residential and commercial projects, IUNU Developments is reshaping urban landscapes while honoring Egypt's timeless history.")}
               </p>
 
             </div>
@@ -140,18 +134,15 @@ function About() {
           <div className="about-story-content">
 
             <span className="about-small-title about-reveal about-reveal-up">
-              ABOUT US
+              {t("ABOUT US")}
             </span>
 
             <h2 className="about-reveal about-reveal-up">
-              Enduring Real Estate Solutions
+              {t("Enduring Real Estate Solutions")}
             </h2>
 
             <p className="about-reveal about-reveal-up">
-              IUNU Development stands out in real estate for
-              creating enduring spaces. With a focus on legacy
-              and thoughtful development, each project reflects
-              a commitment to purpose and quality.
+              {t("IUNU Development stands out in real estate for creating enduring spaces. With a focus on legacy and thoughtful development, each project reflects a commitment to purpose and quality.")}
             </p>
 
 
@@ -174,11 +165,7 @@ function About() {
                 </div>
 
                 <h3>
-                  Thoughtfully
-                  <br />
-                  Designed
-                  <br />
-                  Spaces
+                  {t("Thoughtfully Designed Spaces")}
                 </h3>
 
               </div>
@@ -195,11 +182,7 @@ function About() {
                 </div>
 
                 <h3>
-                  Quiet
-                  <br />
-                  Confidence
-                  <br />
-                  in Projects
+                  {t("Quiet Confidence in Projects")}
                 </h3>
 
               </div>
@@ -216,9 +199,7 @@ function About() {
                 </div>
 
                 <h3>
-                  Inspired
-                  <br />
-                  by Legacy
+                  {t("Inspired by Legacy")}
                 </h3>
 
               </div>

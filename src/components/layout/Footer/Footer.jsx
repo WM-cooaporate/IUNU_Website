@@ -49,18 +49,17 @@ function Footer() {
           {/* BRAND */}
           <div className="footer-brand">
             <span className="footer-brand-label">
-              IUNU DEVELOPMENTS
+              {t("IUNU DEVELOPMENTS")}
             </span>
 
             <h2>
-              Spaces
+              {t("Spaces")}
               <br />
-              <em>that remain.</em>
+              <em>{t("that remain.")}</em>
             </h2>
 
             <p>
-              Creating considered spaces where architecture,
-              community and everyday life come together.
+              {t("Creating considered spaces where architecture, community and everyday life come together.")}
             </p>
           </div>
 

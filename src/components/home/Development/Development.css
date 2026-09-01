@@ -302,15 +302,19 @@
     background: rgba(49, 89, 102, 0.45);
 }
 
+
 /* Featured gallery */
 
 .development-gallery-shell {
     width: 100%;
+    /* Keep gallery LTR in Arabic and English */
+    direction: ltr;
 }
 
 .development-gallery-stage {
     position: relative;
     min-height: 560px;
+    direction: ltr;
 }
 
 .development-gallery-feature {
@@ -325,6 +329,7 @@
     color: var(--color-white);
     cursor: zoom-in;
     isolation: isolate;
+    direction: ltr;
 }
 
 .development-gallery-feature img {
@@ -344,7 +349,7 @@
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: linear-gradient(180deg, rgba(36, 59, 68, 0.08), rgba(20, 35, 39, 0.7));
+    background: linear-gradient( 180deg, rgba(36, 59, 68, 0.08), rgba(20, 35, 39, 0.7));
     pointer-events: none;
 }
 
@@ -359,16 +364,20 @@
 .development-gallery-feature-label {
     top: 26px;
     left: 28px;
+    right: auto;
     color: rgba(255, 255, 255, 0.82);
     font-size: 9px;
+    direction: ltr;
 }
 
 .development-gallery-feature-caption {
     right: 28px;
+    left: auto;
     bottom: 28px;
     display: flex;
     align-items: center;
     gap: 12px;
+    direction: ltr;
     color: var(--color-white);
     font-size: 9px;
 }
@@ -397,6 +406,7 @@
     background: rgba(20, 35, 39, 0.45);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    direction: ltr;
 }
 
 .development-gallery-progress {
@@ -405,6 +415,8 @@
     color: rgba(255, 255, 255, 0.62);
     font-size: 10px;
     letter-spacing: 1px;
+    direction: ltr;
+    unicode-bidi: isolate;
 }
 
 .development-gallery-progress strong {
@@ -430,6 +442,7 @@
     grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 10px;
     margin-top: 14px;
+    direction: ltr;
 }
 
 .development-gallery-thumb {
@@ -533,6 +546,7 @@
     opacity: 1;
     transform: translateY(0);
 }
+
 
 /* LIGHTBOX */
 
@@ -750,10 +764,12 @@
     .development-gallery-feature-label {
         top: 18px;
         left: 18px;
+        right: auto;
         font-size: 8px;
     }
     .development-gallery-feature-caption {
         right: 18px;
+        left: auto;
         bottom: 18px;
     }
     .development-gallery-shell .development-gallery-controls {

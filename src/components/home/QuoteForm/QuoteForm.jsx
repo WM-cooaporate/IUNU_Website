@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "./QuoteForm.css";
+import { useLanguage } from "../../../i18n/LanguageContext";
 
 const initialFormData = {
   name: "",
@@ -12,6 +13,7 @@ const initialFormData = {
 };
 
 function QuoteForm() {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState(initialFormData);
   const [submitted, setSubmitted] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -76,16 +78,15 @@ function QuoteForm() {
         <div className="quote-header">
 
           <span className="quote-eyebrow">
-            LET'S TALK
+            {t("LET'S TALK")}
           </span>
 
           <h2>
-            Request a <em>quote.</em>
+            {t("Request a")} <em>{t("quote.")}</em>
           </h2>
 
           <p>
-            Tell us a little about what you're looking for
-            and our team will be in touch shortly.
+            {t("Tell us a little about what you're looking for and our team will be in touch shortly.")}
           </p>
 
         </div>
@@ -102,7 +103,7 @@ function QuoteForm() {
 
             <div className="quote-field">
               <label htmlFor="name">
-                Name
+                {t("Name")}
               </label>
 
               <input
@@ -119,7 +120,7 @@ function QuoteForm() {
 
             <div className="quote-field">
               <label htmlFor="phone">
-                Phone number
+                {t("Phone number")}
               </label>
 
               <input
@@ -141,7 +142,7 @@ function QuoteForm() {
 
             <div className="quote-field">
               <label htmlFor="city">
-                City
+                {t("City")}
               </label>
 
               <input
@@ -158,7 +159,7 @@ function QuoteForm() {
 
             <div className="quote-field">
               <label htmlFor="email">
-                Email
+                {t("Email")}
               </label>
 
               <input
@@ -181,7 +182,7 @@ function QuoteForm() {
             <div className="quote-field">
 
               <label htmlFor="project">
-                Project
+                {t("Project")}
               </label>
 
               <select
@@ -193,19 +194,19 @@ function QuoteForm() {
               >
 
                 <option value="">
-                  Select your option
+                  {t("Select your option")}
                 </option>
 
                 <option value="residential">
-                  Residential
+                  {t("Residential")}
                 </option>
 
                 <option value="commercial">
-                  Commercial
+                  {t("Commercial")}
                 </option>
 
                 <option value="administrative">
-                  Administrative
+                  {t("Administrative")}
                 </option>
 
               </select>
@@ -216,7 +217,7 @@ function QuoteForm() {
             <div className="quote-field">
 
               <label htmlFor="whatsapp">
-                WhatsApp number
+              {t("WhatsApp number")}
               </label>
 
               <input
@@ -237,7 +238,7 @@ function QuoteForm() {
           <div className="quote-field quote-full-field">
 
             <label htmlFor="spaceType">
-              What is the most suitable space for your needs?
+              {t("What is the most suitable space for your needs?")}
             </label>
 
             <select
@@ -249,23 +250,23 @@ function QuoteForm() {
             >
 
               <option value="">
-                Select your option
+                {t("Select your option")}
               </option>
 
               <option value="apartment">
-                Apartment
+                {t("Apartment")}
               </option>
 
               <option value="villa">
-                Villa
+                {t("Villa")}
               </option>
 
               <option value="office">
-                Office
+                {t("Office")}
               </option>
 
               <option value="commercial">
-                Commercial Space
+                {t("Commercial Space")}
               </option>
 
             </select>

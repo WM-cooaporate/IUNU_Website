@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import propertyServices from "../../../services/propertyServices";
 import { getDemoProperties, demoPropertiesUpdateEvent } from "../../../data/demoPropertyStorage";
+import { useLanguage } from "../../../i18n/LanguageContext";
 import "./Properties.css";
 
 function Properties() {
+  const { t } = useLanguage();
   const [properties, setProperties] = useState(getDemoProperties);
 
   const sectionRef = useRef(null);
@@ -92,13 +94,13 @@ function Properties() {
         <div className="properties-header-left">
 
           <span className="properties-eyebrow">
-            OUR DEVELOPMENTS
+            {t("OUR DEVELOPMENTS")}
           </span>
 
           <h2>
-            Spaces designed
+            {t("Spaces designed")}
             <br />
-            <em>to belong.</em>
+            <em>{t("to belong.")}</em>
           </h2>
 
         </div>
@@ -106,9 +108,7 @@ function Properties() {
         <div className="properties-header-right">
 
           <p>
-            Discover thoughtfully designed destinations
-            created around quality, community and
-            lasting value.
+            {t("Discover thoughtfully designed destinations created around quality, community and lasting value.")}
           </p>
 
          
@@ -160,7 +160,7 @@ function Properties() {
               <div className="property-image-bottom">
 
                 <span>
-                  VIEW PROJECT
+                  {t("VIEW PROJECT")}
                 </span>
 
                 <span className="property-arrow">
@@ -204,11 +204,11 @@ function Properties() {
       <div className="properties-footer properties-reveal">
 
         <span>
-          DISCOVER ALL DEVELOPMENTS
+          {t("DISCOVER ALL DEVELOPMENTS")}
         </span>
 
         <Link to="/project">
-          VIEW ALL
+          {t("VIEW ALL")}
           <span>→</span>
         </Link>
 
