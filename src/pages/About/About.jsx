@@ -1,10 +1,12 @@
 import { useEffect, useRef } from "react";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Footer from "../../components/layout/Footer/Footer";
+import { useLanguage } from "../../i18n/LanguageContext";
 import "./About.css";
 
 function About() {
   const aboutPageRef = useRef(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const page = aboutPageRef.current;
@@ -47,13 +49,13 @@ function About() {
         <section className="about-hero">
           <div className="about-hero-overlay">
             <span className="about-hero-label about-reveal">
-              IUNU DEVELOPMENTS
+              {t("IUNU DEVELOPMENTS")}
             </span>
 
             <h1 className="about-reveal about-reveal-up">
-              Crafting
+              {t("Crafting")}
               <br />
-              <em>Enduring Spaces</em>
+              <em>{t("Enduring Spaces")}</em>
             </h1>
           </div>
         </section>
@@ -62,7 +64,7 @@ function About() {
 
         <section className="about-intro">
           <h2 className="about-reveal about-reveal-up">
-            Enduring Real Estate Solutions
+            {t("Enduring Real Estate Solutions")}
           </h2>
 
           <div className="about-intro-content">
@@ -70,28 +72,28 @@ function About() {
               <div className="about-image-inner">
                 <img
                   src="/images/About%20copy.jpg"
-                  alt="IUNU Development"
+                  alt={t("IUNU Development")}
                 />
               </div>
             </div>
 
             <div className="about-intro-text about-reveal about-reveal-right">
-              <span className="about-section-label">WHO WE ARE</span>
+              <span className="about-section-label">
+                {t("WHO WE ARE")}
+              </span>
 
-              <h3>What's IUNU?</h3>
+              <h3>{t("What's IUNU?")}</h3>
 
               <p>
-                IUNU Developments is a distinguished real estate developer in
-                Cairo, Egypt, inspired by the rich legacy of ancient Egyptian
-                civilization. The name "IUNU", derived from the ancient
-                Egyptian city of Heliopolis, reflects the company's commitment
-                to blending cultural heritage with modern innovation.
+                {t(
+                  'IUNU Developments is a distinguished real estate developer in Cairo, Egypt, inspired by the rich legacy of ancient Egyptian civilization. The name "IUNU", derived from the ancient Egyptian city of Heliopolis, reflects the company\'s commitment to blending cultural heritage with modern innovation.'
+                )}
               </p>
 
               <p>
-                With a focus on crafting iconic residential and commercial
-                projects, IUNU Developments is reshaping urban landscapes while
-                honoring Egypt's timeless history.
+                {t(
+                  "With a focus on crafting iconic residential and commercial projects, IUNU Developments is reshaping urban landscapes while honoring Egypt's timeless history."
+                )}
               </p>
             </div>
           </div>
@@ -105,20 +107,20 @@ function About() {
               <div className="about-founder-image-inner">
                 <img
                   src="/images/founder.jpg"
-                  alt="Mr. Wagdy Danial - Founder of IUNU Developments"
+                  alt={t("Founder of IUNU Developments")}
                 />
               </div>
             </div>
 
             <div className="about-founder-text">
               <span className="about-section-label about-reveal about-reveal-up">
-                THE FOUNDER
+                {t("THE FOUNDER")}
               </span>
 
               <h2 className="about-reveal about-reveal-up">
-                Who is the
+                {t("Who is the")}
                 <br />
-                <em>Founder?</em>
+                <em>{t("Founder?")}</em>
               </h2>
 
               <h3 className="about-reveal about-reveal-up">
@@ -126,22 +128,21 @@ function About() {
               </h3>
 
               <p className="about-reveal about-reveal-up">
-                Mr. Wagdy Danial, a visionary entrepreneur from Upper Egypt, is
-                the founder of IUNU Developments, a real estate investment
-                company dedicated to transforming Cairo's urban landscape.
+                {t(
+                  "Mr. Wagdy Danial, a visionary entrepreneur from Upper Egypt, is the founder of IUNU Developments, a real estate investment company dedicated to transforming Cairo's urban landscape."
+                )}
               </p>
 
               <p className="about-reveal about-reveal-up">
-                He began his career in 2006, drawing inspiration from the
-                architectural grandeur of the Pharaohs and aiming to create
-                modern developments that reflect the timeless elegance and
-                innovative spirit of ancient Egyptian civilization.
+                {t(
+                  "He began his career in 2006, drawing inspiration from the architectural grandeur of the Pharaohs and aiming to create modern developments that reflect the timeless elegance and innovative spirit of ancient Egyptian civilization."
+                )}
               </p>
 
               <div className="about-founder-line about-reveal about-reveal-up" />
 
               <span className="about-founder-signature about-reveal about-reveal-up">
-                Founder & Chairman
+                {t("Founder & Chairman")}
                 <br />
                 IUNU Developments
               </span>
@@ -156,24 +157,24 @@ function About() {
             <div className="about-story-image-inner">
               <img
                 src="/images/legacy.jpg"
-                alt="IUNU Development project"
+                alt={t("IUNU Development project")}
               />
             </div>
           </div>
 
           <div className="about-story-content">
             <span className="about-small-title about-reveal about-reveal-up">
-              ABOUT US
+              {t("ABOUT US")}
             </span>
 
             <h2 className="about-reveal about-reveal-up">
-              Enduring Real Estate Solutions
+              {t("Enduring Real Estate Solutions")}
             </h2>
 
             <p className="about-reveal about-reveal-up">
-              IUNU Development stands out in real estate for creating enduring
-              spaces. With a focus on legacy and thoughtful development, each
-              project reflects a commitment to purpose and quality.
+              {t(
+                "IUNU Development stands out in real estate for creating enduring spaces. With a focus on legacy and thoughtful development, each project reflects a commitment to purpose and quality."
+              )}
             </p>
 
             {/* ================= VALUES ================= */}
@@ -181,7 +182,7 @@ function About() {
             <div className="about-values">
               <div className="about-value about-reveal about-reveal-value">
                 <div className="value-icon value-icon-building">
-                  <svg viewBox="0 0 64 64">
+                  <svg viewBox="0 0 64 64" aria-hidden="true">
                     <path d="M12 25L38 12L55 21L29 35L12 25Z" />
                     <path d="M12 25V39L29 49L55 35V21" />
                     <path d="M29 35V49" />
@@ -193,17 +194,17 @@ function About() {
                 </div>
 
                 <h3>
-                  Thoughtfully
+                  {t("Thoughtfully")}
                   <br />
-                  Designed
+                  {t("Designed")}
                   <br />
-                  Spaces
+                  {t("Spaces")}
                 </h3>
               </div>
 
               <div className="about-value about-reveal about-reveal-value">
                 <div className="value-icon value-icon-home">
-                  <svg viewBox="0 0 64 64">
+                  <svg viewBox="0 0 64 64" aria-hidden="true">
                     <path d="M10 30L32 11L54 30" />
                     <path d="M16 27V54H48V27" />
                     <path d="M27 54V39H37V54" />
@@ -211,17 +212,17 @@ function About() {
                 </div>
 
                 <h3>
-                  Quiet
+                  {t("Quiet")}
                   <br />
-                  Confidence
+                  {t("Confidence")}
                   <br />
-                  in Projects
+                  {t("in Projects")}
                 </h3>
               </div>
 
               <div className="about-value about-reveal about-reveal-value">
                 <div className="value-icon value-icon-bulb">
-                  <svg viewBox="0 0 64 64">
+                  <svg viewBox="0 0 64 64" aria-hidden="true">
                     <path d="M22 38C18 35 16 30 17 25C18 17 24 12 32 12C40 12 46 17 47 25C48 30 46 35 42 38C40 40 39 42 39 45H25C25 42 24 40 22 38Z" />
                     <path d="M25 51H39" />
                     <path d="M27 56H37" />
@@ -229,17 +230,22 @@ function About() {
                 </div>
 
                 <h3>
-                  Inspired
+                  {t("Inspired")}
                   <br />
-                  by Legacy
+                  {t("by Legacy")}
                 </h3>
               </div>
             </div>
 
-            <button className="about-read-more about-reveal about-reveal-button">
-              <span>READ MORE</span>
+            <button
+              type="button"
+              className="about-read-more about-reveal about-reveal-button"
+            >
+              <span>{t("READ MORE")}</span>
 
-              <span className="about-read-more-arrow">→</span>
+              <span className="about-read-more-arrow" aria-hidden="true">
+                →
+              </span>
             </button>
           </div>
         </section>

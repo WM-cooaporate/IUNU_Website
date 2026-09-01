@@ -46,7 +46,30 @@ const translations = {
     "CONNECT WITH US": "تواصل معنا", "Get in Touch Today": "تواصل معنا اليوم", "Reach out to us to discuss your real estate needs.": "تواصل معنا لمناقشة احتياجاتك العقارية.", "SIGN UP": "اشترك",
     "Designed with purpose.": "مصمم بهدف.", "Every IUNU development is shaped around a simple idea: create places that feel relevant today and remain meaningful tomorrow.": "يقوم كل مشروع من إيونو على فكرة بسيطة: نصنع أماكن مناسبة اليوم وذات قيمة غدًا.", "Thoughtful Architecture": "عمارة مدروسة", "Lasting Quality": "جودة تدوم", "Human-Centered Spaces": "مساحات تتمحور حول الإنسان", "A glimpse into what we create.": "لمحة مما نصنعه.", "From refined interiors to carefully planned outdoor spaces, every detail contributes to the experience.": "من التصميمات الداخلية الراقية إلى المساحات الخارجية المخططة بعناية، يساهم كل تفصيل في التجربة.",
     "Discover thoughtfully designed destinations created around quality, community and lasting value.": "اكتشف وجهات مصممة بعناية تقوم على الجودة والمجتمع والقيمة المستدامة.", "Request a quote.": "اطلب عرضًا.", "Name": "الاسم", "Phone number": "رقم الهاتف", "City": "المدينة", "Project": "المشروع", "Select your option": "اختر خيارك", "Residential": "سكني", "Commercial": "تجاري", "Administrative": "إداري", "WhatsApp number": "رقم واتساب", "What is the most suitable space for your needs?": "ما المساحة الأنسب لاحتياجاتك؟", "Apartment": "شقة", "Villa": "فيلا", "Office": "مكتب", "Commercial Space": "مساحة تجارية", "SUBMIT REQUEST": "إرسال الطلب",
+"THE FOUNDER": "المؤسس",
+"Who is the": "من هو",
+"Founder?": "المؤسس؟",
+"Founder of IUNU Developments": "مؤسس إيونو للتطوير",
+"Founder & Chairman": "المؤسس ورئيس مجلس الإدارة",
+"READ MORE": "اقرأ المزيد",
+"Thoughtfully": "مصممة بعناية",
+"Designed": "بتصميم",
+// eslint-disable-next-line no-dupe-keys
+"Spaces": "مساحات",
 
+"Quiet": "ثقة",
+"Confidence": "هادئة",
+"in Projects": "في المشروعات",
+
+"Inspired": "مستوحاة",
+"by Legacy": "من الإرث",
+"Mr. Wagdy Danial": "السيد وجدي دانيال",
+
+"Mr. Wagdy Danial, a visionary entrepreneur from Upper Egypt, is the founder of IUNU Developments, a real estate investment company dedicated to transforming Cairo's urban landscape.":
+  "السيد وجدي دانيال، رائد أعمال طموح من صعيد مصر، هو مؤسس شركة IUNU Developments، وهي شركة استثمار عقاري مكرسة لتحويل المشهد العمراني في القاهرة.",
+
+"He began his career in 2006, drawing inspiration from the architectural grandeur of the Pharaohs and aiming to create modern developments that reflect the timeless elegance and innovative spirit of ancient Egyptian civilization.":
+  "بدأ مسيرته المهنية في عام 2006، مستلهمًا العظمة المعمارية للفراعنة وساعيًا إلى إنشاء مشروعات حديثة تعكس الأناقة الخالدة والروح الابتكارية للحضارة المصرية.",
     // New translations
     "PHONE": "الهاتف",
     "EMAIL": "البريد الإلكتروني",
