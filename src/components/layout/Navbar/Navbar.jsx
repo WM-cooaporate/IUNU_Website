@@ -32,11 +32,15 @@ function Navbar() {
           type="button"
           className={`navbar-toggle${menuOpen ? " is-open" : ""}`}
           aria-label={
-            menuOpen ? "Close navigation menu" : "Open navigation menu"
+            menuOpen
+              ? "Close navigation menu"
+              : "Open navigation menu"
           }
           aria-expanded={menuOpen}
           aria-controls="main-navigation"
-          onClick={() => setMenuOpen((isOpen) => !isOpen)}
+          onClick={() =>
+            setMenuOpen((isOpen) => !isOpen)
+          }
         >
           <span />
           <span />
@@ -46,13 +50,17 @@ function Navbar() {
         {/* Navigation */}
         <nav
           id="main-navigation"
-          className={`navbar-menu${menuOpen ? " is-open" : ""}`}
+          className={`navbar-menu${
+            menuOpen ? " is-open" : ""
+          }`}
         >
           <NavLink
             to="/home"
             end
             className={({ isActive }) =>
-              isActive ? "nav-link nav-link-active" : "nav-link"
+              isActive
+                ? "nav-link nav-link-active"
+                : "nav-link"
             }
             onClick={closeMenu}
           >
@@ -62,7 +70,9 @@ function Navbar() {
           <NavLink
             to="/project"
             className={({ isActive }) =>
-              isActive ? "nav-link nav-link-active" : "nav-link"
+              isActive
+                ? "nav-link nav-link-active"
+                : "nav-link"
             }
             onClick={closeMenu}
           >
@@ -72,7 +82,9 @@ function Navbar() {
           <NavLink
             to="/about"
             className={({ isActive }) =>
-              isActive ? "nav-link nav-link-active" : "nav-link"
+              isActive
+                ? "nav-link nav-link-active"
+                : "nav-link"
             }
             onClick={closeMenu}
           >
@@ -82,11 +94,26 @@ function Navbar() {
           <NavLink
             to="/contact"
             className={({ isActive }) =>
-              isActive ? "nav-link nav-link-active" : "nav-link"
+              isActive
+                ? "nav-link nav-link-active"
+                : "nav-link"
             }
             onClick={closeMenu}
           >
             {t("CONTACT")}
+          </NavLink>
+
+          {/* Careers */}
+          <NavLink
+            to="/careers"
+            className={({ isActive }) =>
+              isActive
+                ? "nav-link nav-link-active"
+                : "nav-link"
+            }
+            onClick={closeMenu}
+          >
+            {t("CAREERS")}
           </NavLink>
         </nav>
 
@@ -94,7 +121,10 @@ function Navbar() {
         <div className="navbar-actions">
 
           {/* Phone */}
-          <a href="tel:17337" className="navbar-phone">
+          <a
+            href="tel:17337"
+            className="navbar-phone"
+          >
             <span className="phone-icon">☎</span>
             17337
           </a>

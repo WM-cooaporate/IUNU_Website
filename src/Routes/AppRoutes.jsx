@@ -5,6 +5,8 @@ import Project from "../pages/Project/Project";
 import About from "../pages/About/About";
 import Contact from "../pages/Contact/Contact";
 import PropertyDetails from "../pages/Project/PropertyDetails";
+import AdminDashboard from "../pages/Admin/AdminDashboard";
+import Careers from "../pages/Careers/Careers";
 
 function AppRoutes() {
   return (
@@ -44,6 +46,16 @@ function AppRoutes() {
       <Route
         path="/contact"
         element={<Contact />}
+      />
+
+      <Route
+        path="/careers"
+        element={<Careers />}
+      />
+
+      <Route
+        path="/admin"
+        element={<AdminDashboard />}
       />
 
     </Routes>
