@@ -1,16 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import propertyServices from "../../../services/propertyServices";
-import {
-  getDemoProperties,
-  demoPropertiesUpdateEvent,
-} from "../../../data/demoPropertyStorage";
+import demoProperties from "../../../data/demoProperties";
 import { useLanguage } from "../../../i18n/LanguageContext";
 import "./Properties.css";
 
 function Properties() {
   const { t } = useLanguage();
-  const [properties, setProperties] = useState(getDemoProperties);
+  const [properties, setProperties] = useState(demoProperties);
 
   const sectionRef = useRef(null);
 
@@ -27,34 +24,20 @@ function Properties() {
           JSON.stringify(data, null, 2)
         );
 
-        const demoData = getDemoProperties();
-
         setProperties(
-          demoMode ? demoData : data.length ? data : demoData
+          demoMode
+            ? demoProperties
+            : data.length
+              ? data
+              : demoProperties
         );
       } catch (error) {
         console.error("Properties error:", error);
-        setProperties(getDemoProperties());
+        setProperties(demoProperties);
       }
     };
 
     loadProperties();
-  }, []);
-
-  useEffect(() => {
-    const refreshDemoProjects = () =>
-      setProperties(getDemoProperties());
-
-    window.addEventListener(
-      demoPropertiesUpdateEvent,
-      refreshDemoProjects
-    );
-
-    return () =>
-      window.removeEventListener(
-        demoPropertiesUpdateEvent,
-        refreshDemoProjects
-      );
   }, []);
 
   useEffect(() => {
@@ -98,7 +81,10 @@ function Properties() {
   }
 
   return (
-    <section ref={sectionRef} className="properties-section">
+    <section
+      ref={sectionRef}
+      className="properties-section"
+    >
       <div className="properties-header properties-reveal">
         <div className="properties-header-left">
           <span className="properties-eyebrow">
@@ -121,10 +107,6 @@ function Properties() {
         </div>
       </div>
 
-      {/* =========================
-          PROPERTY CARDS
-      ========================= */}
-
       <div className="properties-grid">
         {properties.map((property, index) => (
           <article
@@ -133,15 +115,14 @@ function Properties() {
             }`}
             key={property.id}
           >
-            {/* Image */}
-
             <Link
               to={`/project/${property.id}`}
               className="property-image-wrapper"
             >
               <img
                 src={
-                  property.coverImageUrl || "/images/hh.jpg"
+                  property.coverImageUrl ||
+                  "/images/hh.jpg"
                 }
                 alt={property.title}
                 className="property-image"
@@ -152,7 +133,6 @@ function Properties() {
 
               <div className="property-image-top">
                 <span>{property.type}</span>
-
                 <span>{property.status}</span>
               </div>
 
@@ -164,8 +144,6 @@ function Properties() {
                 </span>
               </div>
             </Link>
-
-            {/* Content */}
 
             <div className="property-content">
               <div className="property-location">
@@ -180,12 +158,10 @@ function Properties() {
         ))}
       </div>
 
-      {/* =========================
-          FOOTER
-      ========================= */}
-
       <div className="properties-footer properties-reveal">
-        <span>{t("DISCOVER ALL DEVELOPMENTS")}</span>
+        <span>
+          {t("DISCOVER ALL DEVELOPMENTS")}
+        </span>
 
         <Link to="/project">
           {t("VIEW ALL")}

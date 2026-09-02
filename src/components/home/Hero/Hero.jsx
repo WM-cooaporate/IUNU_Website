@@ -1,25 +1,22 @@
 import { Link } from "react-router-dom";
-import { useLanguage } from "../../../i18n/LanguageContext";
 import "./Hero.css";
+import { useLanguage } from "../../../i18n/LanguageContext";
 
 function Hero() {
   const { t } = useLanguage();
+
   return (
     <section className="hero">
-
       {/* Background overlay */}
       <div className="hero-overlay"></div>
 
       {/* Hero content */}
       <div className="hero-content">
-
         <span className="hero-eyebrow">
           {t("IUNU DEVELOPMENTS")}
         </span>
 
-        <h1>
-          {t("Who we are")}
-        </h1>
+        <h1>{t("Who we are")}</h1>
 
         <p>
           {t("We Are Crafting Signature Destinations")}
@@ -35,20 +32,16 @@ function Hero() {
             →
           </span>
         </Link>
-
       </div>
 
       {/* Scroll indicator */}
       <div className="hero-scroll">
-
         <span className="hero-scroll-line"></span>
 
         <span className="hero-scroll-text">
           {t("SCROLL TO EXPLORE")}
         </span>
-
       </div>
-
     </section>
   );
 }

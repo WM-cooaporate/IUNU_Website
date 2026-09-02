@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useLanguage } from "../../../i18n/LanguageContext";
 import "./Development.css";
+import { useLanguage } from "../../../i18n/LanguageContext";
 
 const galleryImages = [
   {
@@ -41,6 +41,10 @@ function Development() {
   const sectionRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
+
+  /* =====================================================
+     GALLERY NAVIGATION
+  ===================================================== */
 
   const goPrevious = () => {
     setActiveIndex((currentIndex) => {
@@ -103,12 +107,10 @@ function Development() {
         setSelectedImage(null);
       }
 
-      // Arrow Right = Next
       if (event.key === "ArrowRight") {
         goNext();
       }
 
-      // Arrow Left = Previous
       if (event.key === "ArrowLeft") {
         goPrevious();
       }
@@ -141,7 +143,7 @@ function Development() {
       ref={sectionRef}
       className="development-section"
     >
-      {/* =========================
+      {/* =================================================
           INTRO
       ================================================= */}
 
@@ -167,7 +169,7 @@ function Development() {
         </div>
       </div>
 
-      {/* =========================
+      {/* =================================================
           FEATURED DEVELOPMENT
       ================================================= */}
 
@@ -182,7 +184,6 @@ function Development() {
 
           <div className="development-image-caption">
             <span>{t("FEATURED DEVELOPMENT")}</span>
-
             <strong>IUNU</strong>
           </div>
         </div>
@@ -207,26 +208,23 @@ function Development() {
           <div className="development-details">
             <div>
               <span>01</span>
-
               <p>{t("Thoughtful Architecture")}</p>
             </div>
 
             <div>
               <span>02</span>
-
               <p>{t("Lasting Quality")}</p>
             </div>
 
             <div>
               <span>03</span>
-
               <p>{t("Human-Centered Spaces")}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* =========================
+      {/* =================================================
           GALLERY
       ================================================= */}
 
@@ -261,7 +259,9 @@ function Development() {
               type="button"
               className="development-gallery-feature"
               onClick={() =>
-                setSelectedImage(galleryImages[activeIndex])
+                setSelectedImage(
+                  galleryImages[activeIndex]
+                )
               }
               aria-label={`${t("Open")} ${
                 galleryImages[activeIndex].alt
@@ -307,9 +307,16 @@ function Development() {
 
                 <span>
                   {" / "}
-                  {String(galleryImages.length).padStart(2, "0")}
+                  {String(galleryImages.length).padStart(
+                    2,
+                    "0"
+                  )}
                 </span>
               </span>
+
+              {/* =================================================
+                  PREVIOUS
+              ================================================= */}
 
               <button
                 type="button"
@@ -321,6 +328,10 @@ function Development() {
                   ←
                 </span>
               </button>
+
+              {/* =================================================
+                  NEXT
+              ================================================= */}
 
               <button
                 type="button"
@@ -365,7 +376,9 @@ function Development() {
                   aria-label={`${t("Show image")} ${
                     index + 1
                   }`}
-                  aria-pressed={index === activeIndex}
+                  aria-pressed={
+                    index === activeIndex
+                  }
                 >
                   <img
                     src={image.src}

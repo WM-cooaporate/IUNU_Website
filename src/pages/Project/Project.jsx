@@ -29,7 +29,9 @@ function Project() {
 
         if (!cancelled) {
           setProperties(
-            data.content?.length ? data.content : demoProperties
+            data?.content?.length
+              ? data.content
+              : demoProperties
           );
         }
       } catch (error) {
@@ -68,7 +70,9 @@ function Project() {
               {t("IUNU DEVELOPMENTS")}
             </span>
 
-            <h1>{t("Enduring Spaces for Tomorrow")}</h1>
+            <h1>
+              {t("Enduring Spaces for Tomorrow")}
+            </h1>
 
             <p>
               {t(
@@ -89,7 +93,9 @@ function Project() {
             {t("OUR APPROACH")}
           </span>
 
-          <h2>{t("Thoughtful Development")}</h2>
+          <h2>
+            {t("Thoughtful Development")}
+          </h2>
 
           <p>
             {t(
@@ -108,7 +114,9 @@ function Project() {
               {t("OUR PROJECTS")}
             </span>
 
-            <h2>{t("Discover Our Properties")}</h2>
+            <h2>
+              {t("Discover Our Properties")}
+            </h2>
 
             <p>
               {t(
@@ -125,7 +133,9 @@ function Project() {
             <div className="project-loading">
               <div className="project-spinner" />
 
-              <p>{t("Loading properties...")}</p>
+              <p>
+                {t("Loading properties...")}
+              </p>
             </div>
           )}
 
@@ -135,11 +145,17 @@ function Project() {
 
           {!loading && error && (
             <div className="project-message project-error">
-              <span>{t("ERROR")}</span>
+              <span>
+                {t("ERROR")}
+              </span>
 
-              <h3>{t("Unable to Load Properties")}</h3>
+              <h3>
+                {t("Unable to Load Properties")}
+              </h3>
 
-              <p>{error}</p>
+              <p>
+                {error}
+              </p>
             </div>
           )}
 
@@ -151,9 +167,13 @@ function Project() {
             !error &&
             properties.length === 0 && (
               <div className="project-message project-empty">
-                <span>{t("PROJECTS")}</span>
+                <span>
+                  {t("PROJECTS")}
+                </span>
 
-                <h3>{t("No Properties Available")}</h3>
+                <h3>
+                  {t("No Properties Available")}
+                </h3>
 
                 <p>
                   {t(
@@ -230,7 +250,9 @@ function Project() {
                           </span>
                         )}
 
-                        <h3>{property.title}</h3>
+                        <h3>
+                          {property.title}
+                        </h3>
 
                         {property.location && (
                           <p className="project-property-location">
@@ -275,7 +297,9 @@ function Project() {
               01
             </span>
 
-            <h3>{t("Legacy Inspired Design")}</h3>
+            <h3>
+              {t("Legacy Inspired Design")}
+            </h3>
 
             <p>
               {t(
@@ -289,7 +313,9 @@ function Project() {
               02
             </span>
 
-            <h3>{t("Confident Project Delivery")}</h3>
+            <h3>
+              {t("Confident Project Delivery")}
+            </h3>
 
             <p>
               {t(
@@ -303,7 +329,9 @@ function Project() {
               03
             </span>
 
-            <h3>{t("Enduring Spaces")}</h3>
+            <h3>
+              {t("Enduring Spaces")}
+            </h3>
 
             <p>
               {t(
@@ -322,7 +350,9 @@ function Project() {
             {t("CONNECT WITH US")}
           </span>
 
-          <h2>{t("Get in Touch Today")}</h2>
+          <h2>
+            {t("Get in Touch Today")}
+          </h2>
 
           <p>
             {t(
