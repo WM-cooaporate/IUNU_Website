@@ -24,7 +24,7 @@ function LegacySection() {
         <div className="legacy-image-overlay"></div>
 
         <img
-          src="/images/legacy.jpg"
+          src="/images/assets/2.jpg"
           alt={t("IUNU Development")}
           className="legacy-image"
         />

@@ -10,7 +10,7 @@ const galleryImages = [
   },
   {
     id: 2,
-    src: "/images/assets/2.jpg",
+    src: "/images/assets/7.jpg",
     alt: "IUNU Development interior",
   },
   {
