@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../../../i18n/LanguageContext";
 import "./Footer.css";
-import { useLanguage } from "../../../i18n/LanguageContext";
 
 function Footer() {
   const { t } = useLanguage();
