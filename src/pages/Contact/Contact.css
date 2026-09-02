@@ -82,7 +82,7 @@
 .contact-content {
     width: min(1150px, calc(100% - 40px));
     margin: 0 auto;
-    padding: 50px 0 110px;
+    padding: 70px 0 110px;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
     gap: 100px;
@@ -125,7 +125,7 @@
 .contact-form {
     display: flex;
     flex-direction: column;
-    gap: 21px;
+    gap: 24px;
 }
 
 .form-row {
@@ -147,8 +147,14 @@
     letter-spacing: 0.5px;
 }
 
+
+/* =========================================================
+   INPUTS / SELECTS / TEXTAREA
+========================================================= */
+
 .contact-form input,
-.contact-form textarea {
+.contact-form textarea,
+.contact-form select {
     width: 100%;
     box-sizing: border-box;
     border: 1px solid #dedbd5;
@@ -172,72 +178,40 @@
     line-height: 1.7;
 }
 
+.contact-form select {
+    height: 50px;
+    padding-right: 42px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: linear-gradient( 45deg, transparent 50%, #8d8980 50%), linear-gradient( 135deg, #8d8980 50%, transparent 50%);
+    background-position: calc(100% - 18px) 21px, calc(100% - 13px) 21px;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+}
+
+.contact-form select option {
+    color: #66645e;
+    background: #ffffff;
+}
+
 .contact-form input::placeholder,
 .contact-form textarea::placeholder {
     color: #aaa7a0;
 }
 
 .contact-form input:hover,
-.contact-form textarea:hover {
+.contact-form textarea:hover,
+.contact-form select:hover {
     border-color: #c8c4bc;
 }
 
 .contact-form input:focus,
-.contact-form textarea:focus {
+.contact-form textarea:focus,
+.contact-form select:focus {
     border-color: #a9a49a;
     background: #ffffff;
     box-shadow: 0 6px 24px rgba(80, 76, 68, 0.06);
-    transform: translateY(-1px);
-}
-
-
-/* =========================================================
-   SUBMIT BUTTON
-========================================================= */
-
-.contact-submit {
-    align-self: flex-start;
-    min-width: 170px;
-    height: 54px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    border: none;
-    border-radius: 3px;
-    background: var(--color-primary);
-    color: var(--color-white);
-    font-family: inherit;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.3px;
-    cursor: pointer;
-    transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.contact-submit svg {
-    width: 17px;
-    height: 17px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    transition: transform 0.3s ease;
-}
-
-.contact-submit:hover {
-    background: var(--color-gold);
-    color: #ffffff;
-    transform: translateY(-3px);
-    box-shadow: 0 12px 25px rgba(80, 76, 68, 0.12);
-}
-
-.contact-submit:hover svg {
-    transform: translateX(4px);
-}
-
-.contact-submit:active {
     transform: translateY(-1px);
 }
 
@@ -317,6 +291,57 @@
 
 .loading-large {
     width: 260px;
+}
+
+
+/* =========================================================
+   SUBMIT BUTTON
+========================================================= */
+
+.contact-submit {
+    align-self: flex-start;
+    min-width: 170px;
+    height: 54px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    border: none;
+    border-radius: 3px;
+    background: var(--color-primary);
+    color: var(--color-white);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.3px;
+    cursor: pointer;
+    transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.contact-submit svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.3s ease;
+}
+
+.contact-submit:hover {
+    background: var(--color-gold);
+    color: #ffffff;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(80, 76, 68, 0.12);
+}
+
+.contact-submit:hover svg {
+    transform: translateX(4px);
+}
+
+.contact-submit:active {
+    transform: translateY(-1px);
 }
 
 
@@ -486,6 +511,10 @@
     transition-delay: 0.06s;
 }
 
+.social-link:nth-child(5):hover {
+    transition-delay: 0.08s;
+}
+
 
 /* =========================================================
    ANIMATIONS
@@ -601,6 +630,9 @@
     .contact-form input {
         height: 48px;
     }
+    .contact-form select {
+        height: 48px;
+    }
     .contact-form textarea {
         min-height: 145px;
     }
@@ -668,7 +700,8 @@
     .info-icon,
     .social-link,
     .contact-form input,
-    .contact-form textarea {
+    .contact-form textarea,
+    .contact-form select {
         transition: none;
     }
 }

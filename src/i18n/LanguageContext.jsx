@@ -58,6 +58,10 @@ const translations = {
 "Your last name":"الأسم الأخير",
 "Tell us how we can help...":" اخبرنا كيف نساعدك",
 "SEND MESSAGE":"أرسل رسالة",
+"Your WhatsApp number":"رقم الواتس أب الخاص بك",
+"Your city":"مدينتك",
+"Select project type":" أختر مشروعك",
+"Select space type":" أختر مساحتك",
 
 
 // eslint-disable-next-line no-dupe-keys

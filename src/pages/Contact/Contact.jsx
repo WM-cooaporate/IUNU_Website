@@ -23,6 +23,10 @@ function Contact() {
     phone: "",
     email: "",
     message: "",
+    city: "",
+  project: "",
+  whatsapp: "",
+  spaceType: "",
   });
 
   useEffect(() => {
@@ -259,7 +263,105 @@ function Contact() {
                 </div>
 
               </div>
+<div className="form-row">
+  <div className="form-field">
+    <label htmlFor="whatsapp">
+      {t("WhatsApp number")}
+    </label>
 
+    <input
+      id="whatsapp"
+      type="tel"
+      name="whatsapp"
+      placeholder={t("Your WhatsApp number")}
+      value={formData.whatsapp}
+      onChange={handleChange}
+      required
+    />
+  </div>
+
+  <div className="form-field">
+    <label htmlFor="city">
+      {t("City")}
+    </label>
+
+    <input
+      id="city"
+      type="text"
+      name="city"
+      placeholder={t("Your city")}
+      value={formData.city}
+      onChange={handleChange}
+      required
+    />
+  </div>
+</div>
+
+<div className="form-row">
+  <div className="form-field">
+    <label htmlFor="project">
+      {t("Project")}
+    </label>
+
+    <select
+      id="project"
+      name="project"
+      value={formData.project}
+      onChange={handleChange}
+      required
+    >
+      <option value="">
+        {t("Select project type")}
+      </option>
+
+      <option value="Residential">
+        {t("Residential")}
+      </option>
+
+      <option value="Commercial">
+        {t("Commercial")}
+      </option>
+
+      <option value="Administrative">
+        {t("Administrative")}
+      </option>
+    </select>
+  </div>
+
+  <div className="form-field">
+    <label htmlFor="spaceType">
+      {t("Space Type")}
+    </label>
+
+    <select
+      id="spaceType"
+      name="spaceType"
+      value={formData.spaceType}
+      onChange={handleChange}
+      required
+    >
+      <option value="">
+        {t("Select space type")}
+      </option>
+
+      <option value="Apartment">
+        {t("Apartment")}
+      </option>
+
+      <option value="Villa">
+        {t("Villa")}
+      </option>
+
+      <option value="Office">
+        {t("Office")}
+      </option>
+
+      <option value="Commercial Space">
+        {t("Commercial Space")}
+      </option>
+    </select>
+  </div>
+</div>
 
               <div className="form-field">
 
