@@ -216,6 +216,22 @@ function Footer() {
               </svg>
             </a>
 
+            {/* LinkedIn */}
+            <a
+              href="https://www.linkedin.com/company/iunudevelopments/posts/?feedView=all"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="LinkedIn"
+              className="footer-social-link"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6.5 8.5A2 2 0 1 0 6.5 4.5a2 2 0 0 0 0 4Z" />
+
+                <path d="M4.8 10h3.4v9.5H4.8z" />
+
+                <path d="M10.2 10h3.2v1.3c.7-1 1.8-1.7 3.5-1.7 3 0 4.3 1.8 4.3 5.1v4.8h-3.4v-4.4c0-1.6 0-2.9-1.9-2.9s-2.2 1.4-2.2 2.9v4.4h-3.4V10Z" />
+              </svg>
+            </a>
             {/* WhatsApp */}
             <a
               href="https://wa.me/201091218088"
