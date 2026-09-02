@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "./Footer.css";
+import { useLanguage } from "../../../i18n/LanguageContext";
 
 function Footer() {
+  const { t } = useLanguage();
+
   const currentYear = new Date().getFullYear();
 
   const footerRef = useRef(null);
@@ -39,7 +42,6 @@ function Footer() {
       ref={footerRef}
       className={`footer ${isVisible ? "footer-visible" : ""}`}
     >
-
       <div className="footer-container">
 
         {/* =========================
@@ -52,18 +54,19 @@ function Footer() {
           <div className="footer-brand">
 
             <span className="footer-brand-label">
-              IUNU DEVELOPMENTS
+              {t("IUNU DEVELOPMENTS")}
             </span>
 
             <h2>
-              Spaces
+              {t("Spaces")}
               <br />
-              <em>that remain.</em>
+              <em>{t("that remain.")}</em>
             </h2>
 
             <p>
-              Creating considered spaces where architecture,
-              community and everyday life come together.
+              {t(
+                "Creating considered spaces where architecture, community and everyday life come together."
+              )}
             </p>
 
           </div>
@@ -73,23 +76,23 @@ function Footer() {
           <div className="footer-column">
 
             <span className="footer-column-title">
-              EXPLORE
+              {t("EXPLORE")}
             </span>
 
             <Link to="/home">
-              Home
+              {t("Home")}
             </Link>
 
             <Link to="/about">
-              About Us
+              {t("About Us")}
             </Link>
 
             <Link to="/project">
-              Projects
+              {t("Projects")}
             </Link>
 
             <Link to="/contact">
-              Contact
+              {t("Contact")}
             </Link>
 
           </div>
@@ -99,7 +102,7 @@ function Footer() {
           <div className="footer-column footer-contact-column">
 
             <span className="footer-column-title">
-              CONTACT
+              {t("CONTACT")}
             </span>
 
             <a href="tel:17337">
@@ -125,16 +128,13 @@ function Footer() {
           <div className="footer-column footer-address-column">
 
             <span className="footer-column-title">
-              FIND US
+              {t("FIND US")}
             </span>
 
             <p>
-              Plot No. 306–307,
-              Galaxy Mall,
-              South 90th Street,
-              Second Floor,
-              Fifth Settlement,
-              New Cairo, Egypt.
+              {t(
+                "Plot No. 306–307, Galaxy Mall, South 90th Street, Second Floor, Fifth Settlement, New Cairo, Egypt."
+              )}
             </p>
 
           </div>
@@ -251,7 +251,7 @@ function Footer() {
 
 
           <span className="footer-legal">
-            All Rights Reserved.
+            {t("All Rights Reserved.")}
           </span>
 
         </div>

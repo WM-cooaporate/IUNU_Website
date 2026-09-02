@@ -1,22 +1,26 @@
 import "./LegacySection.css";
+import { useLanguage } from "../../../i18n/LanguageContext";
 
 function LegacySection() {
+  const { t } = useLanguage();
+
   return (
     <section className="legacy-section">
 
       <div className="legacy-content">
 
         <span className="legacy-label">
-          CREATING ENDURING SPACES
+          {t("CREATING ENDURING SPACES")}
         </span>
 
         <h2>
-          A Commitment to Legacy
+          {t("A Commitment to Legacy")}
         </h2>
 
         <p>
-          IUNU Development focuses on thoughtful real estate projects
-          designed with purpose, character, and lasting impact.
+          {t(
+            "IUNU Development focuses on thoughtful real estate projects designed with purpose, character, and lasting impact."
+          )}
         </p>
 
       </div>
@@ -27,13 +31,13 @@ function LegacySection() {
 
         <img
           src="/images/legacy.jpg"
-          alt="IUNU Development"
+          alt={t("IUNU Development")}
           className="legacy-image"
         />
 
         <div className="legacy-image-caption">
           <span>01</span>
-          <span>ENDURING SPACES</span>
+          <span>{t("ENDURING SPACES")}</span>
         </div>
 
       </div>

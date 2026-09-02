@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./Development.css";
+import { useLanguage } from "../../../i18n/LanguageContext";
+
 const galleryImages = [
   {
     id: 1,
@@ -32,25 +34,45 @@ const galleryImages = [
     alt: "IUNU Development playground",
   },
 ];
+
 function Development() {
+  const { t, language } = useLanguage();
+
   const sectionRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const changeImage = (direction) => {
-    setActiveIndex((currentIndex) =>
-      (currentIndex + direction + galleryImages.length) % galleryImages.length
-    );
+  /* =====================================================
+     GALLERY NAVIGATION
+  ===================================================== */
+
+  // Previous image
+  const goPrevious = () => {
+    setActiveIndex((currentIndex) => {
+      return (
+        (currentIndex - 1 + galleryImages.length) %
+        galleryImages.length
+      );
+    });
   };
+
+  // Next image
+  const goNext = () => {
+    setActiveIndex((currentIndex) => {
+      return (currentIndex + 1) % galleryImages.length;
+    });
+  };
+
+  /* =====================================================
+     REVEAL ANIMATION
+  ===================================================== */
 
   useEffect(() => {
     const section = sectionRef.current;
 
     if (!section) return;
 
-    const elements = section.querySelectorAll(
-      ".development-reveal"
-    );
+    const elements = section.querySelectorAll(".development-reveal");
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -73,14 +95,31 @@ function Development() {
     return () => observer.disconnect();
   }, []);
 
+  /* =====================================================
+     LIGHTBOX KEYBOARD CONTROL
+  ===================================================== */
+
   useEffect(() => {
     if (!selectedImage) return undefined;
 
     const handleKeyDown = (event) => {
-      if (event.key === "Escape") setSelectedImage(null);
+      if (event.key === "Escape") {
+        setSelectedImage(null);
+      }
+
+      // Arrow Right = Next
+      if (event.key === "ArrowRight") {
+        goNext();
+      }
+
+      // Arrow Left = Previous
+      if (event.key === "ArrowLeft") {
+        goPrevious();
+      }
     };
 
     document.addEventListener("keydown", handleKeyDown);
+
     document.body.style.overflow = "hidden";
 
     return () => {
@@ -89,247 +128,306 @@ function Development() {
     };
   }, [selectedImage]);
 
+  /* =====================================================
+     AUTO GALLERY SLIDER
+  ===================================================== */
+
   useEffect(() => {
     const interval = window.setInterval(() => {
-      setActiveIndex((currentIndex) =>
-        (currentIndex + 1) % galleryImages.length
-      );
+      goNext();
     }, 5500);
 
     return () => window.clearInterval(interval);
   }, []);
 
   return (
-    <section
-      ref={sectionRef}
-      className="development-section"
-    >
-      {/* =========================
+    <section ref={sectionRef} className="development-section">
+      {/* =================================================
           INTRO
-      ========================= */}
+      ================================================= */}
 
       <div className="development-intro development-reveal">
-
         <div className="development-intro-label">
-          IUNU DEVELOPMENTS
+          {t("IUNU DEVELOPMENTS")}
         </div>
 
         <div className="development-intro-content">
-
           <h2>
-            Designed with
+            {t("Designed with")}
             <br />
-            <span>purpose.</span>
+            <span>{t("purpose.")}</span>
           </h2>
 
           <div className="development-intro-text">
-
             <p>
-              We create considered spaces where architecture,
-              community and everyday life come together.
+              {t(
+                "We create considered spaces where architecture, community and everyday life come together."
+              )}
             </p>
           </div>
-
         </div>
-
       </div>
 
-
-      {/* =========================
+      {/* =================================================
           FEATURED DEVELOPMENT
-      ========================= */}
+      ================================================= */}
 
       <div className="development-feature development-reveal">
-
         <div className="development-feature-image">
+          <img
+            src="/images/dev.jpg"
+            alt={t("IUNU Development")}
+          />
 
-        <img
-  src="/images/dev.jpg"
-  alt="IUNU Development"
-/>
-
-          <div className="development-image-overlay"></div>
+          <div className="development-image-overlay" />
 
           <div className="development-image-caption">
-            <span>
-              FEATURED DEVELOPMENT
-            </span>
+            <span>{t("FEATURED DEVELOPMENT")}</span>
 
-            <strong>
-              IUNU
-            </strong>
+            <strong>IUNU</strong>
           </div>
-
         </div>
 
-
         <div className="development-feature-content">
-
           <span className="development-eyebrow">
-            OUR APPROACH
+            {t("OUR APPROACH")}
           </span>
 
           <h3>
-            Spaces that
+            {t("Spaces that")}
             <br />
-            <em>remain.</em>
+            <em>{t("remain.")}</em>
           </h3>
 
           <p>
-            Every IUNU development is shaped around a
-            simple idea: create places that feel relevant
-            today and remain meaningful tomorrow.
+            {t(
+              "Every IUNU development is shaped around a simple idea: create places that feel relevant today and remain meaningful tomorrow."
+            )}
           </p>
 
           <div className="development-details">
-
             <div>
               <span>01</span>
+
               <p>
-                Thoughtful Architecture
+                {t("Thoughtful Architecture")}
               </p>
             </div>
 
             <div>
               <span>02</span>
+
               <p>
-                Lasting Quality
+                {t("Lasting Quality")}
               </p>
             </div>
 
             <div>
               <span>03</span>
+
               <p>
-                Human-Centered Spaces
+                {t("Human-Centered Spaces")}
               </p>
             </div>
-
           </div>
-
         </div>
-
       </div>
 
-
-      {/* =========================
+      {/* =================================================
           GALLERY
-      ========================= */}
+      ================================================= */}
 
       <div className="development-gallery-wrapper">
-
         <div className="development-gallery-header development-reveal">
-
           <div>
             <span className="development-eyebrow">
-              THE IUNU VISION
+              {t("THE IUNU VISION")}
             </span>
 
             <h3>
-              A glimpse into
+              {t("A glimpse into")}
               <br />
-              what we create.
+              {t("what we create.")}
             </h3>
           </div>
 
           <p>
-            From refined interiors to carefully planned
-            outdoor spaces, every detail contributes to
-            the experience.
+            {t(
+              "From refined interiors to carefully planned outdoor spaces, every detail contributes to the experience."
+            )}
           </p>
-
         </div>
-
 
         <div className="development-gallery-shell development-reveal">
           <div className="development-gallery-stage">
+            {/* =================================================
+                MAIN GALLERY IMAGE
+            ================================================= */}
+
             <button
               type="button"
               className="development-gallery-feature"
-              onClick={() => setSelectedImage(galleryImages[activeIndex])}
-              aria-label={`Open ${galleryImages[activeIndex].alt}`}
+              onClick={() =>
+                setSelectedImage(galleryImages[activeIndex])
+              }
+              aria-label={`${t("Open")} ${
+                galleryImages[activeIndex].alt
+              }`}
             >
               <img
                 src={galleryImages[activeIndex].src}
                 alt={galleryImages[activeIndex].alt}
               />
+
               <span className="development-gallery-feature-shade" />
+
               <span className="development-gallery-feature-label">
-                IUNU / {String(activeIndex + 1).padStart(2, "0")}
+                IUNU /{" "}
+                {String(activeIndex + 1).padStart(2, "0")}
               </span>
+
               <span className="development-gallery-feature-caption">
-                View image
-                <span aria-hidden="true">&#8599;</span>
+                {t("View image")}
+
+                <span aria-hidden="true">
+                  &#8599;
+                </span>
               </span>
             </button>
 
-            <div className="development-gallery-controls" aria-label="Gallery controls">
+            {/* =================================================
+                GALLERY CONTROLS
+            ================================================= */}
+
+            <div
+              className={`development-gallery-controls ${
+                language === "ar"
+                  ? "development-gallery-controls-ar"
+                  : "development-gallery-controls-en"
+              }`}
+              aria-label={t("Gallery controls")}
+            >
               <span className="development-gallery-progress">
-                <strong>{String(activeIndex + 1).padStart(2, "0")}</strong>
-                <span>/ {String(galleryImages.length).padStart(2, "0")}</span>
+                <strong>
+                  {String(activeIndex + 1).padStart(2, "0")}
+                </strong>
+
+                <span>
+                  {" / "}
+                  {String(galleryImages.length).padStart(2, "0")}
+                </span>
               </span>
+
+              {/* =================================================
+                  PREVIOUS
+              ================================================= */}
+
               <button
                 type="button"
-                className="development-gallery-control"
-                onClick={() => changeImage(-1)}
-                aria-label="Previous image"
+                className="development-gallery-control development-gallery-control-prev"
+                onClick={goPrevious}
+                aria-label={t("Previous image")}
               >
-                <span aria-hidden="true">&#8592;</span>
+                <span aria-hidden="true">
+                  ←
+                </span>
               </button>
+
+              {/* =================================================
+                  NEXT
+              ================================================= */}
+
               <button
                 type="button"
                 className="development-gallery-control development-gallery-control-next"
-                onClick={() => changeImage(1)}
-                aria-label="Next image"
+                onClick={goNext}
+                aria-label={t("Next image")}
               >
-                <span aria-hidden="true">&#8594;</span>
+                <span aria-hidden="true">
+                  →
+                </span>
               </button>
             </div>
           </div>
 
-          <div className="development-gallery-thumbs" aria-label="Choose gallery image">
-            {galleryImages.map((image, index) => (
-              <button
-                type="button"
-                className={`development-gallery-thumb${index === activeIndex ? " is-active" : ""}`}
-                key={image.id}
-                onClick={() => setActiveIndex(index)}
-                aria-label={`Show image ${index + 1}`}
-                aria-pressed={index === activeIndex}
-              >
-                <img src={image.src} alt="" loading="lazy" />
-                <span>{String(index + 1).padStart(2, "0")}</span>
-              </button>
-            ))}
+          {/* =================================================
+              THUMBNAILS
+          ================================================= */}
+
+          <div
+            className="development-gallery-thumbs"
+            aria-label={t("Choose gallery image")}
+          >
+            {(language === "ar"
+              ? [...galleryImages].reverse()
+              : galleryImages
+            ).map((image) => {
+              const index = galleryImages.findIndex(
+                (galleryImage) => galleryImage.id === image.id
+              );
+
+              return (
+                <button
+                  type="button"
+                  className={`development-gallery-thumb${
+                    index === activeIndex ? " is-active" : ""
+                  }`}
+                  key={image.id}
+                  onClick={() => setActiveIndex(index)}
+                  aria-label={`${t("Show image")} ${
+                    index + 1
+                  }`}
+                  aria-pressed={index === activeIndex}
+                >
+                  <img
+                    src={image.src}
+                    alt=""
+                    loading="lazy"
+                  />
+
+                  <span>
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
-
       </div>
+
+      {/* =================================================
+          LIGHTBOX
+      ================================================= */}
 
       {selectedImage && (
         <div
           className="development-lightbox"
           role="dialog"
           aria-modal="true"
-          aria-label="Image preview"
+          aria-label={t("Image preview")}
           onClick={() => setSelectedImage(null)}
         >
           <button
             type="button"
             className="development-lightbox-close"
             onClick={() => setSelectedImage(null)}
-            aria-label="Close image preview"
+            aria-label={t("Close image preview")}
           >
-            <span aria-hidden="true">&times;</span>
+            <span aria-hidden="true">
+              &times;
+            </span>
           </button>
+
           <img
             className="development-lightbox-image"
             src={selectedImage.src}
             alt={selectedImage.alt}
-            onClick={(event) => event.stopPropagation()}
+            onClick={(event) =>
+              event.stopPropagation()
+            }
           />
         </div>
       )}
-
     </section>
   );
 }

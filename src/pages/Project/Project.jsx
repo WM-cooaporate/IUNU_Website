@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Footer from "../../components/layout/Footer/Footer";
 import propertyServices from "../../services/propertyServices";
 import demoProperties from "../../data/demoProperties";
+
+import { useLanguage } from "../../i18n/LanguageContext";
+
 import "./Project.css";
 
 function Project() {
+  const { t } = useLanguage();
+
   const [properties, setProperties] = useState(demoProperties);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -16,17 +22,21 @@ function Project() {
 
     const loadProperties = async () => {
       try {
+        setLoading(true);
         setError("");
 
         const data = await propertyServices.getProperties();
 
         if (!cancelled) {
-          setProperties(data.content?.length ? data.content : demoProperties);
+          setProperties(
+            data.content?.length ? data.content : demoProperties
+          );
         }
       } catch (error) {
         console.error("Properties loading error:", error);
 
         if (!cancelled) {
+          setError(t("Unable to Load Properties"));
           setProperties(demoProperties);
         }
       } finally {
@@ -41,7 +51,7 @@ function Project() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   return (
     <div className="project-page">
@@ -55,14 +65,15 @@ function Project() {
         <section className="project-hero">
           <div className="project-hero-content">
             <span className="project-hero-eyebrow">
-              IUNU DEVELOPMENTS
+              {t("IUNU DEVELOPMENTS")}
             </span>
 
-            <h1>Enduring Spaces for Tomorrow</h1>
+            <h1>{t("Enduring Spaces for Tomorrow")}</h1>
 
             <p>
-              Discover thoughtfully developed spaces designed
-              around quality, purpose, and lasting value.
+              {t(
+                "Discover thoughtfully developed spaces designed around quality, purpose, and lasting value."
+              )}
             </p>
 
             <div className="project-hero-line" />
@@ -75,14 +86,15 @@ function Project() {
 
         <section className="project-intro">
           <span className="project-section-eyebrow">
-            OUR APPROACH
+            {t("OUR APPROACH")}
           </span>
 
-          <h2>Thoughtful Development</h2>
+          <h2>{t("Thoughtful Development")}</h2>
 
           <p>
-            We create enduring spaces that balance thoughtful
-            design, functionality, and long-term value.
+            {t(
+              "We create enduring spaces that balance thoughtful design, functionality, and long-term value."
+            )}
           </p>
         </section>
 
@@ -93,14 +105,15 @@ function Project() {
         <section className="project-properties">
           <div className="project-properties-header">
             <span className="project-eyebrow">
-              OUR PROJECTS
+              {t("OUR PROJECTS")}
             </span>
 
-            <h2>Discover Our Properties</h2>
+            <h2>{t("Discover Our Properties")}</h2>
 
             <p>
-              Explore the properties currently available
-              across the IUNU platform.
+              {t(
+                "Explore the properties currently available across the IUNU platform."
+              )}
             </p>
           </div>
 
@@ -112,7 +125,7 @@ function Project() {
             <div className="project-loading">
               <div className="project-spinner" />
 
-              <p>Loading properties...</p>
+              <p>{t("Loading properties...")}</p>
             </div>
           )}
 
@@ -122,9 +135,9 @@ function Project() {
 
           {!loading && error && (
             <div className="project-message project-error">
-              <span>ERROR</span>
+              <span>{t("ERROR")}</span>
 
-              <h3>Unable to Load Properties</h3>
+              <h3>{t("Unable to Load Properties")}</h3>
 
               <p>{error}</p>
             </div>
@@ -138,13 +151,14 @@ function Project() {
             !error &&
             properties.length === 0 && (
               <div className="project-message project-empty">
-                <span>PROJECTS</span>
+                <span>{t("PROJECTS")}</span>
 
-                <h3>No Properties Available</h3>
+                <h3>{t("No Properties Available")}</h3>
 
                 <p>
-                  There are currently no published
-                  properties available.
+                  {t(
+                    "There are currently no published properties available."
+                  )}
                 </p>
               </div>
             )}
@@ -198,7 +212,7 @@ function Project() {
 
                         <div className="project-property-overlay">
                           <span>
-                            VIEW PROPERTY
+                            {t("VIEW PROPERTY")}
                           </span>
 
                           <span className="project-property-arrow">
@@ -235,13 +249,12 @@ function Project() {
                             {property.price != null
                               ? `${Number(
                                   property.price
-                                ).toLocaleString()} EGP`
-                              : "Price on request"}
-
+                                ).toLocaleString()} ${t("EGP")}`
+                              : t("Price on request")}
                           </strong>
 
                           <span className="project-property-view">
-                            EXPLORE →
+                            {t("EXPLORE")} →
                           </span>
                         </div>
                       </div>
@@ -262,11 +275,12 @@ function Project() {
               01
             </span>
 
-            <h3>Legacy Inspired Design</h3>
+            <h3>{t("Legacy Inspired Design")}</h3>
 
             <p>
-              Our projects prioritize community needs,
-              thoughtful design, and sustainability.
+              {t(
+                "Our projects prioritize community needs, thoughtful design, and sustainability."
+              )}
             </p>
           </div>
 
@@ -275,11 +289,12 @@ function Project() {
               02
             </span>
 
-            <h3>Confident Project Delivery</h3>
+            <h3>{t("Confident Project Delivery")}</h3>
 
             <p>
-              Experience reliable development with a
-              focus on quality and integrity.
+              {t(
+                "Experience reliable development with a focus on quality and integrity."
+              )}
             </p>
           </div>
 
@@ -288,11 +303,12 @@ function Project() {
               03
             </span>
 
-            <h3>Enduring Spaces</h3>
+            <h3>{t("Enduring Spaces")}</h3>
 
             <p>
-              Creating impactful spaces that reflect
-              purpose and longevity.
+              {t(
+                "Creating impactful spaces that reflect purpose and longevity."
+              )}
             </p>
           </div>
         </section>
@@ -303,14 +319,15 @@ function Project() {
 
         <section className="project-contact">
           <span className="project-section-eyebrow">
-            CONNECT WITH US
+            {t("CONNECT WITH US")}
           </span>
 
-          <h2>Get in Touch Today</h2>
+          <h2>{t("Get in Touch Today")}</h2>
 
           <p>
-            Reach out to us to discuss your real
-            estate needs.
+            {t(
+              "Reach out to us to discuss your real estate needs."
+            )}
           </p>
 
           <form
@@ -321,12 +338,12 @@ function Project() {
           >
             <input
               type="email"
-              placeholder="Email"
-              aria-label="Email address"
+              placeholder={t("Email")}
+              aria-label={t("Email address")}
             />
 
             <button type="submit">
-              SIGN UP
+              {t("SIGN UP")}
             </button>
           </form>
         </section>
