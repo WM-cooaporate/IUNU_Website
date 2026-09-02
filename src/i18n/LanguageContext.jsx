@@ -54,6 +54,11 @@ const translations = {
 "READ MORE": "اقرأ المزيد",
 "Thoughtfully": "مصممة بعناية",
 "Designed": "بتصميم",
+"Your first name":"الأسم الأول",
+"Your last name":"الأسم الأخير",
+"Tell us how we can help...":" اخبرنا كيف نساعدك",
+"SEND MESSAGE":"أرسل رسالة",
+
 
 // eslint-disable-next-line no-dupe-keys
 "Spaces": "مساحات",
