@@ -62,6 +62,7 @@ const translations = {
 "Your city":"مدينتك",
 "Select project type":" أختر مشروعك",
 "Select space type":" أختر مساحتك",
+"Space Type":" المساحة",
 
 
 // eslint-disable-next-line no-dupe-keys
