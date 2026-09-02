@@ -46,7 +46,6 @@ function Development() {
      GALLERY NAVIGATION
   ===================================================== */
 
-  // Previous image
   const goPrevious = () => {
     setActiveIndex((currentIndex) => {
       return (
@@ -56,7 +55,6 @@ function Development() {
     });
   };
 
-  // Next image
   const goNext = () => {
     setActiveIndex((currentIndex) => {
       return (currentIndex + 1) % galleryImages.length;
@@ -72,7 +70,9 @@ function Development() {
 
     if (!section) return;
 
-    const elements = section.querySelectorAll(".development-reveal");
+    const elements = section.querySelectorAll(
+      ".development-reveal"
+    );
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -107,12 +107,10 @@ function Development() {
         setSelectedImage(null);
       }
 
-      // Arrow Right = Next
       if (event.key === "ArrowRight") {
         goNext();
       }
 
-      // Arrow Left = Previous
       if (event.key === "ArrowLeft") {
         goPrevious();
       }
@@ -141,7 +139,10 @@ function Development() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="development-section">
+    <section
+      ref={sectionRef}
+      className="development-section"
+    >
       {/* =================================================
           INTRO
       ================================================= */}
@@ -183,7 +184,6 @@ function Development() {
 
           <div className="development-image-caption">
             <span>{t("FEATURED DEVELOPMENT")}</span>
-
             <strong>IUNU</strong>
           </div>
         </div>
@@ -208,26 +208,17 @@ function Development() {
           <div className="development-details">
             <div>
               <span>01</span>
-
-              <p>
-                {t("Thoughtful Architecture")}
-              </p>
+              <p>{t("Thoughtful Architecture")}</p>
             </div>
 
             <div>
               <span>02</span>
-
-              <p>
-                {t("Lasting Quality")}
-              </p>
+              <p>{t("Lasting Quality")}</p>
             </div>
 
             <div>
               <span>03</span>
-
-              <p>
-                {t("Human-Centered Spaces")}
-              </p>
+              <p>{t("Human-Centered Spaces")}</p>
             </div>
           </div>
         </div>
@@ -268,7 +259,9 @@ function Development() {
               type="button"
               className="development-gallery-feature"
               onClick={() =>
-                setSelectedImage(galleryImages[activeIndex])
+                setSelectedImage(
+                  galleryImages[activeIndex]
+                )
               }
               aria-label={`${t("Open")} ${
                 galleryImages[activeIndex].alt
@@ -314,7 +307,10 @@ function Development() {
 
                 <span>
                   {" / "}
-                  {String(galleryImages.length).padStart(2, "0")}
+                  {String(galleryImages.length).padStart(
+                    2,
+                    "0"
+                  )}
                 </span>
               </span>
 
@@ -363,21 +359,26 @@ function Development() {
               : galleryImages
             ).map((image) => {
               const index = galleryImages.findIndex(
-                (galleryImage) => galleryImage.id === image.id
+                (galleryImage) =>
+                  galleryImage.id === image.id
               );
 
               return (
                 <button
                   type="button"
                   className={`development-gallery-thumb${
-                    index === activeIndex ? " is-active" : ""
+                    index === activeIndex
+                      ? " is-active"
+                      : ""
                   }`}
                   key={image.id}
                   onClick={() => setActiveIndex(index)}
                   aria-label={`${t("Show image")} ${
                     index + 1
                   }`}
-                  aria-pressed={index === activeIndex}
+                  aria-pressed={
+                    index === activeIndex
+                  }
                 >
                   <img
                     src={image.src}

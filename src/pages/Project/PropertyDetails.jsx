@@ -5,6 +5,7 @@ import Navbar from "../../components/layout/Navbar/Navbar";
 import Footer from "../../components/layout/Footer/Footer";
 import propertyServices from "../../services/propertyServices";
 import demoProperties from "../../data/demoProperties";
+
 import { useLanguage } from "../../i18n/LanguageContext";
 
 import "./PropertyDetails.css";
@@ -47,21 +48,34 @@ function PropertyDetails() {
         if (!cancelled) {
           setProperty(data);
 
-          if (data.coverImageUrl) {
+          if (data?.coverImageUrl) {
             setSelectedImage(data.coverImageUrl);
-          } else if (data.imageUrls?.length > 0) {
+          } else if (data?.imageUrls?.length > 0) {
             setSelectedImage(data.imageUrls[0]);
           }
         }
       } catch (error) {
-        console.error("Property details error:", error);
+        console.error(
+          "Property details error:",
+          error
+        );
 
         if (!cancelled) {
           if (demoProperty) {
             setProperty(demoProperty);
             setError("");
-          } else if (error.response?.status === 404) {
-            setError(t("Property not found."));
+
+            setSelectedImage(
+              demoProperty.coverImageUrl ||
+                demoProperty.imageUrls?.[0] ||
+                ""
+            );
+          } else if (
+            error.response?.status === 404
+          ) {
+            setError(
+              t("Property not found.")
+            );
           } else {
             setError(
               t("Failed to load property details.")
@@ -90,7 +104,9 @@ function PropertyDetails() {
         <div className="property-details-loading">
           <div className="property-details-spinner" />
 
-          <p>{t("Loading property...")}</p>
+          <p>
+            {t("Loading property...")}
+          </p>
         </div>
 
         <Footer />
@@ -104,7 +120,9 @@ function PropertyDetails() {
         <Navbar />
 
         <main className="property-details-error">
-          <span>{t("PROPERTY")}</span>
+          <span>
+            {t("PROPERTY")}
+          </span>
 
           <h1>
             {error || t("Property not found.")}
@@ -127,7 +145,8 @@ function PropertyDetails() {
     ...(property.imageUrls || []),
   ].filter(
     (image, index, array) =>
-      image && array.indexOf(image) === index
+      image &&
+      array.indexOf(image) === index
   );
 
   const formattedStatus =
@@ -155,10 +174,14 @@ function PropertyDetails() {
               {property.type}
             </span>
 
-            <h1>{property.title}</h1>
+            <h1>
+              {property.title}
+            </h1>
 
             {property.location && (
-              <p>{property.location}</p>
+              <p>
+                {property.location}
+              </p>
             )}
           </div>
         </section>
@@ -169,7 +192,6 @@ function PropertyDetails() {
 
         <section className="property-details-section">
           <div className="property-details-container">
-
             {/* GALLERY */}
 
             <div className="property-gallery">
@@ -185,34 +207,38 @@ function PropertyDetails() {
                   </div>
                 )}
 
-                <span className="property-details-status">
-                  {t(formattedStatus || "")}
-                </span>
+                {property.status && (
+                  <span className="property-details-status">
+                    {t(formattedStatus || "")}
+                  </span>
+                )}
               </div>
 
               {galleryImages.length > 1 && (
                 <div className="property-thumbnails">
-                  {galleryImages.map((image, index) => (
-                    <button
-                      type="button"
-                      key={`${image}-${index}`}
-                      className={
-                        selectedImage === image
-                          ? "property-thumbnail active"
-                          : "property-thumbnail"
-                      }
-                      onClick={() =>
-                        setSelectedImage(image)
-                      }
-                    >
-                      <img
-                        src={image}
-                        alt={`${property.title} ${
-                          index + 1
-                        }`}
-                      />
-                    </button>
-                  ))}
+                  {galleryImages.map(
+                    (image, index) => (
+                      <button
+                        type="button"
+                        key={`${image}-${index}`}
+                        className={
+                          selectedImage === image
+                            ? "property-thumbnail active"
+                            : "property-thumbnail"
+                        }
+                        onClick={() =>
+                          setSelectedImage(image)
+                        }
+                      >
+                        <img
+                          src={image}
+                          alt={`${property.title} ${
+                            index + 1
+                          }`}
+                        />
+                      </button>
+                    )
+                  )}
                 </div>
               )}
             </div>
@@ -224,11 +250,15 @@ function PropertyDetails() {
                 {property.type}
               </span>
 
-              <h2>{property.title}</h2>
+              <h2>
+                {property.title}
+              </h2>
 
               {property.location && (
                 <div className="property-information-location">
-                  <span>{t("LOCATION")}</span>
+                  <span>
+                    {t("LOCATION")}
+                  </span>
 
                   <strong>
                     {property.location}
@@ -237,7 +267,9 @@ function PropertyDetails() {
               )}
 
               <div className="property-information-price">
-                <span>{t("PRICE")}</span>
+                <span>
+                  {t("PRICE")}
+                </span>
 
                 <strong>
                   {property.price != null
@@ -251,7 +283,9 @@ function PropertyDetails() {
               <div className="property-information-divider" />
 
               <div className="property-information-description">
-                <span>{t("DESCRIPTION")}</span>
+                <span>
+                  {t("DESCRIPTION")}
+                </span>
 
                 <p>
                   {property.description ||
@@ -277,9 +311,10 @@ function PropertyDetails() {
 
         <section className="property-extra-section">
           <div className="property-extra-container">
-
             <div className="property-extra-item">
-              <span>{t("PROPERTY TYPE")}</span>
+              <span>
+                {t("PROPERTY TYPE")}
+              </span>
 
               <strong>
                 {property.type}
@@ -287,7 +322,9 @@ function PropertyDetails() {
             </div>
 
             <div className="property-extra-item">
-              <span>{t("STATUS")}</span>
+              <span>
+                {t("STATUS")}
+              </span>
 
               <strong>
                 {t(formattedStatus || "")}
@@ -295,7 +332,9 @@ function PropertyDetails() {
             </div>
 
             <div className="property-extra-item">
-              <span>{t("LOCATION")}</span>
+              <span>
+                {t("LOCATION")}
+              </span>
 
               <strong>
                 {property.location ||
@@ -304,13 +343,14 @@ function PropertyDetails() {
             </div>
 
             <div className="property-extra-item">
-              <span>{t("PROPERTY ID")}</span>
+              <span>
+                {t("PROPERTY ID")}
+              </span>
 
               <strong>
                 #{property.id}
               </strong>
             </div>
-
           </div>
         </section>
       </main>

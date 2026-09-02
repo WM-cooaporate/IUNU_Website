@@ -243,10 +243,7 @@ function About() {
             >
               <span>{t("READ MORE")}</span>
 
-              <span
-                className="about-read-more-arrow"
-                aria-hidden="true"
-              >
+              <span className="about-read-more-arrow" aria-hidden="true">
                 →
               </span>
             </button>
