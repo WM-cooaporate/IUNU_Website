@@ -36,25 +36,39 @@ const galleryImages = [
 ];
 
 function Development() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
   const sectionRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const changeImage = (direction) => {
-    setActiveIndex(
-      (currentIndex) =>
-        (currentIndex + direction + galleryImages.length) %
+  const goPrevious = () => {
+    setActiveIndex((currentIndex) => {
+      return (
+        (currentIndex - 1 + galleryImages.length) %
         galleryImages.length
-    );
+      );
+    });
   };
+
+  const goNext = () => {
+    setActiveIndex((currentIndex) => {
+      return (currentIndex + 1) % galleryImages.length;
+    });
+  };
+
+  /* =====================================================
+     REVEAL ANIMATION
+  ===================================================== */
 
   useEffect(() => {
     const section = sectionRef.current;
 
     if (!section) return;
 
-    const elements = section.querySelectorAll(".development-reveal");
+    const elements = section.querySelectorAll(
+      ".development-reveal"
+    );
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -77,14 +91,31 @@ function Development() {
     return () => observer.disconnect();
   }, []);
 
+  /* =====================================================
+     LIGHTBOX KEYBOARD CONTROL
+  ===================================================== */
+
   useEffect(() => {
     if (!selectedImage) return undefined;
 
     const handleKeyDown = (event) => {
-      if (event.key === "Escape") setSelectedImage(null);
+      if (event.key === "Escape") {
+        setSelectedImage(null);
+      }
+
+      // Arrow Right = Next
+      if (event.key === "ArrowRight") {
+        goNext();
+      }
+
+      // Arrow Left = Previous
+      if (event.key === "ArrowLeft") {
+        goPrevious();
+      }
     };
 
     document.addEventListener("keydown", handleKeyDown);
+
     document.body.style.overflow = "hidden";
 
     return () => {
@@ -93,21 +124,26 @@ function Development() {
     };
   }, [selectedImage]);
 
+  /* =====================================================
+     AUTO GALLERY SLIDER
+  ===================================================== */
+
   useEffect(() => {
     const interval = window.setInterval(() => {
-      setActiveIndex(
-        (currentIndex) => (currentIndex + 1) % galleryImages.length
-      );
+      goNext();
     }, 5500);
 
     return () => window.clearInterval(interval);
   }, []);
 
   return (
-    <section ref={sectionRef} className="development-section">
+    <section
+      ref={sectionRef}
+      className="development-section"
+    >
       {/* =========================
           INTRO
-      ========================= */}
+      ================================================= */}
 
       <div className="development-intro development-reveal">
         <div className="development-intro-label">
@@ -133,13 +169,16 @@ function Development() {
 
       {/* =========================
           FEATURED DEVELOPMENT
-      ========================= */}
+      ================================================= */}
 
       <div className="development-feature development-reveal">
         <div className="development-feature-image">
-          <img src="/images/dev.jpg" alt="IUNU Development" />
+          <img
+            src="/images/dev.jpg"
+            alt={t("IUNU Development")}
+          />
 
-          <div className="development-image-overlay"></div>
+          <div className="development-image-overlay" />
 
           <div className="development-image-caption">
             <span>{t("FEATURED DEVELOPMENT")}</span>
@@ -168,16 +207,19 @@ function Development() {
           <div className="development-details">
             <div>
               <span>01</span>
+
               <p>{t("Thoughtful Architecture")}</p>
             </div>
 
             <div>
               <span>02</span>
+
               <p>{t("Lasting Quality")}</p>
             </div>
 
             <div>
               <span>03</span>
+
               <p>{t("Human-Centered Spaces")}</p>
             </div>
           </div>
@@ -186,7 +228,7 @@ function Development() {
 
       {/* =========================
           GALLERY
-      ========================= */}
+      ================================================= */}
 
       <div className="development-gallery-wrapper">
         <div className="development-gallery-header development-reveal">
@@ -211,13 +253,19 @@ function Development() {
 
         <div className="development-gallery-shell development-reveal">
           <div className="development-gallery-stage">
+            {/* =================================================
+                MAIN GALLERY IMAGE
+            ================================================= */}
+
             <button
               type="button"
               className="development-gallery-feature"
               onClick={() =>
                 setSelectedImage(galleryImages[activeIndex])
               }
-              aria-label={`Open ${galleryImages[activeIndex].alt}`}
+              aria-label={`${t("Open")} ${
+                galleryImages[activeIndex].alt
+              }`}
             >
               <img
                 src={galleryImages[activeIndex].src}
@@ -227,20 +275,30 @@ function Development() {
               <span className="development-gallery-feature-shade" />
 
               <span className="development-gallery-feature-label">
-                IUNU / {String(activeIndex + 1).padStart(2, "0")}
+                IUNU /{" "}
+                {String(activeIndex + 1).padStart(2, "0")}
               </span>
 
               <span className="development-gallery-feature-caption">
                 {t("View image")}
-                <span aria-hidden="true" dir="ltr">
+
+                <span aria-hidden="true">
                   &#8599;
                 </span>
               </span>
             </button>
 
+            {/* =================================================
+                GALLERY CONTROLS
+            ================================================= */}
+
             <div
-              className="development-gallery-controls"
-              aria-label="Gallery controls"
+              className={`development-gallery-controls ${
+                language === "ar"
+                  ? "development-gallery-controls-ar"
+                  : "development-gallery-controls-en"
+              }`}
+              aria-label={t("Gallery controls")}
             >
               <span className="development-gallery-progress">
                 <strong>
@@ -248,57 +306,86 @@ function Development() {
                 </strong>
 
                 <span>
-                  / {String(galleryImages.length).padStart(2, "0")}
+                  {" / "}
+                  {String(galleryImages.length).padStart(2, "0")}
                 </span>
               </span>
 
               <button
                 type="button"
-                className="development-gallery-control"
-                onClick={() => changeImage(-1)}
+                className="development-gallery-control development-gallery-control-prev"
+                onClick={goPrevious}
                 aria-label={t("Previous image")}
               >
-                <span aria-hidden="true" dir="ltr">
-                  &#8592;
+                <span aria-hidden="true">
+                  ←
                 </span>
               </button>
 
               <button
                 type="button"
                 className="development-gallery-control development-gallery-control-next"
-                onClick={() => changeImage(1)}
+                onClick={goNext}
                 aria-label={t("Next image")}
               >
-                <span aria-hidden="true" dir="ltr">
-                  &#8594;
+                <span aria-hidden="true">
+                  →
                 </span>
               </button>
             </div>
           </div>
 
+          {/* =================================================
+              THUMBNAILS
+          ================================================= */}
+
           <div
             className="development-gallery-thumbs"
             aria-label={t("Choose gallery image")}
           >
-            {galleryImages.map((image, index) => (
-              <button
-                type="button"
-                className={`development-gallery-thumb${
-                  index === activeIndex ? " is-active" : ""
-                }`}
-                key={image.id}
-                onClick={() => setActiveIndex(index)}
-                aria-label={`${t("Show image")} ${index + 1}`}
-                aria-pressed={index === activeIndex}
-              >
-                <img src={image.src} alt="" loading="lazy" />
+            {(language === "ar"
+              ? [...galleryImages].reverse()
+              : galleryImages
+            ).map((image) => {
+              const index = galleryImages.findIndex(
+                (galleryImage) =>
+                  galleryImage.id === image.id
+              );
 
-                <span>{String(index + 1).padStart(2, "0")}</span>
-              </button>
-            ))}
+              return (
+                <button
+                  type="button"
+                  className={`development-gallery-thumb${
+                    index === activeIndex
+                      ? " is-active"
+                      : ""
+                  }`}
+                  key={image.id}
+                  onClick={() => setActiveIndex(index)}
+                  aria-label={`${t("Show image")} ${
+                    index + 1
+                  }`}
+                  aria-pressed={index === activeIndex}
+                >
+                  <img
+                    src={image.src}
+                    alt=""
+                    loading="lazy"
+                  />
+
+                  <span>
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
+
+      {/* =================================================
+          LIGHTBOX
+      ================================================= */}
 
       {selectedImage && (
         <div
@@ -314,14 +401,18 @@ function Development() {
             onClick={() => setSelectedImage(null)}
             aria-label={t("Close image preview")}
           >
-            <span aria-hidden="true">&times;</span>
+            <span aria-hidden="true">
+              &times;
+            </span>
           </button>
 
           <img
             className="development-lightbox-image"
             src={selectedImage.src}
             alt={selectedImage.alt}
-            onClick={(event) => event.stopPropagation()}
+            onClick={(event) =>
+              event.stopPropagation()
+            }
           />
         </div>
       )}

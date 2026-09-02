@@ -3,6 +3,7 @@ import { useLanguage } from "../../../i18n/LanguageContext";
 
 function LegacySection() {
   const { t } = useLanguage();
+
   return (
     <section className="legacy-section">
 
@@ -17,7 +18,9 @@ function LegacySection() {
         </h2>
 
         <p>
-          {t("IUNU Development focuses on thoughtful real estate projects designed with purpose, character, and lasting impact.")}
+          {t(
+            "IUNU Development focuses on thoughtful real estate projects designed with purpose, character, and lasting impact."
+          )}
         </p>
 
       </div>
@@ -28,7 +31,7 @@ function LegacySection() {
 
         <img
           src="/images/legacy.jpg"
-          alt="IUNU Development"
+          alt={t("IUNU Development")}
           className="legacy-image"
         />
 

@@ -4,8 +4,9 @@ import { useLanguage } from "../../../i18n/LanguageContext";
 import "./Footer.css";
 
 function Footer() {
-  const currentYear = new Date().getFullYear();
   const { t } = useLanguage();
+
+  const currentYear = new Date().getFullYear();
 
   const footerRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -59,7 +60,9 @@ function Footer() {
             </h2>
 
             <p>
-              {t("Creating considered spaces where architecture, community and everyday life come together.")}
+              {t(
+                "Creating considered spaces where architecture, community and everyday life come together."
+              )}
             </p>
           </div>
 
@@ -120,17 +123,9 @@ function Footer() {
             </span>
 
             <p>
-              Plot No. 306–307,
-              <br />
-              Galaxy Mall,
-              <br />
-              South 90th Street,
-              <br />
-              Second Floor,
-              <br />
-              Fifth Settlement,
-              <br />
-              New Cairo, Egypt.
+              {t(
+                "Plot No. 306–307, Galaxy Mall, South 90th Street, Second Floor, Fifth Settlement, New Cairo, Egypt."
+              )}
             </p>
 
             <a

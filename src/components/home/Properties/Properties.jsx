@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import propertyServices from "../../../services/propertyServices";
-import { getDemoProperties, demoPropertiesUpdateEvent } from "../../../data/demoPropertyStorage";
+import {
+  getDemoProperties,
+  demoPropertiesUpdateEvent,
+} from "../../../data/demoPropertyStorage";
 import { useLanguage } from "../../../i18n/LanguageContext";
 import "./Properties.css";
 
@@ -14,7 +17,9 @@ function Properties() {
   useEffect(() => {
     const loadProperties = async () => {
       try {
-        const demoMode = localStorage.getItem("adminDemoMode") === "true";
+        const demoMode =
+          localStorage.getItem("adminDemoMode") === "true";
+
         const data = await propertyServices.getAllProperties();
 
         console.log(
@@ -23,7 +28,10 @@ function Properties() {
         );
 
         const demoData = getDemoProperties();
-        setProperties(demoMode ? demoData : data.length ? data : demoData);
+
+        setProperties(
+          demoMode ? demoData : data.length ? data : demoData
+        );
       } catch (error) {
         console.error("Properties error:", error);
         setProperties(getDemoProperties());
@@ -34,9 +42,19 @@ function Properties() {
   }, []);
 
   useEffect(() => {
-    const refreshDemoProjects = () => setProperties(getDemoProperties());
-    window.addEventListener(demoPropertiesUpdateEvent, refreshDemoProjects);
-    return () => window.removeEventListener(demoPropertiesUpdateEvent, refreshDemoProjects);
+    const refreshDemoProjects = () =>
+      setProperties(getDemoProperties());
+
+    window.addEventListener(
+      demoPropertiesUpdateEvent,
+      refreshDemoProjects
+    );
+
+    return () =>
+      window.removeEventListener(
+        demoPropertiesUpdateEvent,
+        refreshDemoProjects
+      );
   }, []);
 
   useEffect(() => {
@@ -80,19 +98,9 @@ function Properties() {
   }
 
   return (
-    <section
-      ref={sectionRef}
-      className="properties-section"
-    >
-
-      {/* =========================
-          HEADER
-      ========================= */}
-
+    <section ref={sectionRef} className="properties-section">
       <div className="properties-header properties-reveal">
-
         <div className="properties-header-left">
-
           <span className="properties-eyebrow">
             {t("OUR DEVELOPMENTS")}
           </span>
@@ -102,118 +110,88 @@ function Properties() {
             <br />
             <em>{t("to belong.")}</em>
           </h2>
-
         </div>
 
         <div className="properties-header-right">
-
           <p>
-            {t("Discover thoughtfully designed destinations created around quality, community and lasting value.")}
+            {t(
+              "Discover thoughtfully designed destinations created around quality, community and lasting value."
+            )}
           </p>
-
-         
-
         </div>
-
       </div>
-
 
       {/* =========================
           PROPERTY CARDS
       ========================= */}
 
       <div className="properties-grid">
-
         {properties.map((property, index) => (
-
           <article
-            className={`property-card properties-reveal property-card-${index + 1}`}
+            className={`property-card properties-reveal property-card-${
+              index + 1
+            }`}
             key={property.id}
           >
-
             {/* Image */}
 
             <Link
               to={`/project/${property.id}`}
               className="property-image-wrapper"
-            ><img
-              src={property.coverImageUrl || "/images/hh.jpg"}
-              alt={property.title}
-              className="property-image"
-              loading="lazy"
-/>
+            >
+              <img
+                src={
+                  property.coverImageUrl || "/images/hh.jpg"
+                }
+                alt={property.title}
+                className="property-image"
+                loading="lazy"
+              />
 
-              <div className="property-image-overlay"></div>
+              <div className="property-image-overlay" />
 
               <div className="property-image-top">
+                <span>{property.type}</span>
 
-                <span>
-                  {property.type}
-                </span>
-
-                <span>
-                  {property.status}
-                </span>
-
+                <span>{property.status}</span>
               </div>
 
               <div className="property-image-bottom">
-
-                <span>
-                  {t("VIEW PROJECT")}
-                </span>
+                <span>{t("VIEW PROJECT")}</span>
 
                 <span className="property-arrow">
                   →
                 </span>
-
               </div>
-
             </Link>
-
 
             {/* Content */}
 
             <div className="property-content">
-
               <div className="property-location">
                 {property.location}
               </div>
 
-              <h3>
-                {property.title}
-              </h3>
+              <h3>{property.title}</h3>
 
-              <p>
-                {property.description}
-              </p>
-
+              <p>{property.description}</p>
             </div>
-
           </article>
-
         ))}
-
       </div>
-
 
       {/* =========================
           FOOTER
       ========================= */}
 
       <div className="properties-footer properties-reveal">
-
-        <span>
-          {t("DISCOVER ALL DEVELOPMENTS")}
-        </span>
+        <span>{t("DISCOVER ALL DEVELOPMENTS")}</span>
 
         <Link to="/project">
           {t("VIEW ALL")}
           <span>→</span>
         </Link>
-
       </div>
-
     </section>
   );
 }

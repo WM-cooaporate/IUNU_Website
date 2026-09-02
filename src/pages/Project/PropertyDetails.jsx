@@ -3,12 +3,12 @@ import { Link, useParams } from "react-router-dom";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Footer from "../../components/layout/Footer/Footer";
 import propertyServices from "../../services/propertyServices";
-import { getDemoProperties } from "../../data/demoPropertyStorage";
+import demoProperties from "../../data/demoProperties";
 import "./PropertyDetails.css";
 
 function PropertyDetails() {
   const { id } = useParams();
-  const demoProperty = getDemoProperties().find(
+  const demoProperty = demoProperties.find(
     (item) => item.id === id
   );
 
@@ -236,13 +236,6 @@ function PropertyDetails() {
                   <strong>
                     {property.location}
                   </strong>
-                </div>
-              )}
-
-              {property.area != null && (
-                <div className="property-information-location">
-                  <span>AREA</span>
-                  <strong>{Number(property.area).toLocaleString()} m²</strong>
                 </div>
               )}
 

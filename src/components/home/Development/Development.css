@@ -271,6 +271,35 @@
     margin: -42px 0 20px;
 }
 
+
+/* =====================================================
+   GALLERY DIRECTION FIX
+===================================================== */
+
+.development-gallery-controls,
+.development-gallery-shell .development-gallery-controls {
+    direction: ltr;
+    unicode-bidi: isolate;
+}
+
+.development-gallery-control {
+    direction: ltr;
+    unicode-bidi: isolate;
+}
+
+.development-gallery-control span {
+    direction: ltr;
+    unicode-bidi: isolate;
+}
+
+
+/* Keep the gallery navigation order unchanged in Arabic */
+
+html[dir="rtl"] .development-gallery-controls {
+    direction: ltr;
+    flex-direction: row;
+}
+
 .development-gallery-control {
     width: 42px;
     height: 42px;

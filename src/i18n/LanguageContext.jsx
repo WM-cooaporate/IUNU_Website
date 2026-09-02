@@ -54,6 +54,7 @@ const translations = {
 "READ MORE": "اقرأ المزيد",
 "Thoughtfully": "مصممة بعناية",
 "Designed": "بتصميم",
+
 // eslint-disable-next-line no-dupe-keys
 "Spaces": "مساحات",
 

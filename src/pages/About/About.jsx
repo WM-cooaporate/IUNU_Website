@@ -124,7 +124,7 @@ function About() {
               </h2>
 
               <h3 className="about-reveal about-reveal-up">
-                Mr. Wagdy Danial
+                {t("Mr. Wagdy Danial")}
               </h3>
 
               <p className="about-reveal about-reveal-up">
@@ -243,9 +243,7 @@ function About() {
             >
               <span>{t("READ MORE")}</span>
 
-              <span className="about-read-more-arrow" aria-hidden="true">
-                →
-              </span>
+              <span className="about-read-more-arrow">→</span>
             </button>
           </div>
         </section>
