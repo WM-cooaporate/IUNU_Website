@@ -84,6 +84,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         // Public read of published properties/projects
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/properties/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/projects", "/api/projects/**").permitAll()
+                        // Uploaded cover images are public assets
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/uploads/**").permitAll()
                         // Public lead-generation forms (contact, quote, newsletter)
                         .requestMatchers(org.springframework.http.HttpMethod.POST,
                                 "/api/contact", "/api/quotes", "/api/newsletter", "/api/careers").permitAll()

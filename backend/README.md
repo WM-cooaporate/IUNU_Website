@@ -1,8 +1,9 @@
 # IUNU Real Estate — Backend
 
 Spring Boot 3 / Java 21 REST API backing the `projects/iunu-website` frontend.
-MySQL for persistence, JWT for auth. No test suite is included by design
-(per project scope) — see **Verification** below for how this was checked.
+MySQL for persistence, JWT for auth. Covers the public site (published
+projects and properties, lead-capture forms) and the authenticated admin
+dashboard behind it.
 
 ## Stack
 
@@ -43,10 +44,32 @@ automatically on first boot.
 
 ### 3. Create the first admin user
 
-Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` before starting the app once — a
-startup runner creates that one ADMIN account if it doesn't already exist.
-Unset both afterwards. There is no default/seeded admin account baked into
-the code or migrations.
+There is no default or seeded admin account anywhere in the code or the
+migrations. The first one is created at startup from the environment:
+
+```bash
+export ADMIN_EMAIL=you@example.com
+export ADMIN_PASSWORD='a-long-password'   # at least 8 characters
+mvn spring-boot:run
+```
+
+`AdminBootstrapRunner` creates that single ADMIN, BCrypt-hashing the
+password, and logs `Bootstrapped initial ADMIN user: ...`.
+
+The rules it follows:
+
+- It only acts when **no user with `role = ADMIN` exists at all**. The gate
+  is the ADMIN role, not the email — so leaving these vars set cannot
+  quietly add a second admin to a running deployment.
+- If `ADMIN_PASSWORD` is under 8 characters it logs an error and creates
+  **nothing**. (`ADMIN_PASSWORD is N characters; at least 8 are required...`)
+- If either var is unset or blank it does nothing at all.
+- It is idempotent, so restarting with the vars still set is harmless.
+
+**After the first successful run, unset `ADMIN_EMAIL` and `ADMIN_PASSWORD`**
+from the environment / your deployment's secrets. Create any further admins
+through `POST /api/admin/users` (below) — there is no public endpoint that
+can mint an ADMIN.
 
 ### API docs
 
@@ -62,7 +85,8 @@ it to this backend (not done here, per "don't touch the frontend"):
 - `POST /api/auth/register` expects `{ fullName, email, phone, password }`
   matching `Register.jsx`'s form fields.
 - `POST /api/auth/login` expects `{ email, password }` and returns
-  `{ accessToken, refreshToken, tokenType, expiresInSeconds, user }`.
+  `{ accessToken, refreshToken, tokenType, expiresInSeconds, expiresAt, user }`
+  — see **Projects & admin API** below for a full example.
 - `POST /api/auth/forgot-password` expects `{ email }` and always returns a
   generic success message, matching the existing UI copy.
 - The contact form (`Contact.jsx`), quote form (`QuoteForm.jsx`), and
@@ -85,6 +109,15 @@ Swagger UI; this is the shape of the surface.
 | POST | `/auth/reset-password` | public (valid reset token) | Set new password |
 | POST | `/auth/change-password` | user | Change password while logged in |
 | GET | `/auth/me` | user | Current user profile |
+| GET | `/projects` | public | List published projects, newest first |
+| GET | `/projects/{id}` | public | Get one published project (404 on a draft) |
+| GET | `/admin/projects` | admin | List all projects, published and draft |
+| POST | `/admin/projects` | admin | Create a project (draft by default) |
+| PUT | `/admin/projects/{id}` | admin | Update a project, incl. publish/unpublish |
+| DELETE | `/admin/projects/{id}` | admin | Delete a project |
+| POST | `/admin/projects/{id}/cover-image` | admin | Upload/replace the cover image (multipart) |
+| GET | `/admin/users` | admin | List staff accounts |
+| POST | `/admin/users` | admin | Create another admin |
 | GET | `/properties` | public | List published properties (filter by `type`) |
 | GET | `/properties/{id}` | public | Get one published property |
 | GET/POST/PUT/DELETE | `/properties/admin*`, `/properties` (write) | admin | Manage listings |
@@ -92,6 +125,268 @@ Swagger UI; this is the shape of the surface.
 | POST | `/quotes` | public | Submit quote request |
 | POST | `/newsletter` | public | Subscribe an email |
 | GET/PATCH | `/admin/contacts*`, `/admin/quotes*` | admin | Review/triage leads |
+
+## Projects & admin API
+
+Everything the admin dashboard and the public Projects page need, with the
+exact shapes they return. `{{token}}` below is the `accessToken` from login.
+
+### Login
+
+`POST /api/auth/login` — public.
+
+```json
+{ "email": "you@example.com", "password": "a-long-password" }
+```
+
+`200 OK`:
+
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
+  "refreshToken": "b7c1e4f0-...",
+  "tokenType": "Bearer",
+  "expiresInSeconds": 900,
+  "expiresAt": "2026-09-05T20:31:44.512Z",
+  "user": {
+    "id": 1,
+    "fullName": "Administrator",
+    "email": "you@example.com",
+    "phone": "N/A",
+    "role": "ADMIN",
+    "createdAt": "2026-09-01T10:00:00Z"
+  }
+}
+```
+
+`expiresAt` is the ISO-8601 absolute expiry of `accessToken` — use it to
+decide when to call `/api/auth/refresh`. The `User` entity is never
+serialized directly and `password` appears in no response.
+
+On bad credentials, `401` with the same generic body whether or not the
+email exists:
+
+```json
+{
+  "timestamp": "2026-09-05T20:16:44.512Z",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Invalid email or password",
+  "path": "/api/auth/login",
+  "fieldErrors": []
+}
+```
+
+Send the token on every admin request as `Authorization: Bearer {{token}}`.
+
+### The Project shape
+
+Every project endpoint — public, admin, and the cover-image upload — returns
+this same object:
+
+```json
+{
+  "id": 12,
+  "title": "Nile Tower",
+  "description": "Mixed-use development on the Corniche.",
+  "location": "New Cairo",
+  "status": "UNDER_CONSTRUCTION",
+  "priceRange": "From 4,500,000 EGP",
+  "coverImageUrl": "http://localhost:8080/uploads/projects/9f2b...c1.png",
+  "published": true,
+  "createdAt": "2026-09-05T19:04:11.204Z",
+  "updatedAt": "2026-09-05T19:22:03.881Z"
+}
+```
+
+- `title` is the only required field. Everything else may be `null`, so the
+  dashboard can save a draft before the copy exists.
+- `status` is one of `PLANNED`, `UNDER_CONSTRUCTION`, `COMPLETED`,
+  `SOLD_OUT`, or `null`.
+- `priceRange` is free text ("From 4,500,000 EGP", "On request"), not a
+  number — render it as-is.
+- `coverImageUrl` is an absolute URL built from `PUBLIC_API_URL`, or `null`.
+
+List endpoints return a Spring `Page`, so the array is under `content`:
+
+```json
+{
+  "content": [ { "id": 12, "title": "Nile Tower", "...": "..." } ],
+  "totalElements": 1,
+  "totalPages": 1,
+  "number": 0,
+  "size": 12
+}
+```
+
+### Public endpoints (no auth)
+
+`GET /api/projects` — published projects only, newest first. Paged with
+`?page=0&size=12`.
+
+`GET /api/projects/{id}` — one published project. A draft returns exactly
+the same `404` as a project that doesn't exist, so drafts can't be probed:
+
+```json
+{
+  "timestamp": "2026-09-05T20:16:44.512Z",
+  "status": 404,
+  "error": "Not Found",
+  "message": "Project not found",
+  "path": "/api/projects/12",
+  "fieldErrors": []
+}
+```
+
+### Admin endpoints (`Authorization: Bearer {{token}}`, ROLE_ADMIN)
+
+`GET /api/admin/projects` — all projects including drafts, newest first,
+paged (`?page=0&size=20`).
+
+`GET /api/admin/projects/{id}` — any project, published or not.
+
+`POST /api/admin/projects` — create. Request:
+
+```json
+{
+  "title": "Nile Tower",
+  "description": "Mixed-use development on the Corniche.",
+  "location": "New Cairo",
+  "status": "UNDER_CONSTRUCTION",
+  "priceRange": "From 4,500,000 EGP",
+  "coverImageUrl": null,
+  "published": false
+}
+```
+
+`201 Created` with the Project shape above. **A new project is a draft
+unless you explicitly send `"published": true`.**
+
+`PUT /api/admin/projects/{id}` — update; same body as create, `200 OK` with
+the updated project. Publish or unpublish by sending `"published": true` /
+`false`. **Omitting `published` leaves the current state alone**, so an
+ordinary edit can't accidentally take a live project off the site.
+
+`DELETE /api/admin/projects/{id}` — `204 No Content`.
+
+### Cover image upload
+
+`POST /api/admin/projects/{id}/cover-image` — `multipart/form-data` with a
+single part named `file`. JPG, PNG or WEBP, max 5 MB.
+
+```bash
+curl -X POST http://localhost:8080/api/admin/projects/12/cover-image \
+  -H "Authorization: Bearer {{token}}" \
+  -F "file=@cover.png"
+```
+
+`200 OK`:
+
+```json
+{
+  "coverImageUrl": "http://localhost:8080/uploads/projects/9f2b...c1.png",
+  "project": {
+    "id": 12,
+    "title": "Nile Tower",
+    "coverImageUrl": "http://localhost:8080/uploads/projects/9f2b...c1.png",
+    "published": true,
+    "...": "the full Project shape"
+  }
+}
+```
+
+The upload saves the URL on the project and returns the whole updated
+project alongside it, so the dashboard can refresh the row from one
+response. Uploading again replaces the cover and deletes the old file if
+nothing else references it.
+
+Files are stored under `${UPLOAD_LOCATION}/projects/`, named by the SHA-256
+of their bytes (re-uploading the same image is a no-op), and served from
+`GET /uploads/projects/{filename}` with no auth — they're public assets.
+Every caller goes through `ImageStorageService`, so moving to S3 or Cloud
+Storage later means reimplementing `store`/`deleteIfStored` and nothing else.
+
+A non-image or empty file is a `400`, not a `500`:
+
+```json
+{
+  "timestamp": "2026-09-05T20:16:44.512Z",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Only JPG, PNG and WEBP images are supported",
+  "path": "/api/admin/projects/12/cover-image",
+  "fieldErrors": []
+}
+```
+
+Over 5 MB is a `413`.
+
+### Creating more admins
+
+`POST /api/admin/users` — requires an existing admin's token. There is no
+public route to an ADMIN account.
+
+```json
+{
+  "fullName": "Second Admin",
+  "email": "second@example.com",
+  "phone": "+20 100 111 2222",
+  "password": "Password1",
+  "role": "ADMIN"
+}
+```
+
+`role` is optional and defaults to `ADMIN`. `phone` is optional. The
+password must be at least 8 characters with a letter and a digit.
+
+`201 Created`:
+
+```json
+{
+  "id": 2,
+  "fullName": "Second Admin",
+  "email": "second@example.com",
+  "phone": "+20 100 111 2222",
+  "role": "ADMIN",
+  "createdAt": "2026-09-05T20:16:44.512Z"
+}
+```
+
+`GET /api/admin/users` lists staff accounts as a page of that same shape.
+
+### Error shape
+
+Every error is the same JSON object, from one `@RestControllerAdvice`:
+
+```json
+{
+  "timestamp": "2026-09-05T20:16:44.512Z",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Validation failed",
+  "path": "/api/admin/projects",
+  "fieldErrors": [
+    { "field": "title", "message": "Title is required" }
+  ]
+}
+```
+
+`fieldErrors` is `[]` for everything except Bean Validation failures.
+Statuses used: `400` validation/malformed/bad upload, `401` missing or
+invalid token, `403` valid token without ROLE_ADMIN, `404` missing or
+unpublished, `409` data conflict, `413` upload too large, `429` rate
+limited, `500` unexpected (generic message; details are logged, never
+returned).
+
+### Projects vs. properties
+
+`projects` and `properties` are separate tables with separate endpoints, and
+they overlap heavily — a project is editorial content for the Projects page
+(title, blurb, cover image, published flag), a property is a sellable unit
+with a type, area and price. The frontend currently drives the admin
+dashboard off `/api/properties/admin`. Worth deciding whether both should
+survive before wiring the dashboard to `/api/projects`; consolidating later
+is a migration, not a rewrite.
 
 ## Security measures implemented
 
@@ -120,19 +415,65 @@ Swagger UI; this is the shape of the surface.
 
 ## Verification performed
 
-There's no MySQL/Docker daemon available in the sandbox this was built in,
-so full end-to-end verification against real MySQL wasn't possible here.
-What *was* verified before handoff:
+```bash
+mvn test
+```
 
-1. `mvn compile` / `mvn package` succeed cleanly.
-2. The app was booted with `spring-boot:test-run` against an in-memory H2
-   database (MySQL-compatibility mode) to catch Spring wiring issues
-   (missing beans, bad `@Value` bindings, security filter chain errors,
-   entity mapping mismatches) that a compile alone wouldn't catch.
-3. Smoke-tested the main flows with curl against that instance: register,
-   login (+ lockout after repeated bad passwords), refresh, forgot-password
-   (generic response), contact/quote/newsletter submission, and public
-   property listing.
+30 tests, all passing. They run against in-memory H2 (`test` profile,
+`src/test/resources/application-test.yml`) with Hibernate generating the
+schema, because the Flyway migrations are MySQL-specific DDL.
 
-Run it yourself against real MySQL before deploying — see **Getting
-started** above.
+What they cover:
+
+- **`PublicProjectApiTest`** — the public listing returns published projects
+  only, newest first, with no token; a draft 404s identically to a missing
+  project.
+- **`AdminProjectApiTest`** — 401 without a token, 403 for a non-admin, 401
+  on a forged token; create defaults to draft; `published: true` on create
+  and on update reaches the public site; omitting `published` on update
+  leaves it alone; delete; blank title 400s with a field error; cover-image
+  upload stores the file and saves the URL; a non-image upload 400s and
+  leaves the project unchanged; upload requires ROLE_ADMIN.
+- **`AdminUserApiTest`** — an admin can create another admin, no hash in the
+  response, unauthenticated and non-admin callers are refused, short
+  passwords and duplicate emails rejected.
+- **`AdminBootstrapRunnerTest`** — no env vars creates nothing; a password
+  under 8 chars creates nothing; the first run creates exactly one ADMIN
+  with a BCrypt hash and repeat runs are no-ops; it won't add a second admin
+  under a different email once one exists.
+- **`LoginResponseShapeTest`** — pins the login contract the dashboard is
+  built on (token, ISO-8601 `expiresAt`, user without a password) and checks
+  that a wrong password and an unknown email return the identical message.
+- **`MigrationSchemaTest`** — runs the real Flyway migrations against H2 in
+  MySQL-compatibility mode and asserts, from `INFORMATION_SCHEMA`, that
+  `V3__create_projects.sql` produces exactly the columns the `Project`
+  entity maps, with the right nullability and a `published` default of
+  false. This is the check that catches a migration/entity mismatch, which
+  on real MySQL would otherwise only surface at boot as a `ddl-auto=validate`
+  failure.
+
+### Not covered here
+
+No MySQL or Docker daemon is available in the sandbox this was built in, so
+the app has not been booted against real MySQL. `MigrationSchemaTest` covers
+the schema/entity agreement that boot would check, but run the app against
+a real MySQL once before deploying — see **Getting started** above.
+
+## TODO / follow-ups
+
+- **Rate limiting on login is in place** (10/min per IP via Bucket4j) but is
+  per-instance and in-memory; move it to a shared store before running more
+  than one instance.
+- Password reset and email verification exist for `USER` accounts but were
+  out of scope for the admin flow — an admin who loses their password
+  currently needs another admin, or a fresh bootstrap against an empty
+  `users` table.
+- `GET /api/properties/**` is `permitAll` in the URL rules, which also
+  matches the admin-only `GET /api/properties/admin`. That path is safe
+  today only because `@PreAuthorize("hasRole('ADMIN')")` on the method
+  catches it — exactly the defense-in-depth this codebase asks for, but the
+  URL rule should be narrowed so it isn't the only thing standing between a
+  refactor and an exposed endpoint. The new project routes don't have this
+  overlap (`/api/projects` public, `/api/admin/projects` admin).
+- The production frontend origin still needs adding to
+  `CORS_ALLOWED_ORIGINS` when the domain is known.

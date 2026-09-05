@@ -1,0 +1,48 @@
+# Tests run against in-memory H2 rather than MySQL. The Flyway migrations are
+# MySQL-specific DDL (AUTO_INCREMENT, ENGINE=InnoDB), so they are disabled here
+# and Hibernate generates the schema from the entities instead. The migrations
+# themselves stay the source of truth for real deployments.
+spring:
+  datasource:
+    url: jdbc:h2:mem:iunu-test;DB_CLOSE_DELAY=-1;MODE=LEGACY
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  flyway:
+    enabled: false
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+app:
+  jwt:
+    secret: test-only-secret-that-is-at-least-32-bytes-long-for-hmac-sha
+    access-token-expiration-ms: 900000
+    issuer: iunu-real-estate-api
+  security:
+    max-failed-attempts: 5
+    lock-duration-minutes: 15
+    reset-token-expiry-minutes: 30
+    refresh-token-expiry-days: 7
+    trust-forwarded-header: false
+  cors:
+    allowed-origins: http://localhost:5173
+  frontend-url: http://localhost:5173
+  file-storage:
+    location: target/test-uploads
+    public-base-url: http://localhost:8080
+  mail:
+    enabled: false
+    from: no-reply@test.local
+
+logging:
+  level:
+    root: WARN
+    com.iunu.realestate: INFO
