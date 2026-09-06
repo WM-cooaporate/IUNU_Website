@@ -1,6 +1,9 @@
 target/
 *.class
 
+# Locally stored uploads (UPLOAD_LOCATION)
+uploads/
+
 # IDE
 .idea/
 *.iml
