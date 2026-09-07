@@ -65,6 +65,13 @@ public class ImageStorageService {
         try {
             Files.createDirectories(folderRoot);
             byte[] content = file.getBytes();
+
+            // Content-Type is whatever the client typed into the request, so
+            // the bytes get the final say on whether this is really an image.
+            if (!matchesDeclaredType(content, file.getContentType())) {
+                throw new IllegalArgumentException("Only JPG, PNG and WEBP images are supported");
+            }
+
             String extension = extensionFor(file.getContentType(), file.getOriginalFilename());
             String filename = sha256(content) + extension;
             Path target = folderRoot.resolve(filename).normalize();
@@ -125,6 +132,33 @@ public class ImageStorageService {
         if ("image/webp".equals(contentType)) return ".webp";
         String extension = StringUtils.getFilenameExtension(originalFilename);
         return "jpeg".equalsIgnoreCase(extension) ? ".jpeg" : ".jpg";
+    }
+
+    /**
+     * Checks the file signature against the (already allow-listed) declared
+     * content type. Cheap, and enough to stop an HTML or script payload being
+     * stored under an image extension by simply lying about Content-Type.
+     */
+    private static boolean matchesDeclaredType(byte[] content, String contentType) {
+        if ("image/png".equals(contentType)) {
+            return startsWith(content, new int[]{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A});
+        }
+        if ("image/webp".equals(contentType)) {
+            // RIFF....WEBP - the four-byte length in between is not fixed.
+            return startsWith(content, new int[]{0x52, 0x49, 0x46, 0x46})
+                    && content.length >= 12
+                    && content[8] == 'W' && content[9] == 'E' && content[10] == 'B' && content[11] == 'P';
+        }
+        // image/jpeg
+        return startsWith(content, new int[]{0xFF, 0xD8, 0xFF});
+    }
+
+    private static boolean startsWith(byte[] content, int[] signature) {
+        if (content.length < signature.length) return false;
+        for (int i = 0; i < signature.length; i++) {
+            if ((content[i] & 0xFF) != signature[i]) return false;
+        }
+        return true;
     }
 
     private static String sha256(byte[] content) {

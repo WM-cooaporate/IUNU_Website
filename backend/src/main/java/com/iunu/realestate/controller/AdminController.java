@@ -52,21 +52,25 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.CREATED).body(adminUserService.create(request));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/contacts")
     public ResponseEntity<Page<ContactMessageResponse>> listContacts(@PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(contactService.listForAdmin(pageable));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/contacts/{id}/handled")
     public ResponseEntity<ContactMessageResponse> markContactHandled(@PathVariable Long id) {
         return ResponseEntity.ok(contactService.markHandled(id));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/quotes")
     public ResponseEntity<Page<QuoteRequestResponse>> listQuotes(@PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(quoteService.listForAdmin(pageable));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/quotes/{id}/handled")
     public ResponseEntity<QuoteRequestResponse> markQuoteHandled(@PathVariable Long id) {
         return ResponseEntity.ok(quoteService.markHandled(id));

@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Footer from "../../components/layout/Footer/Footer";
 import propertyServices from "../../services/propertyServices";
+import leadServices from "../../services/leadServices";
+import { toUserMessage } from "../../services/apiClient";
 import demoProperties from "../../data/demoProperties";
 
 import { useLanguage } from "../../i18n/LanguageContext";
@@ -16,6 +18,37 @@ function Project() {
   const [properties, setProperties] = useState(demoProperties);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterBusy, setNewsletterBusy] = useState(false);
+  const [newsletterStatus, setNewsletterStatus] = useState({ type: "", text: "" });
+
+  const handleNewsletterSubmit = async (event) => {
+    event.preventDefault();
+    if (newsletterBusy) return; // ignore a second click while the first is in flight
+
+    setNewsletterBusy(true);
+    setNewsletterStatus({ type: "", text: "" });
+
+    try {
+      await leadServices.subscribeNewsletter(newsletterEmail);
+      setNewsletterEmail("");
+      setNewsletterStatus({
+        type: "success",
+        text: t("Thank you. You are subscribed to our updates."),
+      });
+    } catch (requestError) {
+      setNewsletterStatus({
+        type: "error",
+        text: toUserMessage(
+          requestError,
+          t("We could not complete your sign up. Please try again.")
+        ),
+      });
+    } finally {
+      setNewsletterBusy(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -362,20 +395,31 @@ function Project() {
 
           <form
             className="project-newsletter"
-            onSubmit={(event) =>
-              event.preventDefault()
-            }
+            onSubmit={handleNewsletterSubmit}
           >
             <input
               type="email"
+              name="email"
+              required
+              value={newsletterEmail}
+              onChange={(event) => setNewsletterEmail(event.target.value)}
               placeholder={t("Email")}
               aria-label={t("Email address")}
             />
 
-            <button type="submit">
-              {t("SIGN UP")}
+            <button type="submit" disabled={newsletterBusy}>
+              {newsletterBusy ? t("SIGNING UP...") : t("SIGN UP")}
             </button>
           </form>
+
+          {newsletterStatus.text && (
+            <p
+              className={`project-newsletter-status project-newsletter-status-${newsletterStatus.type}`}
+              role="status"
+            >
+              {newsletterStatus.text}
+            </p>
+          )}
         </section>
       </main>
 

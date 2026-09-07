@@ -52,12 +52,36 @@ public class CareerServiceImpl implements CareerService {
                     + "Message:\n" + message, false);
 
             if (resume != null && !resume.isEmpty()) {
-                helper.addAttachment(resume.getOriginalFilename(), new ByteArrayResource(resume.getBytes()));
+                helper.addAttachment(safeAttachmentName(resume.getOriginalFilename()),
+                        new ByteArrayResource(resume.getBytes()));
             }
             mailSender.send(mail);
         } catch (MailException | MessagingException | IOException exception) {
             log.error("Failed to send career application from {}", email, exception);
             throw new IllegalStateException("Unable to send career application", exception);
         }
+    }
+
+    /**
+     * The uploaded filename is attacker-controlled and ends up as an
+     * attachment name in someone's inbox, so strip any directory component
+     * ("../../etc/passwd" -> "passwd") and anything that is not a plain
+     * filename character before using it.
+     */
+    public static String safeAttachmentName(String originalFilename) {
+        if (originalFilename == null || originalFilename.isBlank()) {
+            return "cv.pdf";
+        }
+
+        String baseName = originalFilename
+                .replace('\\', '/')
+                .substring(originalFilename.replace('\\', '/').lastIndexOf('/') + 1)
+                .replaceAll("[^A-Za-z0-9._-]", "_");
+
+        // A name that was entirely separators/dots ("..", "/", "") is not usable.
+        if (baseName.isBlank() || baseName.chars().allMatch(c -> c == '.' || c == '_')) {
+            return "cv.pdf";
+        }
+        return baseName.length() > 100 ? baseName.substring(baseName.length() - 100) : baseName;
     }
 }

@@ -56,4 +56,16 @@ public abstract class IntegrationTest {
     protected String userBearer() {
         return bearerFor(createUser("user-" + System.nanoTime() + "@iunu.test", "Password1", Role.USER));
     }
+
+    /**
+     * The 8-byte PNG signature followed by filler. ImageStorageService checks
+     * the file signature rather than trusting the declared Content-Type, so
+     * upload fixtures have to look like the format they claim to be.
+     */
+    protected static byte[] pngBytes() {
+        byte[] signature = {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n'};
+        byte[] content = new byte[signature.length + 16];
+        System.arraycopy(signature, 0, content, 0, signature.length);
+        return content;
+    }
 }

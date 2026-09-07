@@ -1,7 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import adminServices from "../../services/adminServices";
 import authServices from "../../services/authServices";
+import {
+  getStoredUser,
+  isAdminSession,
+  onSessionExpired,
+  toUserMessage,
+} from "../../services/apiClient";
 import { getDemoProperties, saveDemoProperties } from "../../data/demoPropertyStorage";
 import "./AdminDashboard.css";
 
@@ -27,13 +33,12 @@ const formatDate = (value) =>
       }).format(new Date(value))
     : "-";
 
-const getStoredUser = () => {
-  try {
-    return JSON.parse(localStorage.getItem("user") || "null");
-  } catch {
-    return null;
-  }
-};
+/**
+ * The dashboard is only shown for a stored ADMIN session that still has a
+ * token. A stored user object on its own is not enough - that was how an
+ * expired session used to render the whole dashboard and then fail every call.
+ */
+const getAdminUser = () => (isAdminSession() ? getStoredUser() : null);
 
 function AdminLogin({ onLogin, onDemo }) {
   const [email, setEmail] = useState("");
@@ -49,15 +54,15 @@ function AdminLogin({ onLogin, onDemo }) {
     try {
       const result = await authServices.login({ email, password });
       if (result.user?.role !== "ADMIN") {
-        authServices.logout();
+        await authServices.logout();
         throw new Error("This account does not have administrator access.");
       }
       onLogin(result.user);
     } catch (requestError) {
       setError(
-        requestError.response?.data?.message ||
-          requestError.message ||
-          "Unable to sign in. Check your credentials."
+        requestError.response
+          ? toUserMessage(requestError, "Unable to sign in. Check your credentials.")
+          : requestError.message || "Unable to sign in. Check your credentials."
       );
     } finally {
       setSubmitting(false);
@@ -92,8 +97,7 @@ function AdminLogin({ onLogin, onDemo }) {
 }
 
 function AdminDashboard() {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(getStoredUser);
+  const [user, setUser] = useState(getAdminUser);
   const [demoMode, setDemoMode] = useState(() => localStorage.getItem("adminDemoMode") === "true");
   const [properties, setProperties] = useState(demoMode ? getDemoProperties() : []);
   const [loading, setLoading] = useState(!demoMode);
@@ -105,22 +109,25 @@ function AdminDashboard() {
   const [form, setForm] = useState(emptyForm);
   const [imageFiles, setImageFiles] = useState([]);
 
-  const loadProperties = async () => {
+  const loadProperties = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
       const data = await adminServices.getAllProperties();
       setProperties(data);
     } catch (requestError) {
-      if (requestError.response?.status === 401 || requestError.response?.status === 403) {
-        authServices.logout();
+      // A 401 has already cleared the session in the axios interceptor; the
+      // subscription below drops us back to the login screen. A 403 means the
+      // token is valid but not an admin's, so end the session here too.
+      if (requestError.response?.status === 403) {
+        await authServices.logout();
         setUser(null);
       }
-      setError(requestError.response?.data?.message || "Unable to load projects from the server.");
+      setError(toUserMessage(requestError, "Unable to load projects from the server."));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (demoMode || user?.role !== "ADMIN") return undefined;
@@ -130,7 +137,19 @@ function AdminDashboard() {
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, [user, demoMode]);
+  }, [user, demoMode, loadProperties]);
+
+  /**
+   * Any 401 from any admin call - including one that happens while a save is
+   * in flight - sends us straight back to the sign-in screen with an
+   * explanation, rather than leaving a dashboard nobody can use on screen.
+   */
+  useEffect(() => onSessionExpired(() => {
+    setUser(null);
+    setModal(null);
+    setSaving(false);
+    setError("Your admin session has expired. Please sign in again.");
+  }), []);
 
   const filteredProperties = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -187,6 +206,7 @@ function AdminDashboard() {
 
   const handleSave = async (event) => {
     event.preventDefault();
+    if (saving) return; // a second click while the first request is in flight
     setSaving(true);
     setError("");
     setSuccess("");
@@ -236,15 +256,11 @@ function AdminDashboard() {
       setModal(null);
       setSuccess(`${modal?.type === "edit" ? "Project updated" : "Project created"} successfully${demoMode ? " in demo mode" : ""}.`);
     } catch (requestError) {
-      const message = requestError.response?.data?.message;
+      // Errors thrown locally (demo mode) carry no response object.
       setError(
-        message ||
-          (!requestError.response && requestError.message) ||
-          (requestError.code === "ERR_NETWORK"
-            ? "The server is not connected. Start the backend or use the demo dashboard."
-            : requestError.response?.status === 401
-              ? "Your admin session has expired. Please sign in again."
-              : "Unable to save this project.")
+        requestError.response
+          ? toUserMessage(requestError, "Unable to save this project.")
+          : requestError.message || "Unable to save this project."
       );
     } finally {
       setSaving(false);
@@ -264,18 +280,17 @@ function AdminDashboard() {
       });
       setSuccess(`Project deleted successfully${demoMode ? " in demo mode" : ""}.`);
     } catch (requestError) {
-      setError(requestError.response?.data?.message || "Unable to delete this project.");
+      setError(toUserMessage(requestError, "Unable to delete this project."));
     }
   };
 
-  const handleLogout = () => {
-    authServices.logout();
+  const handleLogout = async () => {
+    await authServices.logout();
     setUser(null);
-    navigate("/admin");
   };
 
-  const handleDemoMode = () => {
-    authServices.logout();
+  const handleDemoMode = async () => {
+    await authServices.logout();
     localStorage.setItem("adminDemoMode", "true");
     setDemoMode(true);
     const demoData = getDemoProperties();
@@ -284,7 +299,20 @@ function AdminDashboard() {
     setLoading(false);
   };
 
-  if ((!user || user.role !== "ADMIN") && !demoMode) return <AdminLogin onLogin={setUser} onDemo={handleDemoMode} />;
+  if ((!user || user.role !== "ADMIN") && !demoMode) {
+    return (
+      <>
+        {error && <div className="admin-alert admin-alert-error admin-session-alert">{error}</div>}
+        <AdminLogin
+          onLogin={(loggedInUser) => {
+            setError("");
+            setUser(loggedInUser);
+          }}
+          onDemo={handleDemoMode}
+        />
+      </>
+    );
+  }
 
   return (
     <div className="admin-page">

@@ -1,15 +1,20 @@
-import axios from "axios";
+import apiClient from "./apiClient";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+/** Matches spring.servlet.multipart.max-file-size on the backend. */
+export const MAX_RESUME_BYTES = 5 * 1024 * 1024;
 
 const careerServices = {
-    apply: async(application) => {
-        const formData = new FormData();
-        Object.entries(application).forEach(([key, value]) => {
-            if (value != null) formData.append(key, value);
-        });
-        await axios.post(`${API_URL}/careers`, formData, { timeout: 15000 });
-    },
+  apply: async (application) => {
+    const formData = new FormData();
+
+    Object.entries(application).forEach(([key, value]) => {
+      if (value != null && value !== "") formData.append(key, value);
+    });
+
+    // Career emails can carry a 5MB attachment, so this one gets longer than
+    // the shared default.
+    await apiClient.post("/careers", formData, { timeout: 30000 });
+  },
 };
 
 export default careerServices;
