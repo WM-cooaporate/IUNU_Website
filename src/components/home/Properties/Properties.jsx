@@ -14,18 +14,14 @@ function Properties() {
   useEffect(() => {
     const loadProperties = async () => {
       try {
-        const demoMode =
-          localStorage.getItem("adminDemoMode") === "true";
-
+        // This is a public page: it renders whatever the public API returns
+        // and nothing else. It used to also check the admin-only
+        // "adminDemoMode" flag and, when set, replace the real catalogue with
+        // hardcoded placeholders - so a visitor who had once opened the demo
+        // dashboard in this browser never saw newly published projects again.
         const data = await propertyServices.getAllProperties();
 
-        setProperties(
-          demoMode
-            ? demoProperties
-            : data.length
-              ? data
-              : demoProperties
-        );
+        setProperties(data.length ? data : demoProperties);
       } catch (error) {
         console.error("Properties error:", error);
         setProperties(demoProperties);
