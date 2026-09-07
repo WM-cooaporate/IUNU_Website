@@ -40,6 +40,37 @@ const formatDate = (value) =>
  */
 const getAdminUser = () => (isAdminSession() ? getStoredUser() : null);
 
+/**
+ * Demo mode renders the dashboard against browser-local sample data with no
+ * backend. Nothing saved in it is ever sent to the server.
+ *
+ * It lives in sessionStorage, not localStorage, so it dies with the tab. It
+ * used to persist in localStorage indefinitely, which is how someone could
+ * click "Try demo dashboard" once and then, days later, "add a project" that
+ * silently went nowhere - the dashboard listed it, the website never showed
+ * it, and the save reported success.
+ */
+const DEMO_MODE_KEY = "adminDemoMode";
+
+const demoModeEnabled = () => {
+  try {
+    return sessionStorage.getItem(DEMO_MODE_KEY) === "true";
+  } catch {
+    return false;
+  }
+};
+
+const setDemoModeFlag = (enabled) => {
+  try {
+    if (enabled) sessionStorage.setItem(DEMO_MODE_KEY, "true");
+    else sessionStorage.removeItem(DEMO_MODE_KEY);
+    // Clear the old persistent flag left by earlier versions.
+    localStorage.removeItem(DEMO_MODE_KEY);
+  } catch {
+    /* storage disabled - demo mode simply will not persist */
+  }
+};
+
 function AdminLogin({ onLogin, onDemo }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -98,7 +129,7 @@ function AdminLogin({ onLogin, onDemo }) {
 
 function AdminDashboard() {
   const [user, setUser] = useState(getAdminUser);
-  const [demoMode, setDemoMode] = useState(() => localStorage.getItem("adminDemoMode") === "true");
+  const [demoMode, setDemoMode] = useState(demoModeEnabled);
   const [properties, setProperties] = useState(demoMode ? getDemoProperties() : []);
   const [loading, setLoading] = useState(!demoMode);
   const [saving, setSaving] = useState(false);
@@ -254,7 +285,10 @@ function AdminDashboard() {
         await loadProperties();
       }
       setModal(null);
-      setSuccess(`${modal?.type === "edit" ? "Project updated" : "Project created"} successfully${demoMode ? " in demo mode" : ""}.`);
+      const action = modal?.type === "edit" ? "Project updated" : "Project created";
+      setSuccess(demoMode
+        ? `${action} in this browser only. Demo mode does not save to the server, so this will NOT appear on the website. Exit demo and sign in to publish for real.`
+        : `${action} successfully.`);
     } catch (requestError) {
       // Errors thrown locally (demo mode) carry no response object.
       setError(
@@ -278,7 +312,9 @@ function AdminDashboard() {
         if (demoMode) saveDemoProperties(next);
         return next;
       });
-      setSuccess(`Project deleted successfully${demoMode ? " in demo mode" : ""}.`);
+      setSuccess(demoMode
+        ? "Project deleted in this browser only. Demo mode does not save to the server."
+        : "Project deleted successfully.");
     } catch (requestError) {
       setError(toUserMessage(requestError, "Unable to delete this project."));
     }
@@ -291,7 +327,7 @@ function AdminDashboard() {
 
   const handleDemoMode = async () => {
     await authServices.logout();
-    localStorage.setItem("adminDemoMode", "true");
+    setDemoModeFlag(true);
     setDemoMode(true);
     const demoData = getDemoProperties();
     setProperties(demoData);
@@ -324,11 +360,18 @@ function AdminDashboard() {
         </div>
         <div className="admin-user">
           <div className="admin-user-info"><span className="admin-user-name">{demoMode ? "Demo Administrator" : user.fullName || user.email}</span><span className="admin-user-role">{demoMode ? "DEMO MODE" : "ADMINISTRATOR"}</span></div>
-          <button className="logout-button" type="button" onClick={demoMode ? () => { localStorage.removeItem("adminDemoMode"); setDemoMode(false); } : handleLogout}>{demoMode ? "Exit demo" : "Log out"}</button>
+          <button className="logout-button" type="button" onClick={demoMode ? () => { setDemoModeFlag(false); setDemoMode(false); } : handleLogout}>{demoMode ? "Exit demo" : "Log out"}</button>
         </div>
       </header>
 
       <main className="admin-content">
+        {demoMode && (
+          <div className="admin-demo-banner" role="status">
+            <strong>Demo mode.</strong> Everything here is sample data stored in this browser.
+            Projects you add are <strong>not saved to the server</strong> and will not appear on
+            the website. Exit demo and sign in to manage the real catalogue.
+          </div>
+        )}
         {error && <div className="admin-alert admin-alert-error">{error}</div>}
         {success && <div className="admin-alert admin-alert-success">{success}</div>}
         <div className="admin-page-heading"><div><span className="admin-eyebrow">CONTENT MANAGEMENT</span><h2>Projects</h2><p>Create, update and publish the projects visitors see.</p></div><button className="add-property-button" type="button" onClick={openCreate}><span>+</span> Add project</button></div>
