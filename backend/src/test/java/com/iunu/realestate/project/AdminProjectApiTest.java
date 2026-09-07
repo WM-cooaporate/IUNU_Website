@@ -169,7 +169,7 @@ class AdminProjectApiTest extends IntegrationTest {
         Project project = projectRepository.save(Project.builder().title("With cover").build());
 
         MockMultipartFile file = new MockMultipartFile(
-                "file", "cover.png", MediaType.IMAGE_PNG_VALUE, "fake-png-bytes".getBytes());
+                "file", "cover.png", MediaType.IMAGE_PNG_VALUE, pngBytes());
 
         mockMvc.perform(multipart("/api/admin/projects/{id}/cover-image", project.getId())
                         .file(file)
@@ -204,11 +204,50 @@ class AdminProjectApiTest extends IntegrationTest {
     }
 
     @Test
+    @DisplayName("rejects a non-image that lies about its Content-Type")
+    void rejectsContentTypeSpoofedUpload() throws Exception {
+        Project project = projectRepository.save(Project.builder().title("Spoofed").build());
+
+        // An HTML payload claiming to be a PNG. The declared type passes the
+        // allow-list, so only the file-signature check can catch this.
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "cover.png", MediaType.IMAGE_PNG_VALUE,
+                "<script>alert(1)</script>".getBytes());
+
+        mockMvc.perform(multipart("/api/admin/projects/{id}/cover-image", project.getId())
+                        .file(file)
+                        .header(HttpHeaders.AUTHORIZATION, adminBearer()))
+                .andExpect(status().isBadRequest());
+
+        assertThat(projectRepository.findById(project.getId()).orElseThrow().getCoverImageUrl()).isNull();
+    }
+
+    @Test
+    @DisplayName("a filename full of traversal segments cannot escape the upload folder")
+    void rejectsPathTraversalFilename() throws Exception {
+        Project project = projectRepository.save(Project.builder().title("Traversal").build());
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "../../../../etc/passwd.png", MediaType.IMAGE_PNG_VALUE, pngBytes());
+
+        mockMvc.perform(multipart("/api/admin/projects/{id}/cover-image", project.getId())
+                        .file(file)
+                        .header(HttpHeaders.AUTHORIZATION, adminBearer()))
+                .andExpect(status().isOk());
+
+        // The stored name is the SHA-256 of the bytes, so nothing from the
+        // caller's filename survives into the path at all.
+        String url = projectRepository.findById(project.getId()).orElseThrow().getCoverImageUrl();
+        assertThat(url).startsWith("http://localhost:8080/uploads/projects/");
+        assertThat(url).doesNotContain("..").doesNotContain("passwd");
+    }
+
+    @Test
     @DisplayName("cover-image upload requires ROLE_ADMIN")
     void coverImageRequiresAdmin() throws Exception {
         Project project = projectRepository.save(Project.builder().title("Guarded").build());
         MockMultipartFile file = new MockMultipartFile(
-                "file", "cover.png", MediaType.IMAGE_PNG_VALUE, "bytes".getBytes());
+                "file", "cover.png", MediaType.IMAGE_PNG_VALUE, pngBytes());
 
         mockMvc.perform(multipart("/api/admin/projects/{id}/cover-image", project.getId()).file(file))
                 .andExpect(status().isUnauthorized());

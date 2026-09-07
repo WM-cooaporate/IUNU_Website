@@ -22,7 +22,8 @@ public record CreateAdminUserRequest(
         @Size(max = 190, message = "Email is too long")
         String email,
 
-        @Pattern(regexp = "^[+0-9 ()-]{6,30}$", message = "Phone number is invalid")
+        /** Optional. Empty is accepted; anything present must look like a phone number. */
+        @Pattern(regexp = "^$|^[+0-9 ()-]{6,30}$", message = "Phone number is invalid")
         String phone,
 
         @NotBlank(message = "Password is required")

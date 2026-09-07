@@ -470,3 +470,19 @@
         display: none;
     }
 }
+
+/* Submit failure, styled to match .quote-success. */
+.quote-error {
+    margin-top: 18px;
+    padding: 14px 18px;
+    border-left: 3px solid #a54d4d;
+    background: #fbf1ef;
+    color: #8c3f3f;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.quote-submit button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

@@ -19,11 +19,6 @@ function Properties() {
 
         const data = await propertyServices.getAllProperties();
 
-        console.log(
-          "Properties API:",
-          JSON.stringify(data, null, 2)
-        );
-
         setProperties(
           demoMode
             ? demoProperties

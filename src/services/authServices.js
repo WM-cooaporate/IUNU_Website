@@ -1,50 +1,50 @@
-import axios from "axios";
-
-const API_URL = "http://localhost:8080/api";
+import apiClient, {
+  clearSession,
+  getRefreshToken,
+  getStoredUser,
+  isAdminSession,
+  storeSession,
+} from "./apiClient";
 
 const authServices = {
-    login: async(loginData) => {
-        const response = await axios.post(
-            `${API_URL}/auth/login`,
-            loginData
-        );
+  login: async (loginData) => {
+    const response = await apiClient.post("/auth/login", loginData);
 
-        localStorage.setItem(
-            "accessToken",
-            response.data.accessToken
-        );
+    storeSession({
+      accessToken: response.data.accessToken,
+      refreshToken: response.data.refreshToken,
+      user: response.data.user,
+    });
 
-        localStorage.setItem(
-            "refreshToken",
-            response.data.refreshToken
-        );
+    return { success: true, ...response.data };
+  },
 
-        localStorage.setItem(
-            "user",
-            JSON.stringify(response.data.user)
-        );
+  register: async (registerData) => {
+    const response = await apiClient.post("/auth/register", registerData);
+    return response.data;
+  },
 
-        return {
-            success: true,
-            ...response.data,
-        };
-    },
+  /**
+   * Revokes the refresh token server-side so a stolen copy is useless, then
+   * clears local state. The local clear happens either way - a failed network
+   * call must never leave someone appearing to still be signed in.
+   */
+  logout: async () => {
+    const refreshToken = getRefreshToken();
 
-    register: async(registerData) => {
-        const response = await axios.post(
-            `${API_URL}/auth/register`,
-            registerData
-        );
+    try {
+      if (refreshToken) {
+        await apiClient.post("/auth/logout", { refreshToken });
+      }
+    } catch {
+      /* best effort - the token expires on its own */
+    } finally {
+      clearSession();
+    }
+  },
 
-        return response.data;
-    },
-
-    logout: () => {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("user");
-        localStorage.removeItem("userEmail");
-    },
+  getCurrentUser: getStoredUser,
+  isAdmin: isAdminSession,
 };
 
 export default authServices;

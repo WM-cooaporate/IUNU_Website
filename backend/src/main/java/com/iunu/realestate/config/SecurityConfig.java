@@ -82,6 +82,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/me", "/api/auth/change-password").authenticated()
                         // Public authentication endpoints
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Admin reads of properties live under /api/properties/admin/** and
+                        // expose unpublished rows, so they must be matched BEFORE the public
+                        // GET rule below - otherwise "/api/properties/**" would permitAll them
+                        // and only the controller's @PreAuthorize would stand between a
+                        // stranger and every draft.
+                        .requestMatchers(org.springframework.http.HttpMethod.GET,
+                                "/api/properties/admin", "/api/properties/admin/**").hasRole("ADMIN")
                         // Public read of published properties/projects
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/properties/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/projects", "/api/projects/**").permitAll()
@@ -109,8 +116,23 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+        List<String> allowedOrigins = corsProperties.allowedOrigins();
+
+        // The browser refuses "Access-Control-Allow-Origin: *" together with
+        // credentials anyway; failing fast at startup turns that into an
+        // obvious misconfiguration instead of CORS errors nobody can explain.
+        if (allowedOrigins == null || allowedOrigins.isEmpty()) {
+            throw new IllegalStateException(
+                    "app.cors.allowed-origins (CORS_ALLOWED_ORIGINS) must list at least one origin.");
+        }
+        if (allowedOrigins.stream().anyMatch(origin -> origin.contains("*"))) {
+            throw new IllegalStateException(
+                    "app.cors.allowed-origins (CORS_ALLOWED_ORIGINS) must be an explicit list of origins; "
+                            + "wildcards cannot be combined with credentialed requests. Got: " + allowedOrigins);
+        }
+
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(corsProperties.allowedOrigins());
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
         configuration.setExposedHeaders(List.of("Authorization"));

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Footer from "../../components/layout/Footer/Footer";
-import careerServices from "../../services/careerServices";
+import careerServices, { MAX_RESUME_BYTES } from "../../services/careerServices";
+import { toUserMessage } from "../../services/apiClient";
 import { useLanguage } from "../../i18n/LanguageContext";
 import "./Careers.css";
 
@@ -20,19 +21,36 @@ function Careers() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (submitting) return; // ignore a second click while the first is in flight
+
+    // Caught here so an oversized file fails instantly instead of after a
+    // 5MB upload the server is going to reject anyway.
+    if (form.resume && form.resume.size > MAX_RESUME_BYTES) {
+      setStatus({ type: "error", text: t("The CV file is too large. Please choose a PDF under 5 MB.") });
+      return;
+    }
+
     setSubmitting(true);
     setStatus({ type: "", text: "" });
 
     try {
       await careerServices.apply(form);
       setForm(initialForm);
+      // Clear the file input, which React does not reset with the state.
+      event.target.reset();
       setStatus({ type: "success", text: t("Thank you. Your application has been sent to our team.") });
     } catch (error) {
+      const status = error.response?.status;
       setStatus({
         type: "error",
-        text: error.response?.status === 413
+        text: status === 413
           ? t("The CV file is too large. Please choose a PDF under 5 MB.")
-          : t("We could not send your application right now. Please try again or email info@iunu-eg.com."),
+          : status === 422
+            ? t("That CV could not be read as a PDF. Please attach a valid PDF file.")
+            : toUserMessage(
+                error,
+                t("We could not send your application right now. Please try again or email info@iunu-eg.com.")
+              ),
       });
     } finally {
       setSubmitting(false);
