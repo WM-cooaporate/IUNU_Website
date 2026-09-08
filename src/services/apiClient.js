@@ -9,8 +9,24 @@ import axios from "axios";
  * the dashboard sitting there with a token the API has already rejected.
  */
 
-export const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+const configuredApiUrl = import.meta.env.VITE_API_URL;
+
+// A production bundle with no API URL would quietly fall back to localhost and
+// fail for every visitor, so fail at load time where it is obvious instead.
+if (!configuredApiUrl && import.meta.env.PROD) {
+  throw new Error("VITE_API_URL is not set");
+}
+
+/**
+ * Trailing slashes are stripped because axios joins this to paths that already
+ * start with "/": "https://host/api/" + "/properties" would request
+ * "https://host/api//properties", which matches none of the Spring Security
+ * path rules and 401s instead of 200s.
+ */
+export const API_URL = (configuredApiUrl || "http://localhost:8080/api").replace(
+  /\/+$/,
+  ""
+);
 
 export const REQUEST_TIMEOUT = 15000;
 

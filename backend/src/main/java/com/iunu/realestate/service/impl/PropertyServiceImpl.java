@@ -8,7 +8,7 @@ import com.iunu.realestate.entity.PropertyType;
 import com.iunu.realestate.exception.ResourceNotFoundException;
 import com.iunu.realestate.repository.PropertyRepository;
 import com.iunu.realestate.service.PropertyService;
-import com.iunu.realestate.service.ImageStorageService;
+import com.iunu.realestate.service.ImageStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +24,7 @@ import java.util.Set;
 public class PropertyServiceImpl implements PropertyService {
 
     private final PropertyRepository propertyRepository;
-    private final ImageStorageService imageStorageService;
+    private final ImageStorage imageStorage;
 
     @Override
     @Transactional(readOnly = true)
@@ -131,6 +131,6 @@ public class PropertyServiceImpl implements PropertyService {
                 .filter(property -> !property.getId().equals(ignoredPropertyId))
                 .forEach(property -> activeImages.addAll(imageUrlsOf(property)));
         candidates.removeAll(activeImages);
-        candidates.forEach(imageStorageService::deleteIfStored);
+        candidates.forEach(imageStorage::deleteIfStored);
     }
 }

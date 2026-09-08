@@ -1,0 +1,33 @@
+# The Docker build context is this directory (set Railway's Root Directory to
+# "backend"). Everything the multi-stage build does not need is excluded so a
+# stray local .env or uploads/ folder can never be baked into an image.
+
+# Build output - the image builds its own
+target/
+*.class
+
+# Secrets and local state
+.env
+.env.*
+!.env.example
+uploads/
+
+# VCS
+.git/
+.gitignore
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Docs / local orchestration (not needed to compile)
+README.md
+docker-compose.yml
+
+# Frontend artefacts, in case the context is ever widened to the repo root
+node_modules/
+dist/
+
+# OS
+.DS_Store

@@ -1,0 +1,46 @@
+# Production profile (SPRING_PROFILES_ACTIVE=prod).
+#
+# Every value here is required with NO default: a missing variable must stop
+# the container at startup rather than let it come up silently pointing at a
+# development database, signing tokens with an empty secret, or writing
+# uploads somewhere that vanishes on the next deploy.
+server:
+  # Railway injects PORT and routes to it. SERVER_PORT stays honoured as a
+  # local override; the 8080 fallback only applies when neither is set.
+  port: ${PORT:${SERVER_PORT:8080}}
+  # TLS terminates at Railway's edge proxy, so without this Spring sees plain
+  # HTTP and builds http:// redirect/absolute URLs for an https:// site.
+  forward-headers-strategy: framework
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+
+  security:
+    # Behind Railway's proxy every request arrives from the proxy's address,
+    # so the per-IP rate limits are only meaningful if X-Forwarded-For is read.
+    trust-forwarded-header: true
+
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+  file-storage:
+    # Must point at a mounted Railway Volume - the container filesystem is
+    # wiped on every deploy. See ENV_VARS.md.
+    location: ${UPLOAD_DIR}
+    public-base-url: ${PUBLIC_API_URL}
+
+  frontend-url: ${FRONTEND_URL}
