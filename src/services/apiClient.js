@@ -11,10 +11,19 @@ import axios from "axios";
 
 const configuredApiUrl = import.meta.env.VITE_API_URL;
 
-// A production bundle with no API URL would quietly fall back to localhost and
-// fail for every visitor, so fail at load time where it is obvious instead.
+// Missing configuration must break API calls, not the whole site. This module
+// is imported by every page, so throwing here would run before React mounts
+// and leave a blank screen with nothing to read. Log loudly instead and let
+// the app render its shell and its existing fetch-failed states.
+//
+// Only in a production build: in dev the localhost fallback below is the
+// intended target, so warning there would just be noise people learn to skip.
 if (!configuredApiUrl && import.meta.env.PROD) {
-  throw new Error("VITE_API_URL is not set");
+  console.error(
+    "VITE_API_URL is not set - API calls will fail. Set it in the Vercel " +
+      "project settings and redeploy (Vite inlines it at build time, so a " +
+      "rebuild is required for the change to take effect)."
+  );
 }
 
 /**
