@@ -1,6 +1,9 @@
-package com.iunu.realestate.service;
+package com.iunu.realestate.service.impl;
 
+import com.iunu.realestate.service.ImageStorage;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,30 +19,28 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Content-addressed image storage on the local filesystem.
+ * Content-addressed image storage on the local filesystem - the default
+ * {@link ImageStorage} provider.
  *
  * Files are named by the SHA-256 of their bytes, so re-uploading the same
  * image is idempotent and a caller can never overwrite someone else's file
  * or smuggle a path through the original filename.
  *
- * Everything the outside world sees is a URL, and every caller goes through
- * {@link #store}/{@link #deleteIfStored} rather than touching paths - so
- * swapping this for S3 or Cloud Storage later means reimplementing these
- * two methods, with no change at the call sites.
+ * NOTE: a container filesystem is ephemeral. In production the upload root
+ * (app.file-storage.location / UPLOAD_DIR) must point at a mounted volume,
+ * or every image uploaded since the last deploy is lost while the database
+ * rows keep pointing at it. See ENV_VARS.md.
  */
 @Service
-public class ImageStorageService {
+@ConditionalOnProperty(name = "app.file-storage.provider", havingValue = "local", matchIfMissing = true)
+public class LocalImageStorage implements ImageStorage {
 
     private static final List<String> ALLOWED_TYPES = List.of("image/jpeg", "image/png", "image/webp");
-
-    /** Sub-directories under the upload root, one per owning entity type. */
-    public static final String PROPERTIES_FOLDER = "properties";
-    public static final String PROJECTS_FOLDER = "projects";
 
     private final Path uploadRoot;
     private final String publicBaseUrl;
 
-    public ImageStorageService(
+    public LocalImageStorage(
             @Value("${app.file-storage.location:uploads}") String uploadLocation,
             @Value("${app.file-storage.public-base-url:http://localhost:8080}") String publicBaseUrl
     ) {
@@ -47,12 +48,37 @@ public class ImageStorageService {
         this.publicBaseUrl = publicBaseUrl.replaceAll("/$", "");
     }
 
+    /**
+     * Creates the upload root up front and proves it is writable, so a
+     * container that cannot persist uploads fails at boot rather than
+     * accepting traffic and 500-ing on the first admin upload.
+     */
+    @PostConstruct
+    void prepareUploadRoot() {
+        try {
+            Files.createDirectories(uploadRoot);
+        } catch (IOException exception) {
+            throw new IllegalStateException(
+                    "Cannot create the image upload directory " + uploadRoot
+                            + " (app.file-storage.location / UPLOAD_DIR). "
+                            + "In production this must be a mounted, writable volume.", exception);
+        }
+        if (!Files.isWritable(uploadRoot)) {
+            throw new IllegalStateException(
+                    "The image upload directory " + uploadRoot
+                            + " (app.file-storage.location / UPLOAD_DIR) is not writable. "
+                            + "In production this must be a mounted, writable volume.");
+        }
+    }
+
     /** Stores a property image. Retained so existing property callers are unaffected. */
+    @Override
     public String store(MultipartFile file) {
         return store(file, PROPERTIES_FOLDER);
     }
 
     /** Stores an image under {@code folder} and returns its public URL. */
+    @Override
     public String store(MultipartFile file, String folder) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Image file cannot be empty");
@@ -86,6 +112,7 @@ public class ImageStorageService {
         }
     }
 
+    @Override
     public void deleteIfStored(String imageUrl) {
         deleteIfStored(imageUrl, PROPERTIES_FOLDER);
     }
@@ -95,6 +122,7 @@ public class ImageStorageService {
      * {@code folder} (e.g. an externally hosted image an admin pasted in)
      * are ignored rather than treated as an error.
      */
+    @Override
     public void deleteIfStored(String imageUrl, String folder) {
         String prefix = publicUrlPrefix(folder);
         if (imageUrl == null || !imageUrl.startsWith(prefix)) return;

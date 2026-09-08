@@ -4,7 +4,7 @@ import com.iunu.realestate.dto.request.PropertyRequest;
 import com.iunu.realestate.dto.response.PropertyResponse;
 import com.iunu.realestate.entity.PropertyType;
 import com.iunu.realestate.service.PropertyService;
-import com.iunu.realestate.service.ImageStorageService;
+import com.iunu.realestate.service.ImageStorage;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -27,13 +27,13 @@ import java.util.List;
 public class PropertyController {
 
     private final PropertyService propertyService;
-    private final ImageStorageService imageStorageService;
+    private final ImageStorage imageStorage;
 
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(value = "/images", consumes = "multipart/form-data")
     public ResponseEntity<List<String>> uploadImages(@RequestParam("files") List<MultipartFile> files) {
-        return ResponseEntity.ok(files.stream().map(imageStorageService::store).distinct().toList());
+        return ResponseEntity.ok(files.stream().map(imageStorage::store).distinct().toList());
     }
 
     @GetMapping

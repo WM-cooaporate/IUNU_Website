@@ -5,7 +5,7 @@ import com.iunu.realestate.dto.response.ProjectResponse;
 import com.iunu.realestate.entity.Project;
 import com.iunu.realestate.exception.ResourceNotFoundException;
 import com.iunu.realestate.repository.ProjectRepository;
-import com.iunu.realestate.service.ImageStorageService;
+import com.iunu.realestate.service.ImageStorage;
 import com.iunu.realestate.service.ProjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,7 +21,7 @@ public class ProjectServiceImpl implements ProjectService {
     private static final String NOT_FOUND_MESSAGE = "Project not found";
 
     private final ProjectRepository projectRepository;
-    private final ImageStorageService imageStorageService;
+    private final ImageStorage imageStorage;
 
     @Override
     @Transactional(readOnly = true)
@@ -104,7 +104,7 @@ public class ProjectServiceImpl implements ProjectService {
         Project project = findOrThrow(id);
         String previousCover = project.getCoverImageUrl();
 
-        project.setCoverImageUrl(imageStorageService.store(file, ImageStorageService.PROJECTS_FOLDER));
+        project.setCoverImageUrl(imageStorage.store(file, ImageStorage.PROJECTS_FOLDER));
         Project saved = projectRepository.save(project);
 
         deleteCoverIfOrphaned(previousCover, saved.getCoverImageUrl(), id);
@@ -129,6 +129,6 @@ public class ProjectServiceImpl implements ProjectService {
         if (projectRepository.existsByCoverImageUrlAndIdNot(previousCover, projectId)) {
             return;
         }
-        imageStorageService.deleteIfStored(previousCover, ImageStorageService.PROJECTS_FOLDER);
+        imageStorage.deleteIfStored(previousCover, ImageStorage.PROJECTS_FOLDER);
     }
 }

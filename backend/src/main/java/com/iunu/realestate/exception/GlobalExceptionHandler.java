@@ -112,7 +112,7 @@ public class GlobalExceptionHandler {
 
     /**
      * Rejected uploads (empty file, disallowed content type, bad storage
-     * folder) surface as IllegalArgumentException from ImageStorageService.
+     * folder) surface as IllegalArgumentException from the ImageStorage provider.
      * These are caller mistakes, so they get a 400 with the specific reason
      * rather than falling through to a generic 500.
      */

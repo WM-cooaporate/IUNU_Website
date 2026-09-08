@@ -93,12 +93,23 @@ public class RateLimitingFilter extends OncePerRequestFilter {
      * X-Forwarded-For is only trusted when the app is explicitly configured to
      * sit behind a reverse proxy (app.security.trust-forwarded-header=true) -
      * otherwise a direct client could spoof it to bypass the per-IP limit.
+     *
+     * The LAST entry is used, not the first. A client can send its own
+     * X-Forwarded-For and the proxy appends to it, so the first entry is
+     * attacker-controlled and the last is the one the trusted proxy wrote.
+     *
+     * Without this, every request behind a proxy keys on the proxy's own
+     * address, collapsing the per-IP limits into one site-wide bucket.
      */
     private String clientKey(HttpServletRequest request) {
         if (trustForwardedHeader) {
             String forwardedFor = request.getHeader("X-Forwarded-For");
             if (forwardedFor != null && !forwardedFor.isBlank()) {
-                return forwardedFor.split(",")[0].trim();
+                String[] hops = forwardedFor.split(",");
+                String closestToProxy = hops[hops.length - 1].trim();
+                if (!closestToProxy.isEmpty()) {
+                    return closestToProxy;
+                }
             }
         }
         return request.getRemoteAddr();
