@@ -1,18 +1,17 @@
 services:
-  mysql:
-    image: mysql:8.4
+  postgres:
+    image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: iunu_real_estate
-      MYSQL_USER: iunu_app
-      MYSQL_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?set DB_ROOT_PASSWORD in .env}
+      POSTGRES_DB: iunu_real_estate
+      POSTGRES_USER: iunu_app
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      test: ["CMD-SHELL", "pg_isready -U iunu_app -d iunu_real_estate"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -21,10 +20,10 @@ services:
     build: .
     restart: unless-stopped
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
     environment:
-      DB_URL: jdbc:mysql://mysql:3306/iunu_real_estate?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=false
+      DB_URL: jdbc:postgresql://postgres:5432/iunu_real_estate
       DB_USERNAME: iunu_app
       DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
@@ -47,5 +46,5 @@ services:
       - property_uploads:/app/uploads
 
 volumes:
-  mysql_data:
+  postgres_data:
   property_uploads:

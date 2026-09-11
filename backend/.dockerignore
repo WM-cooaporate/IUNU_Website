@@ -1,5 +1,5 @@
-# The Docker build context is this directory (set Railway's Root Directory to
-# "backend"). Everything the multi-stage build does not need is excluded so a
+# The Docker build context is this directory (render.yaml sets rootDir:
+# backend). Everything the multi-stage build does not need is excluded so a
 # stray local .env or uploads/ folder can never be baked into an image.
 
 # Build output - the image builds its own
