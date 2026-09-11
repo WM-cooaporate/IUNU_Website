@@ -67,6 +67,12 @@ public class PropertyServiceImpl implements PropertyService {
                 .type(request.type())
                 .status(request.status() != null ? request.status() : PropertyStatus.AVAILABLE)
                 .location(request.location())
+                // Already filled in by PropertyTranslationFiller at the
+                // controller layer, so there is nothing to translate here -
+                // this only normalizes blank to null.
+                .titleAr(blankToNull(request.titleAr()))
+                .descriptionAr(blankToNull(request.descriptionAr()))
+                .locationAr(blankToNull(request.locationAr()))
                 .area(request.area())
                 .price(request.price())
                 .coverImageUrl(request.coverImageUrl())
@@ -92,6 +98,9 @@ public class PropertyServiceImpl implements PropertyService {
             property.setStatus(request.status());
         }
         property.setLocation(request.location());
+        property.setTitleAr(blankToNull(request.titleAr()));
+        property.setDescriptionAr(blankToNull(request.descriptionAr()));
+        property.setLocationAr(blankToNull(request.locationAr()));
         property.setArea(request.area());
         property.setPrice(request.price());
         property.setCoverImageUrl(request.coverImageUrl());
@@ -116,6 +125,15 @@ public class PropertyServiceImpl implements PropertyService {
         Set<String> images = imageUrlsOf(property);
         propertyRepository.deleteById(id);
         deleteUnusedImages(images, id);
+    }
+
+    /**
+     * Blank and absent mean the same thing for an Arabic field - "there is no
+     * Arabic copy" - and storing "" instead of NULL would hide the row from
+     * the backfill query, which looks for NULLs.
+     */
+    private static String blankToNull(String value) {
+        return (value == null || value.isBlank()) ? null : value.trim();
     }
 
     private Set<String> imageUrlsOf(Property property) {

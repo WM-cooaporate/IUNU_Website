@@ -16,6 +16,11 @@ public record PropertyResponse(
         PropertyType type,
         PropertyStatus status,
         String location,
+        // Arabic copies, null when translation is off or has not run yet.
+        // The site picks between these and the English above by language.
+        String titleAr,
+        String descriptionAr,
+        String locationAr,
         BigDecimal area,
         BigDecimal price,
         String coverImageUrl,
@@ -32,6 +37,9 @@ public record PropertyResponse(
                 property.getType(),
                 property.getStatus(),
                 property.getLocation(),
+                property.getTitleAr(),
+                property.getDescriptionAr(),
+                property.getLocationAr(),
                 property.getArea(),
                 property.getPrice(),
                 property.getCoverImageUrl(),
