@@ -4,8 +4,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.Locale;
 import java.util.Map;
@@ -14,28 +19,44 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Guards the Flyway migrations, which the other tests never touch (they let
- * Hibernate generate the schema from the entities on H2).
+ * Guards the Flyway migrations, which the rest of the suite never touches
+ * (those tests let Hibernate generate the schema from the entities on H2).
  *
- * The failure this catches is the expensive one: a column named or sized
- * differently in V3__create_projects.sql than the Project entity expects.
- * On MySQL that surfaces only at boot, as a ddl-auto=validate error.
+ * This runs against a real PostgreSQL, not a compatibility mode, because the
+ * two failures that would otherwise only surface on the first deploy are
+ * engine-specific: a migration that PostgreSQL refuses to apply, and a schema
+ * that applies cleanly but that Hibernate's ddl-auto=validate then rejects.
+ * Both are asserted here - the second simply by the context starting, since
+ * validate is switched on below.
+ *
+ * Skipped, not failed, when Docker is unavailable.
  */
 @SpringBootTest
-@ActiveProfiles({"test", "migcheck"})
-@DisplayName("Flyway migrations")
+@Testcontainers(disabledWithoutDocker = true)
+@ActiveProfiles("test")
+@TestPropertySource(properties = {
+        "spring.flyway.enabled=true",
+        "spring.jpa.hibernate.ddl-auto=validate"
+})
+@DisplayName("Flyway migrations on PostgreSQL")
 class MigrationSchemaTest {
+
+    @Container
+    @ServiceConnection
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
 
     @Autowired private JdbcTemplate jdbcTemplate;
 
+    /** PostgreSQL folds unquoted identifiers to lower case, so every key here is lower case. */
     private Map<String, String> columnsOf(String table) {
         return jdbcTemplate.queryForList(
-                        "SELECT column_name, data_type FROM information_schema.columns WHERE lower(table_name) = ?",
+                        "SELECT column_name, data_type FROM information_schema.columns "
+                                + "WHERE table_schema = 'public' AND table_name = ?",
                         table)
                 .stream()
                 .collect(Collectors.toMap(
-                        row -> String.valueOf(row.get("COLUMN_NAME")).toLowerCase(Locale.ROOT),
-                        row -> String.valueOf(row.get("DATA_TYPE")).toUpperCase(Locale.ROOT)));
+                        row -> String.valueOf(row.get("column_name")).toLowerCase(Locale.ROOT),
+                        row -> String.valueOf(row.get("data_type")).toUpperCase(Locale.ROOT)));
     }
 
     @Test
@@ -50,7 +71,10 @@ class MigrationSchemaTest {
 
         assertThat(columns.get("id")).isEqualTo("BIGINT");
         assertThat(columns.get("published")).isEqualTo("BOOLEAN");
-        assertThat(columns.get("title")).contains("CHARACTER VARYING");
+        assertThat(columns.get("title")).isEqualTo("CHARACTER VARYING");
+        // Not "TEXT" by accident: the entity dropped @Lob precisely so this
+        // stays a text column rather than becoming a large-object oid.
+        assertThat(columns.get("description")).isEqualTo("TEXT");
     }
 
     @Test
@@ -58,11 +82,11 @@ class MigrationSchemaTest {
     void nullabilityMatchesEntity() {
         Map<String, String> nullability = jdbcTemplate.queryForList(
                         "SELECT column_name, is_nullable FROM information_schema.columns "
-                                + "WHERE lower(table_name) = 'projects'")
+                                + "WHERE table_schema = 'public' AND table_name = 'projects'")
                 .stream()
                 .collect(Collectors.toMap(
-                        row -> String.valueOf(row.get("COLUMN_NAME")).toLowerCase(Locale.ROOT),
-                        row -> String.valueOf(row.get("IS_NULLABLE")).toUpperCase(Locale.ROOT)));
+                        row -> String.valueOf(row.get("column_name")).toLowerCase(Locale.ROOT),
+                        row -> String.valueOf(row.get("is_nullable")).toUpperCase(Locale.ROOT)));
 
         assertThat(nullability.get("title")).isEqualTo("NO");
         assertThat(nullability.get("published")).isEqualTo("NO");
@@ -85,5 +109,39 @@ class MigrationSchemaTest {
                 "SELECT published FROM projects WHERE title = 'Direct insert'", Boolean.class);
 
         assertThat(published).isFalse();
+    }
+
+    @Test
+    @DisplayName("give every Instant-backed column a time zone, as Hibernate 6 expects")
+    void timestampColumnsAreTimeZoneAware() {
+        // A plain TIMESTAMP here is the classic MySQL-to-PostgreSQL carry-over:
+        // it applies fine and then fails ddl-auto=validate at boot, because
+        // Hibernate 6 maps java.time.Instant to TIMESTAMP WITH TIME ZONE.
+        assertThat(columnsOf("projects").get("created_at")).isEqualTo("TIMESTAMP WITH TIME ZONE");
+        assertThat(columnsOf("projects").get("updated_at")).isEqualTo("TIMESTAMP WITH TIME ZONE");
+        assertThat(columnsOf("users").get("created_at")).isEqualTo("TIMESTAMP WITH TIME ZONE");
+        assertThat(columnsOf("users").get("locked_until")).isEqualTo("TIMESTAMP WITH TIME ZONE");
+        assertThat(columnsOf("refresh_tokens").get("expires_at")).isEqualTo("TIMESTAMP WITH TIME ZONE");
+        assertThat(columnsOf("contact_messages").get("created_at")).isEqualTo("TIMESTAMP WITH TIME ZONE");
+    }
+
+    @Test
+    @DisplayName("reject two users whose emails differ only by case")
+    void emailUniquenessIsCaseInsensitive() {
+        jdbcTemplate.update(
+                "INSERT INTO users (full_name, email, password, role) VALUES (?, ?, ?, 'ADMIN')",
+                "Case Test", "Case.Test@iunu.example", "irrelevant-hash");
+
+        // MySQL's collation made this a duplicate for free. On PostgreSQL only
+        // the lower(email) unique index stops it, and that index is what keeps
+        // two accounts from answering to the same login.
+        assertThatDuplicateInsertFails("case.test@iunu.example");
+    }
+
+    private void assertThatDuplicateInsertFails(String email) {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> jdbcTemplate.update(
+                        "INSERT INTO users (full_name, email, password, role) VALUES (?, ?, ?, 'ADMIN')",
+                        "Duplicate", email, "irrelevant-hash"))
+                .isInstanceOf(org.springframework.dao.DuplicateKeyException.class);
     }
 }

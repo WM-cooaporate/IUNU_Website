@@ -1,19 +1,18 @@
-# Tests run against in-memory H2 rather than MySQL. The Flyway migrations are
-# MySQL-specific DDL (AUTO_INCREMENT, ENGINE=InnoDB), so they are disabled here
-# and Hibernate generates the schema from the entities instead. The migrations
-# themselves stay the source of truth for real deployments.
+# The fast suite runs against in-memory H2 in PostgreSQL compatibility mode,
+# with Flyway off and the schema generated from the entities - the same
+# arrangement as before, just aimed at PostgreSQL instead of MySQL semantics.
+#
+# The migrations themselves are exercised separately, against a real
+# PostgreSQL container, by MigrationSchemaTest.
 spring:
   datasource:
-    url: jdbc:h2:mem:iunu-test;DB_CLOSE_DELAY=-1;MODE=LEGACY
+    url: jdbc:h2:mem:iunu-test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
     username: sa
     password: ""
     driver-class-name: org.h2.Driver
   jpa:
     hibernate:
       ddl-auto: create-drop
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
   flyway:
     enabled: false
   servlet:
