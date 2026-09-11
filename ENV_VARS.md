@@ -110,7 +110,7 @@ The Vite project lives at the repository root (`package.json`, `vite.config.js`)
 
 | Variable | Description | Example (dummy) |
 |---|---|---|
-| `VITE_API_URL` | Backend API base URL **including the `/api` segment**. Trailing slashes are stripped by `src/services/apiClient.js`. A production build with this unset logs an error and every API call fails. | `https://iunu-api.onrender.com/api` |
+| `VITE_API_URL` | Backend API base URL. `src/services/apiClient.js` normalises it in one place - trailing slashes are stripped and `/api` is appended when the value does not already end in `/api`, so `https://iunu-api.onrender.com` and `https://iunu-api.onrender.com/api` both reach `/api/properties`. A production build with this unset logs an error and every API call fails. | `https://iunu-api.onrender.com/api` |
 
 Vite inlines `VITE_*` variables into the shipped bundle **at build time**, so
 changing this value requires a rebuild, and every value here is public. Auth
