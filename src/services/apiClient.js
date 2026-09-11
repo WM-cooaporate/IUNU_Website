@@ -20,22 +20,42 @@ const configuredApiUrl = import.meta.env.VITE_API_URL;
 // intended target, so warning there would just be noise people learn to skip.
 if (!configuredApiUrl && import.meta.env.PROD) {
   console.error(
-    "VITE_API_URL is not set - API calls will fail. Set it in the Vercel " +
-      "project settings and redeploy (Vite inlines it at build time, so a " +
-      "rebuild is required for the change to take effect)."
+    "VITE_API_URL is not set - API calls will fail. Set it in the hosting " +
+      "provider's environment settings and redeploy (Vite inlines it at " +
+      "build time, so a rebuild is required for the change to take effect)."
   );
 }
 
+/** Used when VITE_API_URL is absent - the local backend in `npm run dev`. */
+const FALLBACK_API_URL = "http://localhost:8080/api";
+
 /**
- * Trailing slashes are stripped because axios joins this to paths that already
- * start with "/": "https://host/api/" + "/properties" would request
- * "https://host/api//properties", which matches none of the Spring Security
- * path rules and 401s instead of 200s.
+ * The one place the API base URL is decided. Everything else - every service,
+ * every component - goes through the axios instance below with a bare path
+ * like "/properties", so no other module may add or strip "/api".
+ *
+ * Two things are normalised here:
+ *
+ * 1. Trailing slashes are stripped, because axios joins this to paths that
+ *    already start with "/": "https://host/api/" + "/properties" would request
+ *    "https://host/api//properties", which matches none of the Spring Security
+ *    path rules and 401s instead of 200s.
+ * 2. "/api" is appended when it is not already the last segment. Every backend
+ *    route is served under /api (server.servlet.context-path), so a value like
+ *    "https://iunu-api.onrender.com" - the host on its own, which is what a
+ *    deploy dashboard gives you if you paste the service URL - would otherwise
+ *    send every call to /properties and /auth/login and get a 401 back.
+ *    Already-correct values ending in "/api" are left exactly as they are.
  */
-export const API_URL = (configuredApiUrl || "http://localhost:8080/api").replace(
-  /\/+$/,
-  ""
-);
+const normaliseApiUrl = (value) => {
+  const trimmed = String(value ?? "").trim().replace(/\/+$/, "");
+
+  if (!trimmed) return FALLBACK_API_URL;
+
+  return /\/api$/i.test(trimmed) ? trimmed : `${trimmed}/api`;
+};
+
+export const API_URL = normaliseApiUrl(configuredApiUrl);
 
 export const REQUEST_TIMEOUT = 15000;
 
