@@ -37,7 +37,7 @@ public class Project {
     @Column(nullable = false, length = 200)
     private String title;
 
-    @Lob
+    // See Property.description: @Lob on a String maps to an oid on PostgreSQL.
     @Column(columnDefinition = "TEXT")
     private String description;
 

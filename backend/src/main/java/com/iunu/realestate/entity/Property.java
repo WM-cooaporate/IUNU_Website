@@ -34,7 +34,10 @@ public class Property {
     @Column(nullable = false, length = 200)
     private String title;
 
-    @Lob
+    // Not @Lob: on PostgreSQL Hibernate maps @Lob String to a large-object
+    // oid, which ddl-auto=validate rejects against a TEXT column and which
+    // cannot be read outside a transaction. columnDefinition alone gives the
+    // unbounded text column this actually wants.
     @Column(columnDefinition = "TEXT")
     private String description;
 
