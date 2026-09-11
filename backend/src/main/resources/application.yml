@@ -90,6 +90,15 @@ management:
   endpoint:
     health:
       show-details: never
+  health:
+    # The mail indicator opens an SMTP connection to MAIL_HOST on every probe.
+    # With mail disabled (the default) there is nothing listening, so it reports
+    # DOWN and drags the aggregate status down with it - which on a platform
+    # that gates releases on /actuator/health means the deploy never goes live.
+    # Whether outbound email works is not a liveness condition for this API;
+    # app.mail.enabled already governs whether it is used at all.
+    mail:
+      enabled: false
 
 logging:
   level:
