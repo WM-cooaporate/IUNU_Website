@@ -44,6 +44,8 @@ class AdminEndpointAuthorizationTest extends IntegrationTest {
             "PUT,    /api/properties/1",
             "DELETE, /api/properties/1",
             "POST,   /api/properties/images",
+            "POST,   /api/admin/translations/preview",
+            "POST,   /api/admin/translations/properties/backfill",
     })
     @DisplayName("401s with no token")
     void requiresAuthentication(String method, String path) throws Exception {
@@ -69,6 +71,8 @@ class AdminEndpointAuthorizationTest extends IntegrationTest {
             "PUT,    /api/properties/1",
             "DELETE, /api/properties/1",
             "POST,   /api/properties/images",
+            "POST,   /api/admin/translations/preview",
+            "POST,   /api/admin/translations/properties/backfill",
     })
     @DisplayName("403s for an authenticated non-admin")
     void forbidsNonAdmins(String method, String path) throws Exception {
