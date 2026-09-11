@@ -61,6 +61,18 @@ const adminServices = {
   deleteProperty: async (id) => {
     await apiClient.delete(`/properties/${id}`);
   },
+
+  /** Translates the open form's English into Arabic without saving anything. */
+  previewTranslation: async (fields) => {
+    const response = await apiClient.post("/admin/translations/preview", fields);
+    return response.data;
+  },
+
+  /** Fills the Arabic of existing projects that have none yet. */
+  backfillTranslations: async () => {
+    const response = await apiClient.post("/admin/translations/properties/backfill");
+    return response.data;
+  },
 };
 
 export default adminServices;
