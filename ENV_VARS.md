@@ -84,6 +84,32 @@ this to `true` where a proxy you trust actually terminates every request.
 | `MAIL_HOST` / `MAIL_PORT` | SMTP server. | `localhost` / `587` |
 | `MAIL_USERNAME` / `MAIL_PASSWORD` | SMTP credentials. | *(empty)* |
 | `MAIL_FROM` | From address on outgoing mail. | `no-reply@iunu-eg.com` |
+| `GOOGLE_TRANSLATE_API_KEY` | Google Cloud Translation API key. Enables automatic English -> Arabic translation of project content on save. Unset or blank disables the feature: saves still succeed, the Arabic fields stay empty, and the site falls back to the English text. | *(empty)* |
+| `GOOGLE_TRANSLATE_BASE_URL` | Override for the translation API host. Only useful for pointing the backend at a stub in tests. | `https://translation.googleapis.com` |
+
+### Arabic auto-translation
+
+When an admin saves a project, the backend translates its title, description
+and location into Arabic and stores both languages on the row. The public API
+returns both, and the site's language toggle picks between them with no extra
+request. Arabic the admin typed into the dashboard is always kept as typed.
+
+`GOOGLE_TRANSLATE_API_KEY` is **backend only**. It is sent in the
+`X-goog-api-key` header, never in a URL, and must never be given a `VITE_`
+name — anything prefixed `VITE_` is compiled into the browser bundle and is
+therefore public.
+
+Setting one up:
+
+1. Google Cloud Console -> **APIs & Services** -> enable **Cloud Translation API**.
+2. **Credentials** -> **Create credentials** -> **API key**.
+3. Edit the key and, under **API restrictions**, restrict it to *Cloud Translation API*.
+4. Set it on the backend host (Railway / Render) only — never in Vercel or any
+   other frontend project.
+
+With the key absent the backend logs
+`Google translation disabled: GOOGLE_TRANSLATE_API_KEY not set` at startup and
+the dashboard's translation buttons report that translation is not configured.
 
 Actuator's mail health indicator is switched off (`management.health.mail.enabled: false`).
 It probes `MAIL_HOST` on every call, so with mail disabled it reported `DOWN`

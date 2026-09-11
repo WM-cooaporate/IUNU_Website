@@ -80,6 +80,11 @@ services:
       - key: UPLOAD_DIR
         value: /tmp/uploads
 
+      # Optional. Enables English -> Arabic auto-translation of project content
+      # on save. Left unset, saves still work and the site shows English.
+      - key: GOOGLE_TRANSLATE_API_KEY
+        sync: false
+
       # One-time admin bootstrap. Set both on the first deploy, then clear them:
       # they only take effect while the database contains no ADMIN at all.
       # ADMIN_PASSWORD must be at least 8 characters.
