@@ -1,7 +1,7 @@
 # IUNU Real Estate — Backend
 
 Spring Boot 3 / Java 21 REST API backing the `projects/iunu-website` frontend.
-MySQL for persistence, JWT for auth. Covers the public site (published
+PostgreSQL for persistence, JWT for auth. Covers the public site (published
 projects and properties, lead-capture forms) and the authenticated admin
 dashboard behind it.
 
@@ -9,7 +9,8 @@ dashboard behind it.
 
 - Java 21, Spring Boot 3.3
 - Spring Web, Spring Security, Spring Data JPA
-- MySQL 8 (via `mysql-connector-j`) + Flyway migrations
+- PostgreSQL 16 (via the `postgresql` JDBC driver) + Flyway migrations
+  (`flyway-database-postgresql`)
 - JJWT for access tokens
 - Bucket4j for in-memory rate limiting
 - springdoc-openapi (Swagger UI)
@@ -26,13 +27,13 @@ cp .env.example .env
 openssl rand -base64 48   # paste the output into JWT_SECRET
 ```
 
-### 2a. Run with Docker Compose (MySQL + API)
+### 2a. Run with Docker Compose (PostgreSQL + API)
 
 ```bash
 docker compose up --build
 ```
 
-### 2b. Run locally against your own MySQL
+### 2b. Run locally against your own PostgreSQL
 
 ```bash
 export $(grep -v '^#' .env | xargs)   # or use a tool like direnv
@@ -419,9 +420,11 @@ is a migration, not a rewrite.
 mvn test
 ```
 
-30 tests, all passing. They run against in-memory H2 (`test` profile,
-`src/test/resources/application-test.yml`) with Hibernate generating the
-schema, because the Flyway migrations are MySQL-specific DDL.
+87 tests. The fast suite runs against in-memory H2 in PostgreSQL
+compatibility mode (`test` profile, `src/test/resources/application-test.yml`)
+with Hibernate generating the schema. `MigrationSchemaTest` is the exception:
+it runs the real migrations against a real PostgreSQL container, and is
+skipped where no Docker daemon is available.
 
 What they cover:
 
@@ -444,20 +447,26 @@ What they cover:
 - **`LoginResponseShapeTest`** — pins the login contract the dashboard is
   built on (token, ISO-8601 `expiresAt`, user without a password) and checks
   that a wrong password and an unknown email return the identical message.
-- **`MigrationSchemaTest`** — runs the real Flyway migrations against H2 in
-  MySQL-compatibility mode and asserts, from `INFORMATION_SCHEMA`, that
-  `V3__create_projects.sql` produces exactly the columns the `Project`
-  entity maps, with the right nullability and a `published` default of
-  false. This is the check that catches a migration/entity mismatch, which
-  on real MySQL would otherwise only surface at boot as a `ddl-auto=validate`
-  failure.
+- **`MigrationSchemaTest`** — runs the real Flyway migrations against a
+  `postgres:16-alpine` Testcontainer with `ddl-auto=validate` switched on, so
+  the context only starts if every migration applies *and* Hibernate accepts
+  the resulting schema. On top of that it asserts, from `INFORMATION_SCHEMA`,
+  that `V3__create_projects.sql` produces exactly the columns the `Project`
+  entity maps with the right nullability and a `published` default of false;
+  that every `Instant`-backed column is `TIMESTAMP WITH TIME ZONE`; and that
+  two users whose emails differ only by case are rejected. These are the
+  checks that catch a migration/entity mismatch, which would otherwise only
+  surface at boot as a `ddl-auto=validate` failure.
 
 ### Not covered here
 
-No MySQL or Docker daemon is available in the sandbox this was built in, so
-the app has not been booted against real MySQL. `MigrationSchemaTest` covers
-the schema/entity agreement that boot would check, but run the app against
-a real MySQL once before deploying — see **Getting started** above.
+No Docker daemon was available in the sandbox the PostgreSQL migration was
+done in, so `MigrationSchemaTest` was skipped there and the `Dockerfile` has
+not been built. The packaged jar *was* booted under the `prod` profile against
+a real PostgreSQL 16: all three migrations applied, `ddl-auto=validate`
+accepted the schema, `/actuator/health` returned `UP`, and admin bootstrap,
+login, project create/read and the public forms were exercised end to end.
+Run `mvn verify` somewhere with Docker to get the container test itself.
 
 ## TODO / follow-ups
 

@@ -97,8 +97,15 @@ public class SecurityConfig {
                         // Public lead-generation forms (contact, quote, newsletter)
                         .requestMatchers(org.springframework.http.HttpMethod.POST,
                                 "/api/contact", "/api/quotes", "/api/newsletter", "/api/careers").permitAll()
-                        // Health checks
-                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                        // Health check. Render polls this on every deploy and keeps
+                        // polling it afterwards, so it has to be reachable without a
+                        // token - but only this one path, only for GET. Everything else
+                        // under /actuator is refused outright rather than left to
+                        // anyRequest().authenticated(), so exposing another endpoint by
+                        // widening management.endpoints.web.exposure.include cannot
+                        // quietly publish it.
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/actuator/health").permitAll()
+                        .requestMatchers("/actuator/**").denyAll()
                         // API docs
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         // Admin-only management endpoints
