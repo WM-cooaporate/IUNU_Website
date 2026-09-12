@@ -12,7 +12,7 @@ import "./PropertyDetails.css";
 
 function PropertyDetails() {
   const { id } = useParams();
-  const { t } = useLanguage();
+  const { t, localize } = useLanguage();
 
   const demoProperty = demoProperties.find(
     (item) => item.id === id
@@ -174,13 +174,13 @@ function PropertyDetails() {
               {property.type}
             </span>
 
-            <h1>
-              {property.title}
+            <h1 dir="auto">
+              {localize(property, "title")}
             </h1>
 
-            {property.location && (
-              <p>
-                {property.location}
+            {localize(property, "location") && (
+              <p dir="auto">
+                {localize(property, "location")}
               </p>
             )}
           </div>
@@ -199,7 +199,7 @@ function PropertyDetails() {
                 {selectedImage ? (
                   <img
                     src={selectedImage}
-                    alt={property.title}
+                    alt={localize(property, "title")}
                   />
                 ) : (
                   <div className="property-no-image">
@@ -232,7 +232,7 @@ function PropertyDetails() {
                       >
                         <img
                           src={image}
-                          alt={`${property.title} ${
+                          alt={`${localize(property, "title")} ${
                             index + 1
                           }`}
                         />
@@ -250,18 +250,18 @@ function PropertyDetails() {
                 {property.type}
               </span>
 
-              <h2>
-                {property.title}
+              <h2 dir="auto">
+                {localize(property, "title")}
               </h2>
 
-              {property.location && (
+              {localize(property, "location") && (
                 <div className="property-information-location">
                   <span>
                     {t("LOCATION")}
                   </span>
 
-                  <strong>
-                    {property.location}
+                  <strong dir="auto">
+                    {localize(property, "location")}
                   </strong>
                 </div>
               )}
@@ -287,8 +287,8 @@ function PropertyDetails() {
                   {t("DESCRIPTION")}
                 </span>
 
-                <p>
-                  {property.description ||
+                <p dir="auto">
+                  {localize(property, "description") ||
                     t(
                       "No description available for this property."
                     )}
@@ -336,8 +336,8 @@ function PropertyDetails() {
                 {t("LOCATION")}
               </span>
 
-              <strong>
-                {property.location ||
+              <strong dir="auto">
+                {localize(property, "location") ||
                   t("Not specified")}
               </strong>
             </div>

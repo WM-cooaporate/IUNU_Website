@@ -27,6 +27,19 @@ public record PropertyRequest(
         @Size(max = 200)
         String location,
 
+        // Optional Arabic copies. Blank means "translate this from the English
+        // above when saving"; a non-blank value is the admin's own wording and
+        // is stored as typed. Limits are double the English ones because
+        // Arabic output is routinely longer than its source.
+        @Size(max = 400)
+        String titleAr,
+
+        @Size(max = 40000)
+        String descriptionAr,
+
+        @Size(max = 400)
+        String locationAr,
+
         @DecimalMin(value = "0", inclusive = true, message = "Area cannot be negative")
         BigDecimal area,
 

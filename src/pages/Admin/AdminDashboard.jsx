@@ -17,12 +17,24 @@ const emptyForm = {
   type: "RESIDENTIAL",
   status: "AVAILABLE",
   location: "",
+  titleAr: "",
+  descriptionAr: "",
+  locationAr: "",
   area: "",
   price: "",
   coverImageUrl: "",
   imageUrls: "",
   published: true,
 };
+
+/**
+ * The three content fields that carry an Arabic copy, English name -> Arabic
+ * name. Anything not listed here (type, status, area, price) is either an enum
+ * the site translates from its own dictionary or a number.
+ */
+const ARABIC_FIELDS = { title: "titleAr", description: "descriptionAr", location: "locationAr" };
+
+const NO_ARABIC_TOUCHED = { titleAr: false, descriptionAr: false, locationAr: false };
 
 const formatDate = (value) =>
   value
@@ -139,6 +151,15 @@ function AdminDashboard() {
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [imageFiles, setImageFiles] = useState([]);
+  /**
+   * Which Arabic fields the admin has typed in. An untouched field is cleared
+   * whenever its English changes, so the backend re-translates it on save; a
+   * touched one is the admin's own wording and is never thrown away.
+   */
+  const [arTouched, setArTouched] = useState(NO_ARABIC_TOUCHED);
+  const [translating, setTranslating] = useState(false);
+  const [translationNotice, setTranslationNotice] = useState("");
+  const [backfilling, setBackfilling] = useState(false);
 
   const loadProperties = useCallback(async () => {
     setLoading(true);
@@ -204,6 +225,8 @@ function AdminDashboard() {
   const openCreate = () => {
     setForm(emptyForm);
     setImageFiles([]);
+    setArTouched(NO_ARABIC_TOUCHED);
+    setTranslationNotice("");
     setModal("create");
     setError("");
   };
@@ -215,6 +238,9 @@ function AdminDashboard() {
       type: property.type || "RESIDENTIAL",
       status: property.status || "AVAILABLE",
       location: property.location || "",
+      titleAr: property.titleAr || "",
+      descriptionAr: property.descriptionAr || "",
+      locationAr: property.locationAr || "",
       area: property.area ?? "",
       price: property.price ?? "",
       coverImageUrl: property.coverImageUrl || "",
@@ -222,13 +248,72 @@ function AdminDashboard() {
       published: property.published !== false,
     });
     setImageFiles([]);
+    // Arabic already on the row was either machine-translated or hand-written;
+    // either way editing the English should refresh it, so it starts untouched.
+    setArTouched(NO_ARABIC_TOUCHED);
+    setTranslationNotice("");
     setModal({ type: "edit", id: property.id });
     setError("");
   };
 
   const updateField = (event) => {
     const { name, value, type, checked } = event.target;
-    setForm((current) => ({ ...current, [name]: type === "checkbox" ? checked : value }));
+    if (Object.values(ARABIC_FIELDS).includes(name)) setArTouched((current) => ({ ...current, [name]: true }));
+    setForm((current) => {
+      const next = { ...current, [name]: type === "checkbox" ? checked : value };
+      // Editing the English invalidates an Arabic copy nobody has hand-edited.
+      // Clearing it is what tells the backend to translate it again on save.
+      const arabicField = ARABIC_FIELDS[name];
+      if (arabicField && !arTouched[arabicField]) next[arabicField] = "";
+      return next;
+    });
+  };
+
+  /** Fills the three Arabic inputs from the English ones, without saving. */
+  const handleTranslatePreview = async () => {
+    if (translating) return;
+    setTranslating(true);
+    setError("");
+    setTranslationNotice("");
+    try {
+      const result = await adminServices.previewTranslation({
+        title: form.title.trim(),
+        description: form.description.trim(),
+        location: form.location.trim(),
+      });
+      if (result?.enabled === false) {
+        setTranslationNotice("Automatic translation is not configured on the server.");
+        return;
+      }
+      setForm((current) => ({ ...current, titleAr: result?.titleAr || "", descriptionAr: result?.descriptionAr || "", locationAr: result?.locationAr || "" }));
+      // The admin asked for these values, so they count as theirs: editing the
+      // English afterwards must not silently wipe them.
+      setArTouched({ titleAr: true, descriptionAr: true, locationAr: true });
+    } catch (requestError) {
+      setError(toUserMessage(requestError, "Unable to translate this project right now."));
+    } finally {
+      setTranslating(false);
+    }
+  };
+
+  const handleBackfillTranslations = async () => {
+    if (backfilling) return;
+    setBackfilling(true);
+    setError("");
+    setSuccess("");
+    try {
+      const result = await adminServices.backfillTranslations();
+      if (result?.enabled === false) {
+        setError("Automatic translation is not configured on the server.");
+        return;
+      }
+      setSuccess(`Translated ${result?.updated ?? 0} project(s).`);
+      await loadProperties();
+    } catch (requestError) {
+      setError(toUserMessage(requestError, "Unable to translate the existing projects."));
+    } finally {
+      setBackfilling(false);
+    }
   };
 
   const handleImageFiles = (event) => {
@@ -256,6 +341,11 @@ function AdminDashboard() {
       type: form.type,
       status: form.status,
       location: form.location.trim(),
+      // Blank is meaningful: it asks the backend to translate from the English
+      // above. A filled value is the admin's own Arabic and is stored as typed.
+      titleAr: form.titleAr.trim(),
+      descriptionAr: form.descriptionAr.trim(),
+      locationAr: form.locationAr.trim(),
       area: form.area === "" ? null : Number(form.area),
       price: form.price === "" ? null : Number(form.price),
       coverImageUrl: uploadedImages[0] || form.coverImageUrl.trim() || null,
@@ -374,7 +464,7 @@ function AdminDashboard() {
         )}
         {error && <div className="admin-alert admin-alert-error">{error}</div>}
         {success && <div className="admin-alert admin-alert-success">{success}</div>}
-        <div className="admin-page-heading"><div><span className="admin-eyebrow">CONTENT MANAGEMENT</span><h2>Projects</h2><p>Create, update and publish the projects visitors see.</p></div><button className="add-property-button" type="button" onClick={openCreate}><span>+</span> Add project</button></div>
+        <div className="admin-page-heading"><div><span className="admin-eyebrow">CONTENT MANAGEMENT</span><h2>Projects</h2><p>Create, update and publish the projects visitors see.</p></div><div className="admin-heading-actions">{!demoMode && <button className="backfill-button" type="button" onClick={handleBackfillTranslations} disabled={backfilling}>{backfilling ? "Translating..." : "Translate missing Arabic"}</button>}<button className="add-property-button" type="button" onClick={openCreate}><span>+</span> Add project</button></div></div>
         <section className="admin-stats">
           <div className="admin-stat-card"><span>Total projects</span><strong>{stats.total}</strong></div>
           <div className="admin-stat-card"><span>Published projects</span><strong>{stats.published}</strong></div>
@@ -386,7 +476,7 @@ function AdminDashboard() {
         </section>
       </main>
 
-      {modal && <div className="admin-modal-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null); }}><section className="admin-modal" role="dialog" aria-modal="true" aria-labelledby="project-form-title"><div className="admin-modal-header"><div><span className="admin-eyebrow">{modal.type === "edit" ? "UPDATE PROJECT" : "NEW PROJECT"}</span><h2 id="project-form-title">{modal.type === "edit" ? "Edit project" : "Add project"}</h2></div><button className="modal-close" type="button" onClick={() => setModal(null)} aria-label="Close form">×</button></div><form className="property-form" onSubmit={handleSave}><div className="form-grid"><label className="form-field"><span>Project name *</span><input name="title" value={form.title} onChange={updateField} placeholder="IUNU Residence" required maxLength={200} /></label><label className="form-field"><span>Location</span><input name="location" value={form.location} onChange={updateField} placeholder="New Cairo" maxLength={200} /></label><label className="form-field form-field-full"><span>Description</span><textarea name="description" value={form.description} onChange={updateField} placeholder="Describe the project..." rows="5" maxLength={20000} /></label><label className="form-field"><span>Area of unit (m²)</span><input name="area" type="number" min="0" step="0.01" value={form.area} onChange={updateField} placeholder="120000" /></label><label className="form-field"><span>Project type *</span><select name="type" value={form.type} onChange={updateField}><option value="RESIDENTIAL">Residential</option><option value="COMMERCIAL">Commercial</option><option value="ADMINISTRATIVE">Administrative</option></select></label><label className="form-field"><span>Status</span><select name="status" value={form.status} onChange={updateField}><option value="AVAILABLE">Available</option><option value="COMING_SOON">Coming soon</option><option value="SOLD_OUT">Sold out</option></select></label><label className="form-field"><span>Price (optional)</span><input name="price" type="number" min="0" step="0.01" value={form.price} onChange={updateField} placeholder="Price on request" /></label><label className="form-field form-field-full"><span>Project photos</span><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={handleImageFiles} /><small>Select JPG, PNG or WEBP files from your device. The first selected image becomes the cover. Existing images stay unchanged when no new files are selected.{imageFiles.length > 0 ? ` ${imageFiles.length} file${imageFiles.length === 1 ? "" : "s"} selected.` : ""}</small></label><label className="form-checkbox"><input name="published" type="checkbox" checked={form.published} onChange={updateField} /><span>Publish this project on the website</span></label></div><div className="admin-modal-actions"><button className="cancel-button" type="button" onClick={() => setModal(null)}>Cancel</button><button className="save-button" type="submit" disabled={saving}>{saving ? "Saving..." : modal.type === "edit" ? "Update project" : "Save project"}</button></div></form></section></div>}
+      {modal && <div className="admin-modal-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null); }}><section className="admin-modal" role="dialog" aria-modal="true" aria-labelledby="project-form-title"><div className="admin-modal-header"><div><span className="admin-eyebrow">{modal.type === "edit" ? "UPDATE PROJECT" : "NEW PROJECT"}</span><h2 id="project-form-title">{modal.type === "edit" ? "Edit project" : "Add project"}</h2></div><button className="modal-close" type="button" onClick={() => setModal(null)} aria-label="Close form">×</button></div><form className="property-form" onSubmit={handleSave}><div className="form-grid"><label className="form-field"><span>Project name *</span><input name="title" value={form.title} onChange={updateField} placeholder="IUNU Residence" required maxLength={200} /></label><label className="form-field"><span>Location</span><input name="location" value={form.location} onChange={updateField} placeholder="New Cairo" maxLength={200} /></label><label className="form-field form-field-full"><span>Description</span><textarea name="description" value={form.description} onChange={updateField} placeholder="Describe the project..." rows="5" maxLength={20000} /></label><fieldset className="form-field form-field-full arabic-fieldset"><legend>Arabic version</legend><p className="arabic-hint">Leave blank to translate automatically from English when you save. You can edit the Arabic before saving.</p><div className="arabic-grid"><label className="form-field"><span>اسم المشروع</span><input name="titleAr" value={form.titleAr} onChange={updateField} placeholder="اسم المشروع" dir="rtl" lang="ar" maxLength={400} /></label><label className="form-field"><span>الموقع</span><input name="locationAr" value={form.locationAr} onChange={updateField} placeholder="الموقع" dir="rtl" lang="ar" maxLength={400} /></label><label className="form-field form-field-full"><span>وصف المشروع</span><textarea name="descriptionAr" value={form.descriptionAr} onChange={updateField} placeholder="وصف المشروع" dir="rtl" lang="ar" rows="5" maxLength={40000} /></label></div><div className="arabic-actions"><button className="translate-button" type="button" onClick={handleTranslatePreview} disabled={translating || demoMode}>{translating ? "Translating..." : "Translate from English"}</button>{demoMode && <small>Translation requires the backend. Exit demo mode to use it.</small>}{translationNotice && <small className="arabic-notice">{translationNotice}</small>}</div></fieldset><label className="form-field"><span>Area of unit (m²)</span><input name="area" type="number" min="0" step="0.01" value={form.area} onChange={updateField} placeholder="120000" /></label><label className="form-field"><span>Project type *</span><select name="type" value={form.type} onChange={updateField}><option value="RESIDENTIAL">Residential</option><option value="COMMERCIAL">Commercial</option><option value="ADMINISTRATIVE">Administrative</option></select></label><label className="form-field"><span>Status</span><select name="status" value={form.status} onChange={updateField}><option value="AVAILABLE">Available</option><option value="COMING_SOON">Coming soon</option><option value="SOLD_OUT">Sold out</option></select></label><label className="form-field"><span>Price (optional)</span><input name="price" type="number" min="0" step="0.01" value={form.price} onChange={updateField} placeholder="Price on request" /></label><label className="form-field form-field-full"><span>Project photos</span><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={handleImageFiles} /><small>Select JPG, PNG or WEBP files from your device. The first selected image becomes the cover. Existing images stay unchanged when no new files are selected.{imageFiles.length > 0 ? ` ${imageFiles.length} file${imageFiles.length === 1 ? "" : "s"} selected.` : ""}</small></label><label className="form-checkbox"><input name="published" type="checkbox" checked={form.published} onChange={updateField} /><span>Publish this project on the website</span></label></div><div className="admin-modal-actions"><button className="cancel-button" type="button" onClick={() => setModal(null)}>Cancel</button><button className="save-button" type="submit" disabled={saving}>{saving ? "Saving..." : modal.type === "edit" ? "Update project" : "Save project"}</button></div></form></section></div>}
     </div>
   );
 }

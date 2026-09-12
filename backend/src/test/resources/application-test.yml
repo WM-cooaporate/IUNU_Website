@@ -33,6 +33,12 @@ app:
     trust-forwarded-header: false
   cors:
     allowed-origins: http://localhost:5173
+  # Deliberately blank: the suite must never reach Google. Tests that need a
+  # translator supply their own stub or mock.
+  translation:
+    google:
+      api-key: ""
+      base-url: https://translation.invalid
   frontend-url: http://localhost:5173
   file-storage:
     location: target/test-uploads

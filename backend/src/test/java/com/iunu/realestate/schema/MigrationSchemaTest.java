@@ -78,6 +78,34 @@ class MigrationSchemaTest {
     }
 
     @Test
+    @DisplayName("give properties the three Arabic content columns V4 adds")
+    void propertiesTableCarriesArabicColumns() {
+        Map<String, String> columns = columnsOf("properties");
+
+        assertThat(columns).containsKeys("title_ar", "description_ar", "location_ar");
+        assertThat(columns.get("title_ar")).isEqualTo("CHARACTER VARYING");
+        assertThat(columns.get("location_ar")).isEqualTo("CHARACTER VARYING");
+        // TEXT rather than a large-object oid, for the same reason as description.
+        assertThat(columns.get("description_ar")).isEqualTo("TEXT");
+    }
+
+    @Test
+    @DisplayName("keep every Arabic column nullable, so a save works with translation off")
+    void arabicColumnsAreNullable() {
+        Map<String, String> nullability = jdbcTemplate.queryForList(
+                        "SELECT column_name, is_nullable FROM information_schema.columns "
+                                + "WHERE table_schema = 'public' AND table_name = 'properties'")
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> String.valueOf(row.get("column_name")).toLowerCase(Locale.ROOT),
+                        row -> String.valueOf(row.get("is_nullable")).toUpperCase(Locale.ROOT)));
+
+        assertThat(nullability.get("title_ar")).isEqualTo("YES");
+        assertThat(nullability.get("description_ar")).isEqualTo("YES");
+        assertThat(nullability.get("location_ar")).isEqualTo("YES");
+    }
+
+    @Test
     @DisplayName("make title and published NOT NULL, and leave every descriptive field nullable")
     void nullabilityMatchesEntity() {
         Map<String, String> nullability = jdbcTemplate.queryForList(

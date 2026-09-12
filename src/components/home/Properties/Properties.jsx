@@ -6,7 +6,7 @@ import { useLanguage } from "../../../i18n/LanguageContext";
 import "./Properties.css";
 
 function Properties() {
-  const { t } = useLanguage();
+  const { t, localize } = useLanguage();
   const [properties, setProperties] = useState(demoProperties);
 
   const sectionRef = useRef(null);
@@ -115,7 +115,7 @@ function Properties() {
                   property.coverImageUrl ||
                   "/images/hh.jpg"
                 }
-                alt={property.title}
+                alt={localize(property, "title")}
                 className="property-image"
                 loading="lazy"
               />
@@ -137,13 +137,13 @@ function Properties() {
             </Link>
 
             <div className="property-content">
-              <div className="property-location">
-                {property.location}
+              <div className="property-location" dir="auto">
+                {localize(property, "location")}
               </div>
 
-              <h3>{property.title}</h3>
+              <h3 dir="auto">{localize(property, "title")}</h3>
 
-              <p>{property.description}</p>
+              <p dir="auto">{localize(property, "description")}</p>
             </div>
           </article>
         ))}

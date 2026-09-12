@@ -23,7 +23,7 @@ const emptyContactForm = {
 };
 
 function Contact() {
-  const { t } = useLanguage();
+  const { t, localize } = useLanguage();
 
   const [searchParams] = useSearchParams();
   const propertyId = searchParams.get("property");
@@ -78,6 +78,9 @@ function Contact() {
       ["Project type", formData.project],
       ["Space type", formData.spaceType],
       ["WhatsApp", formData.whatsapp],
+      // Deliberately the English title, not the localized one: this line ends
+      // up in the message the sales team reads, and the catalogue they work
+      // from is in English.
       ["Enquiring about", property?.title],
     ].filter(([, value]) => Boolean(value));
 
@@ -163,7 +166,7 @@ function Contact() {
 
               <h2>
                 {property
-                  ? `${t("Interested in")} ${property.title}`
+                  ? `${t("Interested in")} ${localize(property, "title")}`
                   : t("Visit Our Office")}
               </h2>
 
@@ -198,13 +201,13 @@ function Contact() {
                       {t("PROPERTY INQUIRY")}
                     </span>
 
-                    <strong>
-                      {property.title}
+                    <strong dir="auto">
+                      {localize(property, "title")}
                     </strong>
 
-                    {property.location && (
-                      <small>
-                        {property.location}
+                    {localize(property, "location") && (
+                      <small dir="auto">
+                        {localize(property, "location")}
                       </small>
                     )}
 
@@ -424,7 +427,7 @@ function Contact() {
                   name="message"
                   placeholder={
                     property
-                      ? `${t("I'm interested in")} ${property.title}...`
+                      ? `${t("I'm interested in")} ${localize(property, "title")}...`
                       : t("Tell us how we can help...")
                   }
                   value={formData.message}

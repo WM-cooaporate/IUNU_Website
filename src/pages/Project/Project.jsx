@@ -13,7 +13,7 @@ import { useLanguage } from "../../i18n/LanguageContext";
 import "./Project.css";
 
 function Project() {
-  const { t } = useLanguage();
+  const { t, localize } = useLanguage();
 
   const [properties, setProperties] = useState(demoProperties);
   const [loading, setLoading] = useState(false);
@@ -246,7 +246,7 @@ function Project() {
                         {property.coverImageUrl ? (
                           <img
                             src={property.coverImageUrl}
-                            alt={property.title}
+                            alt={localize(property, "title")}
                             loading="lazy"
                           />
                         ) : (
@@ -283,19 +283,19 @@ function Project() {
                           </span>
                         )}
 
-                        <h3>
-                          {property.title}
+                        <h3 dir="auto">
+                          {localize(property, "title")}
                         </h3>
 
-                        {property.location && (
-                          <p className="project-property-location">
-                            {property.location}
+                        {localize(property, "location") && (
+                          <p className="project-property-location" dir="auto">
+                            {localize(property, "location")}
                           </p>
                         )}
 
-                        {property.description && (
-                          <p className="project-property-description">
-                            {property.description}
+                        {localize(property, "description") && (
+                          <p className="project-property-description" dir="auto">
+                            {localize(property, "description")}
                           </p>
                         )}
 

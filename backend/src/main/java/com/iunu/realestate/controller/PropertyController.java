@@ -5,6 +5,7 @@ import com.iunu.realestate.dto.response.PropertyResponse;
 import com.iunu.realestate.entity.PropertyType;
 import com.iunu.realestate.service.PropertyService;
 import com.iunu.realestate.service.ImageStorage;
+import com.iunu.realestate.translation.PropertyTranslationFiller;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,6 +29,7 @@ public class PropertyController {
 
     private final PropertyService propertyService;
     private final ImageStorage imageStorage;
+    private final PropertyTranslationFiller translationFiller;
 
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasRole('ADMIN')")
@@ -67,14 +69,18 @@ public class PropertyController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<PropertyResponse> create(@Valid @RequestBody PropertyRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(propertyService.create(request));
+        // Translation happens here rather than in the service on purpose: the
+        // controller is not transactional, so the call to Google finishes
+        // before create() takes a database connection.
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(propertyService.create(translationFiller.fill(request)));
     }
 
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<PropertyResponse> update(@PathVariable Long id, @Valid @RequestBody PropertyRequest request) {
-        return ResponseEntity.ok(propertyService.update(id, request));
+        return ResponseEntity.ok(propertyService.update(id, translationFiller.fill(request)));
     }
 
     @SecurityRequirement(name = "bearerAuth")
