@@ -237,16 +237,7 @@ function About() {
               </div>
             </div>
 
-            <button
-              type="button"
-              className="about-read-more about-reveal about-reveal-button"
-            >
-              <span>{t("READ MORE")}</span>
-
-              <span className="about-read-more-arrow" aria-hidden="true">
-                →
-              </span>
-            </button>
+           
           </div>
         </section>
       </main>
