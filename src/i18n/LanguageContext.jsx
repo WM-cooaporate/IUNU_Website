@@ -64,7 +64,7 @@ const translations = {
 "Select space type":" أختر مساحتك",
 "Space Type":" المساحة",
 
-
+"Plot No. 306–307, Galaxy Mall, South 90th Street, Second Floor, Fifth Settlement, New Cairo, Egypt.":"القطعة رقم 306–307، جالكسي مول، شارع التسعين الجنوبي، الطابق الثاني، التجمع الخامس، القاهرة الجديدة، مصر.",
 // eslint-disable-next-line no-dupe-keys
 "Spaces": "مساحات",
 
