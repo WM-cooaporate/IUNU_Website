@@ -1,5 +1,7 @@
 package com.iunu.realestate.translation;
 
+import com.iunu.realestate.metrics.AbuseMetrics;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -33,10 +35,23 @@ class GoogleTranslationServiceTest {
     private MockRestServiceServer server;
 
     private GoogleTranslationService serviceWith(String apiKey) {
+        // 0 = no daily character budget, so these tests exercise the HTTP
+        // behaviour only. The budget has its own test.
+        return serviceWith(apiKey, budgetOf(0));
+    }
+
+    private GoogleTranslationService serviceWith(String apiKey, TranslationBudget budget) {
         RestClient.Builder builder = RestClient.builder();
         server = MockRestServiceServer.bindTo(builder).build();
         return new GoogleTranslationService(
-                builder, new GoogleTranslateProperties(apiKey, BASE_URL, 1000, 1000));
+                builder,
+                new GoogleTranslateProperties(apiKey, BASE_URL, 1000, 1000, budget.dailyCharLimit()),
+                budget,
+                new AbuseMetrics(new SimpleMeterRegistry()));
+    }
+
+    private static TranslationBudget budgetOf(long dailyCharLimit) {
+        return new TranslationBudget(dailyCharLimit, new AbuseMetrics(new SimpleMeterRegistry()));
     }
 
     private static String responseWith(String... translations) {
@@ -134,6 +149,28 @@ class GoogleTranslationServiceTest {
         assertThat(service.isEnabled()).isFalse();
         assertThat(service.translateEnToAr(List.of("New Cairo"))).containsExactly((String) null);
         // No expectation was registered, so any request would have failed above.
+        server.verify();
+    }
+
+    @Test
+    @DisplayName("stops calling Google once the daily character budget is spent, without failing")
+    void spentBudgetStopsCallingGoogleAndStillReturns() {
+        // Room for "New Cairo" (9 characters) and nothing after it.
+        TranslationBudget budget = budgetOf(9);
+        GoogleTranslationService service = serviceWith("secret-key", budget);
+
+        server.expect(ExpectedCount.once(), requestTo(ENDPOINT))
+                .andRespond(withSuccess(responseWith("القاهرة الجديدة"), MediaType.APPLICATION_JSON));
+
+        assertThat(service.translateEnToAr(List.of("New Cairo"))).containsExactly("القاهرة الجديدة");
+        assertThat(budget.charsUsedToday()).isEqualTo(9);
+
+        // Second call is over budget. No HTTP request is made - the single
+        // expectation above is already satisfied, so a second one would fail -
+        // and the caller gets a null rather than an exception, which is the
+        // same shape every other translation failure takes. A save built on
+        // this still succeeds, with the English text.
+        assertThat(service.translateEnToAr(List.of("Sheikh Zayed"))).containsExactly((String) null);
         server.verify();
     }
 }
