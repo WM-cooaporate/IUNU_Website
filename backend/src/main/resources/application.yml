@@ -5,6 +5,30 @@ server:
     include-binding-errors: never
     include-stacktrace: never
     include-exception: false
+  # A header larger than this is refused before it is buffered. The default is
+  # 8KB; 16KB leaves room for a long Authorization header plus Cloudflare's own
+  # headers without leaving the door open to header-stuffing.
+  max-http-request-header-size: 16KB
+  tomcat:
+    threads:
+      # The ceiling on concurrent in-flight requests. Every thread over this is
+      # queued, not dropped. Keep it well above DB_POOL_MAX: threads waiting on
+      # the pool are cheap, threads that cannot exist mean refused connections.
+      max: ${TOMCAT_MAX_THREADS:100}
+    # Connections waiting for a thread. Beyond this the OS refuses the TCP
+    # connection, which is the correct failure - a refused connection is a fast
+    # error a client can retry, an accepted one that times out is a held resource.
+    accept-count: 100
+    # Bytes of an aborted request body Tomcat will read and discard. Without a
+    # cap, rejecting a large upload still means reading all of it.
+    max-swallow-size: 2MB
+    max-http-form-post-size: 1MB
+    # Slowloris: a client that opens a connection and sends one byte a minute
+    # holds a thread indefinitely. Enough of those and the pool is gone without
+    # a single complete request. These two put a clock on it.
+    connection-timeout: 10s
+    keep-alive-timeout: 15s
+    max-keep-alive-requests: 100
 
 spring:
   application:
@@ -15,8 +39,25 @@ spring:
     username: ${DB_USERNAME:iunu}
     password: ${DB_PASSWORD:}
     hikari:
-      maximum-pool-size: ${DB_POOL_SIZE:10}
-      connection-timeout: 20000
+      # Must stay BELOW the database plan's connection limit, counting every
+      # instance and every other client (migrations, a psql session, a backup
+      # job). Exceeding it does not degrade - the database refuses new
+      # connections and the app 500s. See ENV_VARS.md.
+      # DB_POOL_SIZE is the older name for this, still honoured.
+      maximum-pool-size: ${DB_POOL_MAX:${DB_POOL_SIZE:10}}
+      minimum-idle: 2
+      # Fail fast rather than queue forever. Under load the useful answer is
+      # "the database is saturated" after 5 seconds, not a request thread held
+      # for 20 while the queue behind it grows.
+      connection-timeout: 5000
+      # Below the idle timeout managed Postgres providers apply (commonly 30
+      # minutes), so the pool retires a connection before the server kills it
+      # and hands out a dead one.
+      max-lifetime: 1500000
+      # Logs a stack trace for a connection held longer than this. Catches the
+      # "slow endpoint holds a connection across a network call" class of bug,
+      # which is invisible until it exhausts the pool under load.
+      leak-detection-threshold: 20000
 
   jpa:
     hibernate:
@@ -49,10 +90,22 @@ spring:
           timeout: 5000
           writetimeout: 5000
 
+  # A public endpoint that takes a page size takes "give me the whole table"
+  # unless it is capped. This is a performance fix and a DoS fix at once: one
+  # request for ?size=100000 costs more than a thousand normal ones.
+  data:
+    web:
+      pageable:
+        default-page-size: 12
+        max-page-size: 50
+
   servlet:
     multipart:
+      # Matches what LocalImageStorage is willing to hold in memory per file.
       max-file-size: 5MB
-      max-request-size: 5MB
+      # Raised from 5MB so the dashboard can send several images in one
+      # request; the per-file cap above is what actually bounds a single upload.
+      max-request-size: 25MB
 
 app:
   jwt:
@@ -65,9 +118,39 @@ app:
     lock-duration-minutes: ${ACCOUNT_LOCK_DURATION_MINUTES:15}
     reset-token-expiry-minutes: ${RESET_TOKEN_EXPIRY_MINUTES:30}
     refresh-token-expiry-days: ${REFRESH_TOKEN_EXPIRY_DAYS:7}
-    # Only true when a reverse proxy in front of this app is trusted to set
-    # X-Forwarded-For. TRUST_FORWARDED_HEADER is the older name, still honoured.
+    # Superseded by app.client-ip.mode below, which distinguishes the three
+    # deployments this app can be in instead of one boolean. Still read, so an
+    # existing deployment that sets it keeps working: when app.client-ip.mode
+    # is unset, true here means x-forwarded-for. See ClientIpResolver.
     trust-forwarded-header: ${RATE_LIMIT_TRUST_FORWARDED_HEADER:${TRUST_FORWARDED_HEADER:false}}
+
+    rate-limit:
+      enabled: ${RATE_LIMIT_ENABLED:true}
+      # Bucket store ceiling. Bounded so a flood from many addresses cannot
+      # grow it until the JVM runs out of memory.
+      max-tracked-clients: ${RATE_LIMIT_MAX_TRACKED_CLIENTS:100000}
+
+    # Largest non-multipart request body accepted, checked against
+    # Content-Length before anything reads the stream. See ContentLengthLimitFilter.
+    max-json-request-bytes: ${MAX_JSON_REQUEST_BYTES:1048576}
+
+  # Which address the per-IP rate limits key on. Getting this wrong silently
+  # breaks the limiter in one of two directions - see ClientIpResolver.
+  #   remote-addr    : no proxy. Local development.
+  #   x-forwarded-for: Render/Railway with no Cloudflare.
+  #   cloudflare     : proxied through Cloudflare AND the origin is locked to it.
+  client-ip:
+    mode: ${CLIENT_IP_MODE:}
+    # How many proxies sit in front of this app. The entry this far from the
+    # RIGHT of X-Forwarded-For is the real client; entries further left are
+    # caller-controlled.
+    trusted-proxy-hops: ${TRUSTED_PROXY_HOPS:1}
+
+  edge:
+    # Blank = disabled. Set this ONLY after a Cloudflare Transform Rule is
+    # injecting the matching X-Edge-Auth header, or the API goes dark.
+    # See docs/DDOS_RUNBOOK.md.
+    shared-secret: ${EDGE_SHARED_SECRET:}
 
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
@@ -82,6 +165,15 @@ app:
       base-url: ${GOOGLE_TRANSLATE_BASE_URL:https://translation.googleapis.com}
       connect-timeout-ms: 3000
       read-timeout-ms: 10000
+      # Characters per UTC day, across every caller. Google bills per character,
+      # so a loop over the preview or backfill endpoint is a loop over the
+      # client's credit card. Past this the translator behaves as if it were
+      # switched off: saves still succeed, the site falls back to English.
+      #
+      # This is a backstop, not the real cap. The real cap is a quota and a
+      # budget alert in the Google Cloud Console - this one only binds while
+      # this process is alive, and resets on every deploy.
+      daily-char-limit: ${GOOGLE_TRANSLATE_DAILY_CHAR_LIMIT:200000}
 
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
 
@@ -97,10 +189,27 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        # Exposing an endpoint here does not publish it: SecurityConfig gates
+        # everything under /actuator except the health probes behind ADMIN.
+        # Both layers have to agree before anything becomes reachable.
+        include: health,info,metrics,prometheus,caches
   endpoint:
     health:
+      # Anonymous callers get UP or DOWN and nothing else - no component names,
+      # no database host, no error text.
       show-details: never
+      probes:
+        enabled: true
+  metrics:
+    distribution:
+      # Percentiles computed in-process, so a load test can read p95/p99 per
+      # endpoint straight off /actuator/metrics without a Prometheus server.
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.95,0.99
+    tags:
+      application: iunu-backend
   health:
     # The mail indicator opens an SMTP connection to MAIL_HOST on every probe.
     # With mail disabled (the default) there is nothing listening, so it reports
@@ -110,6 +219,16 @@ management:
     # app.mail.enabled already governs whether it is used at all.
     mail:
       enabled: false
+
+# Interactive API docs. Default OFF and opt-in, rather than on with a
+# production override: a deploy that forgets SPRING_PROFILES_ACTIVE must not
+# publish the full shape of every admin endpoint to anonymous visitors. Set
+# SWAGGER_ENABLED=true for local development or for a scheduled ZAP scan.
+springdoc:
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:false}
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}
 
 logging:
   level:
