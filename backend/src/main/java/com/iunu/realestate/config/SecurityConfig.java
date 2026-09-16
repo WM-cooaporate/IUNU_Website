@@ -82,13 +82,30 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/me", "/api/auth/change-password").authenticated()
                         // Public authentication endpoints
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Admin reads of properties live under /api/properties/admin/** and
+                        // expose unpublished rows, so they must be matched BEFORE the public
+                        // GET rule below - otherwise "/api/properties/**" would permitAll them
+                        // and only the controller's @PreAuthorize would stand between a
+                        // stranger and every draft.
+                        .requestMatchers(org.springframework.http.HttpMethod.GET,
+                                "/api/properties/admin", "/api/properties/admin/**").hasRole("ADMIN")
                         // Public read of published properties/projects
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/properties/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/projects", "/api/projects/**").permitAll()
+                        // Uploaded cover images are public assets
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/uploads/**").permitAll()
                         // Public lead-generation forms (contact, quote, newsletter)
                         .requestMatchers(org.springframework.http.HttpMethod.POST,
                                 "/api/contact", "/api/quotes", "/api/newsletter", "/api/careers").permitAll()
-                        // Health checks
-                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                        // Health check. Render polls this on every deploy and keeps
+                        // polling it afterwards, so it has to be reachable without a
+                        // token - but only this one path, only for GET. Everything else
+                        // under /actuator is refused outright rather than left to
+                        // anyRequest().authenticated(), so exposing another endpoint by
+                        // widening management.endpoints.web.exposure.include cannot
+                        // quietly publish it.
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/actuator/health").permitAll()
+                        .requestMatchers("/actuator/**").denyAll()
                         // API docs
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         // Admin-only management endpoints
@@ -106,8 +123,23 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+        List<String> allowedOrigins = corsProperties.allowedOrigins();
+
+        // The browser refuses "Access-Control-Allow-Origin: *" together with
+        // credentials anyway; failing fast at startup turns that into an
+        // obvious misconfiguration instead of CORS errors nobody can explain.
+        if (allowedOrigins == null || allowedOrigins.isEmpty()) {
+            throw new IllegalStateException(
+                    "app.cors.allowed-origins (CORS_ALLOWED_ORIGINS) must list at least one origin.");
+        }
+        if (allowedOrigins.stream().anyMatch(origin -> origin.contains("*"))) {
+            throw new IllegalStateException(
+                    "app.cors.allowed-origins (CORS_ALLOWED_ORIGINS) must be an explicit list of origins; "
+                            + "wildcards cannot be combined with credentialed requests. Got: " + allowedOrigins);
+        }
+
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(corsProperties.allowedOrigins());
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
         configuration.setExposedHeaders(List.of("Authorization"));

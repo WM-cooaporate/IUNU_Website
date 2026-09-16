@@ -6,7 +6,7 @@ import { useLanguage } from "../../../i18n/LanguageContext";
 import "./Properties.css";
 
 function Properties() {
-  const { t } = useLanguage();
+  const { t, localize } = useLanguage();
   const [properties, setProperties] = useState(demoProperties);
 
   const sectionRef = useRef(null);
@@ -14,23 +14,14 @@ function Properties() {
   useEffect(() => {
     const loadProperties = async () => {
       try {
-        const demoMode =
-          localStorage.getItem("adminDemoMode") === "true";
-
+        // This is a public page: it renders whatever the public API returns
+        // and nothing else. It used to also check the admin-only
+        // "adminDemoMode" flag and, when set, replace the real catalogue with
+        // hardcoded placeholders - so a visitor who had once opened the demo
+        // dashboard in this browser never saw newly published projects again.
         const data = await propertyServices.getAllProperties();
 
-        console.log(
-          "Properties API:",
-          JSON.stringify(data, null, 2)
-        );
-
-        setProperties(
-          demoMode
-            ? demoProperties
-            : data.length
-              ? data
-              : demoProperties
-        );
+        setProperties(data.length ? data : demoProperties);
       } catch (error) {
         console.error("Properties error:", error);
         setProperties(demoProperties);
@@ -124,7 +115,7 @@ function Properties() {
                   property.coverImageUrl ||
                   "/images/hh.jpg"
                 }
-                alt={property.title}
+                alt={localize(property, "title")}
                 className="property-image"
                 loading="lazy"
               />
@@ -146,13 +137,13 @@ function Properties() {
             </Link>
 
             <div className="property-content">
-              <div className="property-location">
-                {property.location}
+              <div className="property-location" dir="auto">
+                {localize(property, "location")}
               </div>
 
-              <h3>{property.title}</h3>
+              <h3 dir="auto">{localize(property, "title")}</h3>
 
-              <p>{property.description}</p>
+              <p dir="auto">{localize(property, "description")}</p>
             </div>
           </article>
         ))}

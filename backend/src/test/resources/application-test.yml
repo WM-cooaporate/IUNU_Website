@@ -1,0 +1,53 @@
+# The fast suite runs against in-memory H2 in PostgreSQL compatibility mode,
+# with Flyway off and the schema generated from the entities - the same
+# arrangement as before, just aimed at PostgreSQL instead of MySQL semantics.
+#
+# The migrations themselves are exercised separately, against a real
+# PostgreSQL container, by MigrationSchemaTest.
+spring:
+  datasource:
+    url: jdbc:h2:mem:iunu-test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+app:
+  jwt:
+    secret: test-only-secret-that-is-at-least-32-bytes-long-for-hmac-sha
+    access-token-expiration-ms: 900000
+    issuer: iunu-real-estate-api
+  security:
+    max-failed-attempts: 5
+    lock-duration-minutes: 15
+    reset-token-expiry-minutes: 30
+    refresh-token-expiry-days: 7
+    trust-forwarded-header: false
+  cors:
+    allowed-origins: http://localhost:5173
+  # Deliberately blank: the suite must never reach Google. Tests that need a
+  # translator supply their own stub or mock.
+  translation:
+    google:
+      api-key: ""
+      base-url: https://translation.invalid
+  frontend-url: http://localhost:5173
+  file-storage:
+    location: target/test-uploads
+    public-base-url: http://localhost:8080
+  mail:
+    enabled: false
+    from: no-reply@test.local
+
+logging:
+  level:
+    root: WARN
+    com.iunu.realestate: INFO

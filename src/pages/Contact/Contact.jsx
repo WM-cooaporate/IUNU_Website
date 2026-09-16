@@ -4,30 +4,36 @@ import { useSearchParams } from "react-router-dom";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Footer from "../../components/layout/Footer/Footer";
 import propertyServices from "../../services/propertyServices";
+import leadServices from "../../services/leadServices";
+import { toUserMessage } from "../../services/apiClient";
 import { useLanguage } from "../../i18n/LanguageContext";
 
 import "./Contact.css";
 
+const emptyContactForm = {
+  firstName: "",
+  lastName: "",
+  phone: "",
+  email: "",
+  message: "",
+  city: "",
+  project: "",
+  whatsapp: "",
+  spaceType: "",
+};
+
 function Contact() {
-  const { t } = useLanguage();
+  const { t, localize } = useLanguage();
 
   const [searchParams] = useSearchParams();
   const propertyId = searchParams.get("property");
 
   const [property, setProperty] = useState(null);
   const [propertyLoading, setPropertyLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [status, setStatus] = useState({ type: "", text: "" });
 
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    phone: "",
-    email: "",
-    message: "",
-    city: "",
-  project: "",
-  whatsapp: "",
-  spaceType: "",
-  });
+  const [formData, setFormData] = useState(emptyContactForm);
 
   useEffect(() => {
     if (!propertyId) return;
@@ -59,14 +65,61 @@ function Contact() {
     }));
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
+  /**
+   * The backend's ContactRequest carries first/last name, phone, email and a
+   * message. This page also asks qualifying questions (city, project type,
+   * space type, WhatsApp) that the DTO has no fields for, so they are folded
+   * into the message body - nothing the visitor typed is dropped, and no
+   * backend schema change is needed for the form to start working.
+   */
+  const buildMessage = () => {
+    const details = [
+      ["City", formData.city],
+      ["Project type", formData.project],
+      ["Space type", formData.spaceType],
+      ["WhatsApp", formData.whatsapp],
+      // Deliberately the English title, not the localized one: this line ends
+      // up in the message the sales team reads, and the catalogue they work
+      // from is in English.
+      ["Enquiring about", property?.title],
+    ].filter(([, value]) => Boolean(value));
 
-    console.log("Contact form:", {
-      ...formData,
-      propertyId,
-      propertyTitle: property?.title || null,
-    });
+    const detailLines = details.map(([label, value]) => `${label}: ${value}`).join("\n");
+    return detailLines ? `${formData.message}\n\n---\n${detailLines}` : formData.message;
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (submitting) return; // ignore a second click while the first is in flight
+
+    setSubmitting(true);
+    setStatus({ type: "", text: "" });
+
+    try {
+      await leadServices.submitContact({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        email: formData.email,
+        message: buildMessage(),
+      });
+
+      setFormData(emptyContactForm);
+      setStatus({
+        type: "success",
+        text: t("Thank you. Your message has been sent - our team will be in touch shortly."),
+      });
+    } catch (error) {
+      setStatus({
+        type: "error",
+        text: toUserMessage(
+          error,
+          t("We could not send your message right now. Please try again or email info@iunu-eg.com.")
+        ),
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -113,7 +166,7 @@ function Contact() {
 
               <h2>
                 {property
-                  ? `${t("Interested in")} ${property.title}`
+                  ? `${t("Interested in")} ${localize(property, "title")}`
                   : t("Visit Our Office")}
               </h2>
 
@@ -148,13 +201,13 @@ function Contact() {
                       {t("PROPERTY INQUIRY")}
                     </span>
 
-                    <strong>
-                      {property.title}
+                    <strong dir="auto">
+                      {localize(property, "title")}
                     </strong>
 
-                    {property.location && (
-                      <small>
-                        {property.location}
+                    {localize(property, "location") && (
+                      <small dir="auto">
+                        {localize(property, "location")}
                       </small>
                     )}
 
@@ -374,7 +427,7 @@ function Contact() {
                   name="message"
                   placeholder={
                     property
-                      ? `${t("I'm interested in")} ${property.title}...`
+                      ? `${t("I'm interested in")} ${localize(property, "title")}...`
                       : t("Tell us how we can help...")
                   }
                   value={formData.message}
@@ -385,13 +438,20 @@ function Contact() {
               </div>
 
 
+              {status.text && (
+                <div className={`contact-status contact-status-${status.type}`} role="status">
+                  {status.text}
+                </div>
+              )}
+
               <button
                 className="contact-submit"
                 type="submit"
+                disabled={submitting}
               >
 
                 <span>
-                  {t("SEND MESSAGE")}
+                  {submitting ? t("SENDING...") : t("SEND MESSAGE")}
                 </span>
 
                 <svg

@@ -36,7 +36,7 @@ public class ContactMessage {
     @Column(nullable = false, length = 190)
     private String email;
 
-    @Lob
+    // See Property.description: @Lob on a String maps to an oid on PostgreSQL.
     @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
 

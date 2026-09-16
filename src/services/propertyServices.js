@@ -1,44 +1,43 @@
-import axios from "axios";
+import apiClient from "./apiClient";
 
-const API_URL =
-    import.meta.env.VITE_API_URL || "http://localhost:8080/api";
-const REQUEST_TIMEOUT = 5000;
+/**
+ * Public, unauthenticated reads. These only ever hit /api/properties, which
+ * the backend filters to published rows - the admin listing that includes
+ * drafts lives in adminServices and is never called from a public page.
+ */
+
+const PAGE_SIZE = 50;
+/** Stops a malformed totalPages from turning pagination into an infinite loop. */
+const MAX_PAGES = 100;
 
 const propertyServices = {
-    getProperties: async() => {
-        const response = await axios.get(`${API_URL}/properties`, {
-            timeout: REQUEST_TIMEOUT,
-        });
+  getProperties: async () => {
+    const response = await apiClient.get("/properties");
+    return response.data;
+  },
 
-        return response.data;
-    },
+  getAllProperties: async () => {
+    const properties = [];
+    let page = 0;
+    let totalPages;
 
-    getAllProperties: async() => {
-        const properties = [];
-        let page = 0;
-        while (true) {
-            const response = await axios.get(`${API_URL}/properties`, {
-                params: { page, size: 50 },
-                timeout: REQUEST_TIMEOUT,
-            });
-            const data = response.data;
+    do {
+      const response = await apiClient.get("/properties", {
+        params: { page, size: PAGE_SIZE },
+      });
 
-            properties.push(...(data.content || []));
-            page += 1;
+      properties.push(...(response.data?.content || []));
+      totalPages = response.data?.totalPages || 1;
+      page += 1;
+    } while (page < totalPages && page < MAX_PAGES);
 
-            if (page >= (data.totalPages || 1)) break;
-        }
+    return properties;
+  },
 
-        return properties;
-    },
-
-    getPropertyById: async(id) => {
-        const response = await axios.get(`${API_URL}/properties/${id}`, {
-            timeout: REQUEST_TIMEOUT,
-        });
-
-        return response.data;
-    },
+  getPropertyById: async (id) => {
+    const response = await apiClient.get(`/properties/${id}`);
+    return response.data;
+  },
 };
 
 export default propertyServices;

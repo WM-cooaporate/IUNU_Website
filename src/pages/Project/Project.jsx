@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Footer from "../../components/layout/Footer/Footer";
 import propertyServices from "../../services/propertyServices";
+import leadServices from "../../services/leadServices";
+import { toUserMessage } from "../../services/apiClient";
 import demoProperties from "../../data/demoProperties";
 
 import { useLanguage } from "../../i18n/LanguageContext";
@@ -11,11 +13,42 @@ import { useLanguage } from "../../i18n/LanguageContext";
 import "./Project.css";
 
 function Project() {
-  const { t } = useLanguage();
+  const { t, localize } = useLanguage();
 
   const [properties, setProperties] = useState(demoProperties);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterBusy, setNewsletterBusy] = useState(false);
+  const [newsletterStatus, setNewsletterStatus] = useState({ type: "", text: "" });
+
+  const handleNewsletterSubmit = async (event) => {
+    event.preventDefault();
+    if (newsletterBusy) return; // ignore a second click while the first is in flight
+
+    setNewsletterBusy(true);
+    setNewsletterStatus({ type: "", text: "" });
+
+    try {
+      await leadServices.subscribeNewsletter(newsletterEmail);
+      setNewsletterEmail("");
+      setNewsletterStatus({
+        type: "success",
+        text: t("Thank you. You are subscribed to our updates."),
+      });
+    } catch (requestError) {
+      setNewsletterStatus({
+        type: "error",
+        text: toUserMessage(
+          requestError,
+          t("We could not complete your sign up. Please try again.")
+        ),
+      });
+    } finally {
+      setNewsletterBusy(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -213,7 +246,7 @@ function Project() {
                         {property.coverImageUrl ? (
                           <img
                             src={property.coverImageUrl}
-                            alt={property.title}
+                            alt={localize(property, "title")}
                             loading="lazy"
                           />
                         ) : (
@@ -250,19 +283,19 @@ function Project() {
                           </span>
                         )}
 
-                        <h3>
-                          {property.title}
+                        <h3 dir="auto">
+                          {localize(property, "title")}
                         </h3>
 
-                        {property.location && (
-                          <p className="project-property-location">
-                            {property.location}
+                        {localize(property, "location") && (
+                          <p className="project-property-location" dir="auto">
+                            {localize(property, "location")}
                           </p>
                         )}
 
-                        {property.description && (
-                          <p className="project-property-description">
-                            {property.description}
+                        {localize(property, "description") && (
+                          <p className="project-property-description" dir="auto">
+                            {localize(property, "description")}
                           </p>
                         )}
 
@@ -362,20 +395,31 @@ function Project() {
 
           <form
             className="project-newsletter"
-            onSubmit={(event) =>
-              event.preventDefault()
-            }
+            onSubmit={handleNewsletterSubmit}
           >
             <input
               type="email"
+              name="email"
+              required
+              value={newsletterEmail}
+              onChange={(event) => setNewsletterEmail(event.target.value)}
               placeholder={t("Email")}
               aria-label={t("Email address")}
             />
 
-            <button type="submit">
-              {t("SIGN UP")}
+            <button type="submit" disabled={newsletterBusy}>
+              {newsletterBusy ? t("SIGNING UP...") : t("SIGN UP")}
             </button>
           </form>
+
+          {newsletterStatus.text && (
+            <p
+              className={`project-newsletter-status project-newsletter-status-${newsletterStatus.type}`}
+              role="status"
+            >
+              {newsletterStatus.text}
+            </p>
+          )}
         </section>
       </main>
 

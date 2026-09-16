@@ -11,10 +11,9 @@ spring:
     name: real-estate-backend
 
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/iunu_real_estate?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=false}
-    username: ${DB_USERNAME:root}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/iunu_real_estate}
+    username: ${DB_USERNAME:iunu}
     password: ${DB_PASSWORD:}
-    driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: ${DB_POOL_SIZE:10}
       connection-timeout: 20000
@@ -66,10 +65,23 @@ app:
     lock-duration-minutes: ${ACCOUNT_LOCK_DURATION_MINUTES:15}
     reset-token-expiry-minutes: ${RESET_TOKEN_EXPIRY_MINUTES:30}
     refresh-token-expiry-days: ${REFRESH_TOKEN_EXPIRY_DAYS:7}
-    trust-forwarded-header: ${TRUST_FORWARDED_HEADER:false}
+    # Only true when a reverse proxy in front of this app is trusted to set
+    # X-Forwarded-For. TRUST_FORWARDED_HEADER is the older name, still honoured.
+    trust-forwarded-header: ${RATE_LIMIT_TRUST_FORWARDED_HEADER:${TRUST_FORWARDED_HEADER:false}}
 
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
+  # Auto-translation of admin-authored project copy into Arabic. Optional:
+  # with no api-key the feature switches itself off and the site falls back to
+  # the English text. The key is server-side only - it is never exposed to the
+  # browser and never placed in a URL.
+  translation:
+    google:
+      api-key: ${GOOGLE_TRANSLATE_API_KEY:}
+      base-url: ${GOOGLE_TRANSLATE_BASE_URL:https://translation.googleapis.com}
+      connect-timeout-ms: 3000
+      read-timeout-ms: 10000
 
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
 
@@ -89,6 +101,15 @@ management:
   endpoint:
     health:
       show-details: never
+  health:
+    # The mail indicator opens an SMTP connection to MAIL_HOST on every probe.
+    # With mail disabled (the default) there is nothing listening, so it reports
+    # DOWN and drags the aggregate status down with it - which on a platform
+    # that gates releases on /actuator/health means the deploy never goes live.
+    # Whether outbound email works is not a liveness condition for this API;
+    # app.mail.enabled already governs whether it is used at all.
+    mail:
+      enabled: false
 
 logging:
   level:

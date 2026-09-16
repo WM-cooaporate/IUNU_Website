@@ -705,3 +705,28 @@
         transition: none;
     }
 }
+/* Submit feedback for the contact form. */
+.contact-status {
+    margin-bottom: 18px;
+    padding: 14px 18px;
+    border-left: 3px solid;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.contact-status-success {
+    border-color: #8b805f;
+    background: #f5f2e9;
+    color: #6f654b;
+}
+
+.contact-status-error {
+    border-color: #a54d4d;
+    background: #fbf1ef;
+    color: #8c3f3f;
+}
+
+.contact-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

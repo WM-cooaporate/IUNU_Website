@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import "./QuoteForm.css";
 import { useLanguage } from "../../../i18n/LanguageContext";
+import leadServices from "../../../services/leadServices";
+import { toUserMessage } from "../../../services/apiClient";
 
 const initialFormData = {
   name: "",
@@ -16,6 +18,8 @@ function QuoteForm() {
   const { t } = useLanguage();
   const [formData, setFormData] = useState(initialFormData);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
   const [isVisible, setIsVisible] = useState(false);
 
   const sectionRef = useRef(null);
@@ -56,15 +60,34 @@ function QuoteForm() {
     if (submitted) {
       setSubmitted(false);
     }
+    if (error) {
+      setError("");
+    }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    if (submitting) return; // ignore a second click while the first is in flight
 
-    console.log("Quote Request:", formData);
+    setSubmitting(true);
+    setError("");
 
-    setSubmitted(true);
-    setFormData(initialFormData);
+    try {
+      await leadServices.submitQuote(formData);
+      // Only claim success once the API has actually accepted the request.
+      setSubmitted(true);
+      setFormData(initialFormData);
+    } catch (requestError) {
+      setSubmitted(false);
+      setError(
+        toUserMessage(
+          requestError,
+          t("We could not send your request right now. Please try again.")
+        )
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -277,9 +300,9 @@ function QuoteForm() {
           {/* Submit */}
           <div className="quote-submit">
 
-            <button type="submit">
+            <button type="submit" disabled={submitting}>
               <span>
-                SUBMIT REQUEST
+                {submitting ? "SENDING..." : "SUBMIT REQUEST"}
               </span>
 
               <span className="quote-submit-arrow">
@@ -292,8 +315,15 @@ function QuoteForm() {
 
           {/* Success */}
           {submitted && (
-            <div className="quote-success">
+            <div className="quote-success" role="status">
               Thank you. Your request has been received.
+            </div>
+          )}
+
+          {/* Failure */}
+          {error && (
+            <div className="quote-error" role="alert">
+              {error}
             </div>
           )}
 

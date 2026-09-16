@@ -1,106 +1,78 @@
-import axios from "axios";
+import apiClient from "./apiClient";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
-const REQUEST_TIMEOUT = 7000;
+/**
+ * Admin calls. The bearer token and 401 handling live in apiClient, so nothing
+ * here builds headers by hand.
+ */
 
-const getAuthHeaders = () => {
-    const token = localStorage.getItem("accessToken");
-
-    return {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-    };
-};
-
-const getUploadHeaders = () => ({
-    Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-});
+const PAGE_SIZE = 50;
+/** Stops a malformed totalPages from turning pagination into an infinite loop. */
+const MAX_PAGES = 100;
 
 const adminServices = {
-    getProperties: async() => {
-        const response = await axios.get(
-            `${API_URL}/properties/admin`, {
-                headers: getAuthHeaders(),
-                timeout: REQUEST_TIMEOUT,
-            }
-        );
+  getProperties: async () => {
+    const response = await apiClient.get("/properties/admin");
+    return response.data;
+  },
 
-        return response.data;
-    },
+  getAllProperties: async () => {
+    const properties = [];
+    let page = 0;
+    let totalPages;
 
-    getAllProperties: async() => {
-        const properties = [];
-        let page = 0;
-        while (true) {
-            const response = await axios.get(`${API_URL}/properties/admin`, {
-                params: { page, size: 50 },
-                headers: getAuthHeaders(),
-                timeout: REQUEST_TIMEOUT,
-            });
-            const data = response.data;
+    do {
+      const response = await apiClient.get("/properties/admin", {
+        params: { page, size: PAGE_SIZE },
+      });
 
-            properties.push(...(data.content || []));
-            page += 1;
+      properties.push(...(response.data?.content || []));
+      totalPages = response.data?.totalPages || 1;
+      page += 1;
+    } while (page < totalPages && page < MAX_PAGES);
 
-            if (page >= (data.totalPages || 1)) break;
-        }
+    return properties;
+  },
 
-        return properties;
-    },
+  uploadPropertyImages: async (files) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
 
-    uploadPropertyImages: async(files) => {
-        const formData = new FormData();
-        files.forEach((file) => formData.append("files", file));
-        const response = await axios.post(`${API_URL}/properties/images`, formData, {
-            headers: getUploadHeaders(),
-            timeout: REQUEST_TIMEOUT,
-        });
-        return response.data;
-    },
+    // Content-Type is deliberately left unset so the browser adds the
+    // multipart boundary itself.
+    const response = await apiClient.post("/properties/images", formData);
+    return response.data;
+  },
 
-    getPropertyById: async(id) => {
-        const response = await axios.get(
-            `${API_URL}/properties/admin/${id}`, {
-                headers: getAuthHeaders(),
-                timeout: REQUEST_TIMEOUT,
-            }
-        );
+  getPropertyById: async (id) => {
+    const response = await apiClient.get(`/properties/admin/${id}`);
+    return response.data;
+  },
 
-        return response.data;
-    },
+  createProperty: async (propertyData) => {
+    const response = await apiClient.post("/properties", propertyData);
+    return response.data;
+  },
 
-    createProperty: async(propertyData) => {
-        const response = await axios.post(
-            `${API_URL}/properties`,
-            propertyData, {
-                headers: getAuthHeaders(),
-                timeout: REQUEST_TIMEOUT,
-            }
-        );
+  updateProperty: async (id, propertyData) => {
+    const response = await apiClient.put(`/properties/${id}`, propertyData);
+    return response.data;
+  },
 
-        return response.data;
-    },
+  deleteProperty: async (id) => {
+    await apiClient.delete(`/properties/${id}`);
+  },
 
-    updateProperty: async(id, propertyData) => {
-        const response = await axios.put(
-            `${API_URL}/properties/${id}`,
-            propertyData, {
-                headers: getAuthHeaders(),
-                timeout: REQUEST_TIMEOUT,
-            }
-        );
+  /** Translates the open form's English into Arabic without saving anything. */
+  previewTranslation: async (fields) => {
+    const response = await apiClient.post("/admin/translations/preview", fields);
+    return response.data;
+  },
 
-        return response.data;
-    },
-
-    deleteProperty: async(id) => {
-        await axios.delete(
-            `${API_URL}/properties/${id}`, {
-                headers: getAuthHeaders(),
-                timeout: REQUEST_TIMEOUT,
-            }
-        );
-    },
+  /** Fills the Arabic of existing projects that have none yet. */
+  backfillTranslations: async () => {
+    const response = await apiClient.post("/admin/translations/properties/backfill");
+    return response.data;
+  },
 };
 
 export default adminServices;

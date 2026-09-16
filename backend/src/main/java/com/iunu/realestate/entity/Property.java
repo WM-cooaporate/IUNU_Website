@@ -34,7 +34,10 @@ public class Property {
     @Column(nullable = false, length = 200)
     private String title;
 
-    @Lob
+    // Not @Lob: on PostgreSQL Hibernate maps @Lob String to a large-object
+    // oid, which ddl-auto=validate rejects against a TEXT column and which
+    // cannot be read outside a transaction. columnDefinition alone gives the
+    // unbounded text column this actually wants.
     @Column(columnDefinition = "TEXT")
     private String description;
 
@@ -49,6 +52,22 @@ public class Property {
 
     @Column(length = 200)
     private String location;
+
+    // Arabic copies of the three admin-authored content fields, filled at save
+    // time from the English source and editable in the dashboard. Nullable by
+    // design: a save must succeed with translation off, and the public site
+    // falls back to English whenever one of these is missing.
+    //
+    // 400 rather than 200 because Arabic output is routinely longer than the
+    // English it came from. Not @Lob, for the same reason as description above.
+    @Column(name = "title_ar", length = 400)
+    private String titleAr;
+
+    @Column(name = "description_ar", columnDefinition = "TEXT")
+    private String descriptionAr;
+
+    @Column(name = "location_ar", length = 400)
+    private String locationAr;
 
     @Column(precision = 12, scale = 2)
     private BigDecimal area;

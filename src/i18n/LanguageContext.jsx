@@ -93,7 +93,51 @@ const translations = {
     "01": "01",
     "02": "02",
     "03": "03",
-    "17337": "17337"
+    "17337": "17337",
+
+    // Project catalogue and property detail copy. These are rendered through
+    // t() on the pages that show a project, so without an entry here the page
+    // switched to Arabic while its own labels stayed English.
+    "PROJECTS": "المشروعات",
+    "VIEW PROPERTY": "عرض المشروع",
+    "Loading properties...": "جارٍ تحميل المشروعات...",
+    "Loading property...": "جارٍ تحميل المشروع...",
+    "No Properties Available": "لا توجد مشروعات متاحة",
+    "There are currently no published properties available.": "لا توجد حاليًا مشروعات منشورة.",
+    "Unable to Load Properties": "تعذر تحميل المشروعات",
+    "ERROR": "خطأ",
+    "EGP": "جنيه",
+    "Price on request": "السعر عند الطلب",
+    "Back to Properties": "العودة إلى المشروعات",
+    "PROPERTY": "المشروع",
+    "PROPERTY TYPE": "نوع المشروع",
+    "PROPERTY ID": "رقم المشروع",
+    "PROPERTY INQUIRY": "استفسار عن مشروع",
+    "LOCATION": "الموقع",
+    "PRICE": "السعر",
+    "STATUS": "الحالة",
+    "DESCRIPTION": "الوصف",
+    "Not specified": "غير محدد",
+    "No description available for this property.": "لا يوجد وصف متاح لهذا المشروع.",
+    "Property not found.": "المشروع غير موجود.",
+    "Property information unavailable.": "معلومات المشروع غير متاحة.",
+    "Failed to load property details.": "تعذر تحميل تفاصيل المشروع.",
+    "Interested in": "مهتم بـ",
+    "I'm interested in": "أنا مهتم بـ",
+
+    // Status labels: the detail page renders property.status through t() after
+    // turning SOLD_OUT into "SOLD OUT", so the keys are the spaced form.
+    "AVAILABLE": "متاح",
+    "COMING SOON": "قريبًا",
+    "SOLD OUT": "تم البيع بالكامل",
+
+    // Newsletter and contact form feedback.
+    "Email address": "البريد الإلكتروني",
+    "SIGNING UP...": "جارٍ الاشتراك...",
+    "Thank you. You are subscribed to our updates.": "شكرًا لك. تم اشتراكك في تحديثاتنا.",
+    "We could not complete your sign up. Please try again.": "تعذر إتمام اشتراكك. حاول مرة أخرى.",
+    "Thank you. Your message has been sent - our team will be in touch shortly.": "شكرًا لك. تم إرسال رسالتك وسيتواصل معك فريقنا قريبًا.",
+    "We could not send your message right now. Please try again or email info@iunu-eg.com.": "تعذر إرسال رسالتك حاليًا. حاول مرة أخرى أو راسل info@iunu-eg.com."
   }
 };
 
@@ -112,6 +156,20 @@ export function LanguageProvider({ children }) {
     language,
     setLanguage: (next) => setLanguage(next),
     t: (text) => language === "ar" ? translations.ar[text] || text : text,
+    /**
+     * Picks the Arabic variant of an admin-authored content field when the site
+     * is in Arabic, falling back to English whenever it is missing - which is
+     * the case for the demo catalogue, for projects saved before translation
+     * was switched on, and for any field whose translation failed.
+     */
+    localize: (item, field) => {
+      if (!item) return "";
+      if (language === "ar") {
+        const arabic = item[`${field}Ar`];
+        if (typeof arabic === "string" && arabic.trim()) return arabic;
+      }
+      return item[field] ?? "";
+    },
   }), [language]);
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;

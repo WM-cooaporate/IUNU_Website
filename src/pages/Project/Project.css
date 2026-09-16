@@ -971,3 +971,23 @@
         scroll-behavior: auto !important;
     }
 }
+
+/* Newsletter sign-up feedback. */
+.project-newsletter-status {
+    margin-top: 14px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.project-newsletter-status-success {
+    color: #6f654b;
+}
+
+.project-newsletter-status-error {
+    color: #8c3f3f;
+}
+
+.project-newsletter button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

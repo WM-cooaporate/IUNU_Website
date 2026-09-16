@@ -964,3 +964,115 @@
         padding: 30px 22px;
     }
 }
+/* Session-expiry notice shown above the sign-in card, which is centred on its
+   own full-height page - so this needs its own width and centring. */
+.admin-session-alert {
+    max-width: 420px;
+    margin: 24px auto 0;
+    text-align: center;
+}
+
+/* Demo mode is indistinguishable from the real dashboard at a glance, and a
+   "save" in it never reaches the server - so it gets a banner that stays put. */
+.admin-demo-banner {
+    margin-bottom: 22px;
+    padding: 16px 20px;
+    border-left: 3px solid #a5824d;
+    background: #fbf5ec;
+    color: #7a5c2e;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+/* =========================
+   ARABIC VERSION
+========================= */
+
+.arabic-fieldset {
+    margin: 0;
+    padding: 18px;
+    border: 1px solid #e9e5dc;
+    background: #fbfaf7;
+}
+
+.arabic-fieldset legend {
+    padding: 0 8px;
+    color: #31505c;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+.arabic-hint {
+    margin: 0 0 16px;
+    color: #8b8f8e;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.arabic-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.arabic-actions {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.arabic-actions small {
+    color: #8b8f8e;
+    font-size: 11px;
+}
+
+.arabic-notice {
+    color: #9a6a4a;
+}
+
+.translate-button,
+.backfill-button {
+    min-height: 36px;
+    padding: 0 16px;
+    border: 1px solid #9a8a64;
+    background: #ffffff;
+    color: #31505c;
+    font-family: inherit;
+    font-size: 11px;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.translate-button:hover:not(:disabled),
+.backfill-button:hover:not(:disabled) {
+    background: #9a8a64;
+    color: #ffffff;
+}
+
+.translate-button:disabled,
+.backfill-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.admin-heading-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+@media (max-width: 720px) {
+    .arabic-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-heading-actions {
+        width: 100%;
+    }
+}
