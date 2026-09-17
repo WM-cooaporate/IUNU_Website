@@ -397,21 +397,26 @@ is a migration, not a rewrite.
 - **Enumeration resistance**: login and forgot-password give identical generic responses regardless of whether the account exists; `DaoAuthenticationProvider.hideUserNotFoundExceptions` is enabled.
 - **Password reset**: single-use, hashed, 30-minute-expiry tokens; resetting a password revokes all of that user's refresh tokens; changing a password does the same.
 - **Authorization**: stateless JWT filter + Spring Security URL rules (admin-only paths, public GET/POST paths) *and* `@PreAuthorize` on controller methods (defense in depth); role model is `USER`/`ADMIN`.
-- **Rate limiting**: per-IP token buckets on `/auth/login`, `/auth/register`, `/auth/forgot-password`, `/auth/reset-password` (10/min) and on the public lead forms `/contact`, `/quotes`, `/newsletter` (20/hour), to blunt credential stuffing and form spam. `X-Forwarded-For` is only trusted if `TRUST_FORWARDED_HEADER=true` is explicitly set (only turn this on behind a reverse proxy you control), otherwise it's spoofable and ignored.
+- **Rate limiting**: token buckets on the auth endpoints (10/min per IP), the public lead forms (20/hour per IP), public reads (300/min per IP), admin endpoints (120/min per *authenticated user*, so several admins behind one office NAT do not share an allowance) and translation preview (30/min per admin). 429 carries `Retry-After` and the standard `ApiError` body. The bucket store is a bounded Caffeine cache — an unbounded map would let a flood from many addresses turn the limiter itself into a memory-exhaustion vector.
+- **Client IP**: `CLIENT_IP_MODE` selects `remote-addr` / `x-forwarded-for` / `cloudflare`, and forwarding headers are honoured **only** from a peer inside `TRUSTED_PROXIES`. That check is what makes the header trustworthy: "the last `X-Forwarded-For` entry is the real client" holds only if a proxy appended it, and a request reaching the origin directly carries whatever the caller typed. Without it every per-IP limit above can be bypassed by rotating a fake header. See `ENV_VARS.md`.
 - **Transport/response hardening**: HSTS, `X-Frame-Options: DENY`, a restrictive CSP, `Referrer-Policy: no-referrer`; CORS is an explicit allow-list from `CORS_ALLOWED_ORIGINS` (not `*`); stack traces and internal exception details are never returned in API responses (`server.error.include-*=never`, and a global exception handler that logs internally but returns generic messages).
 - **Input validation**: Jakarta Bean Validation on every request DTO (email format, phone pattern, length caps, password policy, enum-constrained fields like property `type`/`spaceType`); SQL injection is not reachable since all persistence goes through parameterized JPA/Hibernate queries — no string-concatenated SQL anywhere.
 - **CSRF**: disabled deliberately — the API is stateless (Bearer tokens, no cookies/sessions), which is the standard, safe posture for this architecture.
 - **Secrets**: nothing is hardcoded — DB credentials, `JWT_SECRET`, mail credentials, and the one-time admin bootstrap all come from environment variables (`.env`, gitignored; `.env.example` documents every key with no real values committed).
 - **No default/backdoor account**: the seed admin is only created if `ADMIN_EMAIL`/`ADMIN_PASSWORD` are explicitly set at boot; nothing is baked into a migration or the codebase.
 - **DB schema ownership**: `ddl-auto=validate` — Hibernate can never silently alter production schema; Flyway migrations (`src/main/resources/db/migration`) are the only way schema changes ship.
-- **Actuator**: only `/actuator/health` is exposed, with `show-details: never`.
+- **Actuator**: the three health probes are anonymous with `show-details: never` (an anonymous caller learns UP or DOWN and nothing else); `metrics`, `prometheus`, `caches` and `info` require ADMIN, stated explicitly so widening the exposure list cannot quietly publish a new endpoint. Custom counters (`iunu.ratelimit.rejected`, `iunu.auth.login.failed`, `iunu.auth.account.locked`, `iunu.translation.*`) make abuse visible — none tagged with anything a caller controls, since an attacker-varied tag is an unbounded time series and a memory leak of its own.
+- **Request limits**: page size capped at 50 (an uncapped `?size=` is a request to select the whole table), non-multipart bodies capped at 1MB on `Content-Length` *before* the stream is read, 5MB per uploaded file, plus Tomcat connection, keep-alive and header caps against slowloris-style slow clients.
+- **Spend caps**: the paid translation API is bounded by a daily character budget, a single-concurrent-backfill guard, and a per-admin preview limit — a compromised token cannot loop it into a bill. The real cap is a Google Cloud quota; see `docs/DDOS_RUNBOOK.md`.
+- **Optional origin lock**: `EDGE_SHARED_SECRET` refuses any request without a header that a Cloudflare Transform Rule injects, closing the platform URL that otherwise bypasses every edge protection. Disabled by default.
 
 ### Known trade-offs / what a real deployment should add on top
 
 - Access tokens can't be revoked before they expire (stateless JWT trade-off) — kept the TTL short (15 min) to bound the blast radius; refresh tokens *are* individually revocable.
-- Rate limiting is in-memory/per-instance (Bucket4j `local`), fine for a single-instance deployment; move to a shared store (e.g. Bucket4j + Redis) if this ever runs behind a load balancer with multiple instances.
+- **Single instance only — read this before scaling out.** Both the public property cache (Caffeine) and the rate limiter's bucket store are **in-process**. With a second instance: an admin's save evicts one instance's cache and the other keeps serving the stale listing for up to 10 minutes, and every rate limit is effectively multiplied by the instance count. Moving both to Redis is a *prerequisite* for running more than one instance, not an optimisation to do afterwards. The cache is `CacheConfig`; the limiter is `RateLimitingFilter`.
 - No email verification step on registration (frontend doesn't currently ask for one either) — accounts are immediately usable after `/auth/register`.
-- The `/actuator/health` and Swagger UI endpoints are open; consider restricting Swagger UI to non-production environments or putting it behind auth before going live.
+- Swagger and `/v3/api-docs` now default to **off** (`SWAGGER_ENABLED`), so nothing is published unless someone opts in.
+- Account lockout is per-account, which makes it a denial-of-service vector against a known admin address. Deliberately unchanged — see M9 in `docs/SECURITY_AUDIT.md` for the three options.
 - TLS termination is expected to happen at the load balancer/reverse proxy in front of this app (HSTS is sent assuming that's the case).
 
 ## Verification performed
@@ -420,7 +425,7 @@ is a migration, not a rewrite.
 mvn test
 ```
 
-87 tests. The fast suite runs against in-memory H2 in PostgreSQL
+197 tests (7 skipped where no Docker daemon is available). The fast suite runs against in-memory H2 in PostgreSQL
 compatibility mode (`test` profile, `src/test/resources/application-test.yml`)
 with Hibernate generating the schema. `MigrationSchemaTest` is the exception:
 it runs the real migrations against a real PostgreSQL container, and is
@@ -470,19 +475,23 @@ Run `mvn verify` somewhere with Docker to get the container test itself.
 
 ## TODO / follow-ups
 
-- **Rate limiting on login is in place** (10/min per IP via Bucket4j) but is
-  per-instance and in-memory; move it to a shared store before running more
-  than one instance.
+- **Redis before a second instance.** The cache and the rate limiter are both
+  in-process. See the trade-offs section above — this is the one item here
+  that is a correctness blocker rather than a nice-to-have.
 - Password reset and email verification exist for `USER` accounts but were
   out of scope for the admin flow — an admin who loses their password
   currently needs another admin, or a fresh bootstrap against an empty
-  `users` table.
-- `GET /api/properties/**` is `permitAll` in the URL rules, which also
-  matches the admin-only `GET /api/properties/admin`. That path is safe
-  today only because `@PreAuthorize("hasRole('ADMIN')")` on the method
-  catches it — exactly the defense-in-depth this codebase asks for, but the
-  URL rule should be narrowed so it isn't the only thing standing between a
-  refactor and an exposed endpoint. The new project routes don't have this
-  overlap (`/api/projects` public, `/api/admin/projects` admin).
+  `users` table. Note that password reset needs `MAIL_ENABLED=true` and real
+  SMTP credentials; without them it silently does nothing in production.
+- ~~`GET /api/properties/**` is `permitAll` and also matches the admin-only
+  `GET /api/properties/admin`.~~ **Done.** The admin rule is now ordered
+  before the public one in `SecurityConfig`, and
+  `AdminEndpointAuthorizationTest` sweeps both paths for anonymous and
+  non-admin callers, so `@PreAuthorize` is no longer the only thing standing
+  between a refactor and every published draft.
 - The production frontend origin still needs adding to
   `CORS_ALLOWED_ORIGINS` when the domain is known.
+- Access tokens live in the browser's `localStorage`, so any XSS on the
+  frontend takes the admin session with it. The strict CSP in `vercel.json`
+  is the mitigation; httpOnly cookies are the structural fix and a larger
+  change. See M7 in `docs/SECURITY_AUDIT.md`.
