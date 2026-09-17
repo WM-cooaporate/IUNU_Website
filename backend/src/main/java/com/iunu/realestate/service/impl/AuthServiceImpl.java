@@ -11,6 +11,7 @@ import com.iunu.realestate.entity.User;
 import com.iunu.realestate.exception.AccountLockedException;
 import com.iunu.realestate.exception.BadRequestException;
 import com.iunu.realestate.exception.UnauthorizedException;
+import com.iunu.realestate.metrics.AbuseMetrics;
 import com.iunu.realestate.repository.PasswordResetTokenRepository;
 import com.iunu.realestate.repository.RefreshTokenRepository;
 import com.iunu.realestate.repository.UserRepository;
@@ -45,6 +46,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
+    private final AbuseMetrics metrics;
 
     @Value("${app.security.max-failed-attempts:5}")
     private int maxFailedAttempts;
@@ -104,6 +106,9 @@ public class AuthServiceImpl implements AuthService {
         } catch (DisabledException e) {
             throw new UnauthorizedException("Invalid email or password");
         } catch (BadCredentialsException e) {
+            // Counted whether or not the account exists, so the metric reflects
+            // guessing attempts rather than only attempts against real users.
+            metrics.loginFailed();
             if (user != null) {
                 registerFailedAttempt(user);
             }
@@ -239,6 +244,7 @@ public class AuthServiceImpl implements AuthService {
         if (attempts >= maxFailedAttempts) {
             user.setAccountLocked(true);
             user.setLockedUntil(Instant.now().plus(lockDurationMinutes, ChronoUnit.MINUTES));
+            metrics.accountLocked();
             log.warn("Account locked after {} failed attempts: {}", attempts, user.getEmail());
         }
 

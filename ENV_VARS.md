@@ -54,25 +54,37 @@ set `UPLOAD_DIR` to its mount path — the two must be identical.
 is not writable, so a misconfigured mount fails loudly rather than at the first
 admin upload.
 
-### Rate limiting behind the proxy
+### Client IP behind the proxy — get this right or the rate limits do nothing
 
 Every request reaches the app through Render's edge proxy, so
-`request.getRemoteAddr()` is the proxy's address for everyone. With
-`RATE_LIMIT_TRUST_FORWARDED_HEADER=false` the per-IP limits collapse into one
-global bucket and the 10-logins-per-minute limit applies to the whole site at
-once — one attacker would lock every visitor out of logging in.
+`request.getRemoteAddr()` is the proxy's address for everyone. There are two
+ways to get this wrong and both are silent.
 
-Set to `true` (as `render.yaml` does) the limiter reads `X-Forwarded-For` and
-keys on its **last** entry. That is deliberate: a client can send its own
-`X-Forwarded-For` and the proxy appends to it, so the first entry is
-attacker-controlled and the last is the one the trusted proxy wrote. Only set
-this to `true` where a proxy you trust actually terminates every request.
+**Trusting too little.** Key on `getRemoteAddr()` behind a proxy and every
+visitor shares one bucket: the 10-logins-per-minute limit applies to the whole
+site at once, so one attacker spending it locks every real admin out of the
+dashboard.
+
+**Trusting too much.** Read `X-Forwarded-For` without checking who sent it and
+the caller picks their own bucket. A client can set the header itself, and
+"the last entry is the one a proxy wrote" only holds *if a proxy wrote it* — a
+request that reaches the origin directly (over the `*.onrender.com` URL, which
+stays reachable) carries whatever the caller typed, end to end.
+
+| Variable | Description | Value on Render |
+|---|---|---|
+| `CLIENT_IP_MODE` | `remote-addr` (no proxy — local development), `x-forwarded-for` (Render or Railway, no Cloudflare), or `cloudflare` (`CF-Connecting-IP`; only once traffic is proxied **and** the origin is closed). | `x-forwarded-for`, or `cloudflare` after runbook step 7 |
+| `TRUSTED_PROXY_HOPS` | How many proxies sit in front of the app. The entry this far from the **right** of `X-Forwarded-For` is the real client. | `1` (Render alone), `2` (Cloudflare in front of Render) |
+| `TRUSTED_PROXIES` | Comma-separated addresses or CIDR blocks. Forwarding headers are honoured **only** from a peer inside one of these; anything else falls back to the socket address. **Set this.** Leaving it blank logs a WARN at startup and means any peer can forge the header. | Render's internal proxy range, or Cloudflare's published ranges (<https://www.cloudflare.com/ips/>) — check what `getRemoteAddr()` actually is first |
+| `RATE_LIMIT_TRUST_FORWARDED_HEADER` | The older boolean, superseded by `CLIENT_IP_MODE`. Still honoured when `CLIENT_IP_MODE` is unset, so an existing deployment does not change behaviour mid-release. | leave as is, or drop once `CLIENT_IP_MODE` is set |
 
 ### Optional — defaults apply if unset
 
 | Variable | Description | Default |
 |---|---|---|
-| `DB_POOL_SIZE` | Hikari maximum pool size. Kept small in `prod`: free PostgreSQL allows few connections and the free instance has 0.1 CPU. | `5` in `prod`, `10` otherwise |
+| `DB_POOL_MAX` | Hikari maximum pool size. **Must stay below the database plan's connection limit**, counting every instance plus anything else that connects (migrations, a `psql` session, a backup job). Exceeding it does not degrade gracefully — the database refuses new connections and the app 500s. Raising it does not buy throughput once the database is the bottleneck; it converts slow requests into failed ones. | `5` in `prod`, `10` otherwise |
+| `DB_POOL_SIZE` | The older name for `DB_POOL_MAX`, still honoured. | — |
+| `TOMCAT_MAX_THREADS` | Concurrent in-flight requests. Requests beyond this queue rather than fail. Keep it well above `DB_POOL_MAX`: a thread waiting on the pool is cheap, a connection the server cannot accept is a refused request. | `100` |
 | `JWT_ACCESS_TOKEN_EXPIRATION_MS` | Access-token lifetime. | `900000` (15 min) |
 | `JWT_ISSUER` | `iss` claim. | `iunu-real-estate-api` |
 | `MAX_FAILED_LOGIN_ATTEMPTS` | Failed logins before the account locks. | `5` |
@@ -80,12 +92,18 @@ this to `true` where a proxy you trust actually terminates every request.
 | `RESET_TOKEN_EXPIRY_MINUTES` | Password-reset token lifetime. | `30` |
 | `REFRESH_TOKEN_EXPIRY_DAYS` | Refresh-token lifetime. | `7` |
 | `RATE_LIMIT_TRUST_FORWARDED_HEADER` | Read the client IP from `X-Forwarded-For`. `TRUST_FORWARDED_HEADER` is the older name and is still honoured. | `false` |
-| `MAIL_ENABLED` | Send password-reset mail. When `false`, reset links are logged instead. | `false` |
+| `MAIL_ENABLED` | Send password-reset mail. **Password reset does not work without it.** When `false` outside the `prod` profile the reset link is logged so local development can complete the flow; under `prod` the link is never logged (it is a working account-takeover token) and a WARN says reset is not functioning. | `false` |
 | `MAIL_HOST` / `MAIL_PORT` | SMTP server. | `localhost` / `587` |
 | `MAIL_USERNAME` / `MAIL_PASSWORD` | SMTP credentials. | *(empty)* |
 | `MAIL_FROM` | From address on outgoing mail. | `no-reply@iunu-eg.com` |
 | `GOOGLE_TRANSLATE_API_KEY` | Google Cloud Translation API key. Enables automatic English -> Arabic translation of project content on save. Unset or blank disables the feature: saves still succeed, the Arabic fields stay empty, and the site falls back to the English text. | *(empty)* |
 | `GOOGLE_TRANSLATE_BASE_URL` | Override for the translation API host. Only useful for pointing the backend at a stub in tests. | `https://translation.googleapis.com` |
+| `GOOGLE_TRANSLATE_DAILY_CHAR_LIMIT` | Characters per UTC day across every caller. Google bills per character, so this bounds what a loop over the preview or backfill endpoint can cost. Past it the translator behaves as disabled: saves still succeed with English fallback. `0` means unlimited. **A backstop, not the cap** — it lives in one JVM's memory and resets on every deploy. The real cap is a quota in the Google Cloud Console (runbook step 9). | `200000` |
+| `SWAGGER_ENABLED` | Publishes `/v3/api-docs` and `/swagger-ui`. **Off by default**, deliberately: a deploy that forgets `SPRING_PROFILES_ACTIVE=prod` must not hand an anonymous visitor the shape of every admin endpoint. Turn on temporarily for a ZAP scan. | `false` |
+| `EDGE_SHARED_SECRET` | When set, requests without a matching `X-Edge-Auth` header are refused with 403, closing the origin to anything that did not come through Cloudflare. **Blank (disabled) by default.** Set it only *after* the Cloudflare Transform Rule that injects the header exists — the other order takes the API offline. `/actuator/health` stays exempt so deploys keep passing. See `docs/DDOS_RUNBOOK.md` step 8. | *(empty)* |
+| `RATE_LIMIT_ENABLED` | Master switch for the in-app rate limiter. Leave on. Exists so the test suite can disable it. | `true` |
+| `RATE_LIMIT_MAX_TRACKED_CLIENTS` | Ceiling on the limiter's bucket store. Bounded so a flood from many addresses cannot grow it until the JVM runs out of memory. | `100000` |
+| `MAX_JSON_REQUEST_BYTES` | Largest non-multipart body accepted, checked against `Content-Length` before the stream is read. | `1048576` (1MB) |
 
 ### Arabic auto-translation
 
@@ -158,5 +176,18 @@ uses `Authorization: Bearer` tokens, not cookies, so the frontend never sets
    it, so a restart alone will not pick it up.
 5. Confirm you can log in as the bootstrapped admin, then remove `ADMIN_EMAIL`
    and `ADMIN_PASSWORD` and redeploy.
-6. Free instances spin down when idle; the first request after that waits for a
+6. Set `CLIENT_IP_MODE` and `TRUSTED_PROXIES`. Until `TRUSTED_PROXIES` is set,
+   startup logs a WARN and the per-IP rate limits can be bypassed by anything
+   that reaches the origin directly.
+7. Set `MAIL_ENABLED=true` with real SMTP credentials, or accept that password
+   reset does not work.
+8. Free instances spin down when idle; the first request after that waits for a
    cold start, and anything in `UPLOAD_DIR` is gone.
+
+## Before this is load-bearing for a client
+
+- `docs/DDOS_RUNBOOK.md` — Cloudflare in front of the backend, and closing the
+  origin behind it. Application code cannot stop a volumetric attack; that
+  document is where the protection actually lives.
+- `docs/SECURITY_AUDIT.md` — what was found, what was fixed, and the decisions
+  left to you.

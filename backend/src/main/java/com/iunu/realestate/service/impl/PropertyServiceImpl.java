@@ -9,7 +9,10 @@ import com.iunu.realestate.exception.ResourceNotFoundException;
 import com.iunu.realestate.repository.PropertyRepository;
 import com.iunu.realestate.service.PropertyService;
 import com.iunu.realestate.service.ImageStorage;
+import com.iunu.realestate.config.CacheConfig;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,6 +22,18 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Caching note: only the two <em>public</em> reads are cached, and every write
+ * clears both caches completely.
+ *
+ * <p>Zero staleness after a write is a requirement, not a nicety - the admin
+ * saves a property and immediately checks the public site. Evicting everything
+ * rather than computing which listing pages a given property appears on is the
+ * cheap, obviously-correct choice at this data volume.
+ *
+ * <p>The admin reads are never cached: they serve drafts, and an admin who
+ * unpublishes something has to see it disappear on the next load.
+ */
 @Service
 @RequiredArgsConstructor
 public class PropertyServiceImpl implements PropertyService {
@@ -28,6 +43,8 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = CacheConfig.PUBLIC_PROPERTY_LIST,
+            key = "#type + ':' + #pageable.pageNumber + ':' + #pageable.pageSize + ':' + #pageable.sort")
     public Page<PropertyResponse> listPublished(PropertyType type, Pageable pageable) {
         Page<Property> page = (type != null)
                 ? propertyRepository.findByPublishedTrueAndType(type, pageable)
@@ -37,6 +54,10 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     @Transactional(readOnly = true)
+    // No `unless` is needed for the missing case: a not-found property throws,
+    // and Spring's cache abstraction never stores the result of a method that
+    // threw. Only a real, published property is ever cached.
+    @Cacheable(cacheNames = CacheConfig.PUBLIC_PROPERTY_BY_ID, key = "#id")
     public PropertyResponse getPublishedById(Long id) {
         Property property = propertyRepository.findById(id)
                 .filter(Property::isPublished)
@@ -60,6 +81,8 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheConfig.PUBLIC_PROPERTY_LIST, CacheConfig.PUBLIC_PROPERTY_BY_ID},
+            allEntries = true)
     public PropertyResponse create(PropertyRequest request) {
         Property property = Property.builder()
                 .title(request.title().trim())
@@ -86,6 +109,11 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     @Transactional
+    // Covers the publish/unpublish toggle and every image change too: both
+    // arrive as an update, and an unpublished property must vanish from the
+    // public listing on the very next request.
+    @CacheEvict(cacheNames = {CacheConfig.PUBLIC_PROPERTY_LIST, CacheConfig.PUBLIC_PROPERTY_BY_ID},
+            allEntries = true)
     public PropertyResponse update(Long id, PropertyRequest request) {
         Property property = propertyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found"));
@@ -119,6 +147,8 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {CacheConfig.PUBLIC_PROPERTY_LIST, CacheConfig.PUBLIC_PROPERTY_BY_ID},
+            allEntries = true)
     public void delete(Long id) {
         Property property = propertyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found"));
@@ -143,12 +173,25 @@ public class PropertyServiceImpl implements PropertyService {
         return urls;
     }
 
-    private void deleteUnusedImages(Set<String> candidates, Long ignoredPropertyId) {
-        Set<String> activeImages = new HashSet<>();
-        propertyRepository.findAll().stream()
-                .filter(property -> !property.getId().equals(ignoredPropertyId))
-                .forEach(property -> activeImages.addAll(imageUrlsOf(property)));
-        candidates.removeAll(activeImages);
-        candidates.forEach(imageStorage::deleteIfStored);
+    /**
+     * Deletes the files behind {@code candidates}, but only those no other
+     * property still points at.
+     *
+     * <p>Storage is content-addressed (the filename is the SHA-256 of the
+     * bytes), so uploading the same photo to two properties yields <em>one</em>
+     * file with two references. Deleting it because the property being edited
+     * dropped it would blank the image on the other property. Hence the
+     * per-URL check rather than "this property no longer uses it".
+     *
+     * <p>This used to load every property row - {@code findAll()} - on every
+     * admin save and delete, which is a full table scan plus a second query per
+     * row for its image collection, to answer a question two indexed lookups
+     * answer. Now it is one cheap existence query per candidate URL, and only
+     * for URLs that were actually removed (usually none).
+     */
+    private void deleteUnusedImages(Set<String> candidates, Long excludePropertyId) {
+        candidates.stream()
+                .filter(url -> !propertyRepository.isImageUsedByOtherProperty(url, excludePropertyId))
+                .forEach(imageStorage::deleteIfStored);
     }
 }

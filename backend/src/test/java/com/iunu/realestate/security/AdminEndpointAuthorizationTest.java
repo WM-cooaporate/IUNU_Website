@@ -46,6 +46,12 @@ class AdminEndpointAuthorizationTest extends IntegrationTest {
             "POST,   /api/properties/images",
             "POST,   /api/admin/translations/preview",
             "POST,   /api/admin/translations/properties/backfill",
+            // Operational data: request rates, cache hit ratios, pool depth,
+            // the JVM's own configuration. Only /actuator/health is anonymous.
+            "GET,    /actuator/metrics",
+            "GET,    /actuator/prometheus",
+            "GET,    /actuator/caches",
+            "GET,    /actuator/info",
     })
     @DisplayName("401s with no token")
     void requiresAuthentication(String method, String path) throws Exception {
@@ -73,6 +79,12 @@ class AdminEndpointAuthorizationTest extends IntegrationTest {
             "POST,   /api/properties/images",
             "POST,   /api/admin/translations/preview",
             "POST,   /api/admin/translations/properties/backfill",
+            // Operational data: request rates, cache hit ratios, pool depth,
+            // the JVM's own configuration. Only /actuator/health is anonymous.
+            "GET,    /actuator/metrics",
+            "GET,    /actuator/prometheus",
+            "GET,    /actuator/caches",
+            "GET,    /actuator/info",
     })
     @DisplayName("403s for an authenticated non-admin")
     void forbidsNonAdmins(String method, String path) throws Exception {
@@ -85,6 +97,8 @@ class AdminEndpointAuthorizationTest extends IntegrationTest {
     void publicEndpointsRemainPublic() throws Exception {
         mockMvc.perform(json("GET", "/api/projects")).andExpect(status().isOk());
         mockMvc.perform(json("GET", "/api/properties")).andExpect(status().isOk());
+        // The platform polls this on every deploy and gates the release on it.
+        mockMvc.perform(json("GET", "/actuator/health")).andExpect(status().isOk());
     }
 
     /**

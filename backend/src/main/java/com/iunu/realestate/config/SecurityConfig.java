@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -25,6 +26,11 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import org.springframework.http.HttpMethod;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -39,6 +45,27 @@ public class SecurityConfig {
     private final AccessDeniedHandlerImpl accessDeniedHandler;
     private final UserDetailsService userDetailsService;
     private final CorsProperties corsProperties;
+
+
+    /**
+     * Matchers for GET <em>and</em> HEAD on each pattern.
+     *
+     * <p>Spring Security's method matcher is exact, so a rule written for GET
+     * alone answers 401 to a HEAD of the same URL. HEAD is a GET without a
+     * body and carries the same authorization decision, so a public path that
+     * refuses HEAD is simply broken - it breaks CDN cache validation, link
+     * previews and uptime checks, and on an admin path it would leak the
+     * difference between "exists" and "does not" to an unauthenticated caller
+     * if the rule were the other way round.
+     */
+    private static RequestMatcher[] readMatchers(String... patterns) {
+        List<RequestMatcher> matchers = new ArrayList<>(patterns.length * 2);
+        for (String pattern : patterns) {
+            matchers.add(AntPathRequestMatcher.antMatcher(HttpMethod.GET, pattern));
+            matchers.add(AntPathRequestMatcher.antMatcher(HttpMethod.HEAD, pattern));
+        }
+        return matchers.toArray(RequestMatcher[]::new);
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -70,12 +97,26 @@ public class SecurityConfig {
                         .authenticationEntryPoint(authEntryPointJwt)
                         .accessDeniedHandler(accessDeniedHandler))
                 .headers(headers -> headers
+                        // This CSP is for a JSON API, not a page: nothing here
+                        // is ever rendered, so everything is denied. The
+                        // browser-facing policy lives in vercel.json.
                         .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'none'; frame-ancestors 'none'"))
+                        .contentTypeOptions(Customizer.withDefaults())
                         .frameOptions(frame -> frame.deny())
+                        // Stricter than the usual strict-origin-when-cross-origin.
+                        // That policy exists to keep analytics working across
+                        // navigations; an API has no navigations to preserve, so
+                        // there is no reason to leak the origin at all.
                         .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
                         .httpStrictTransportSecurity(hsts -> hsts
                                 .includeSubDomains(true)
-                                .maxAgeInSeconds(31536000)))
+                                .maxAgeInSeconds(31536000))
+                        // Last in the chain on purpose: in Spring Security 6.3
+                        // permissionsPolicy() returns its own config object
+                        // rather than the HeadersConfigurer, so nothing can be
+                        // chained after it.
+                        .permissionsPolicy(permissions -> permissions
+                                .policy("camera=(), microphone=(), geolocation=()")))
                 .authorizeHttpRequests(auth -> auth
                         // These two live under /api/auth/** but require a valid token -
                         // listed before the blanket permitAll below so they win.
@@ -87,25 +128,34 @@ public class SecurityConfig {
                         // GET rule below - otherwise "/api/properties/**" would permitAll them
                         // and only the controller's @PreAuthorize would stand between a
                         // stranger and every draft.
-                        .requestMatchers(org.springframework.http.HttpMethod.GET,
-                                "/api/properties/admin", "/api/properties/admin/**").hasRole("ADMIN")
+                        .requestMatchers(readMatchers("/api/properties/admin", "/api/properties/admin/**"))
+                        .hasRole("ADMIN")
                         // Public read of published properties/projects
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/properties/**").permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/projects", "/api/projects/**").permitAll()
+                        .requestMatchers(readMatchers("/api/properties", "/api/properties/**")).permitAll()
+                        .requestMatchers(readMatchers("/api/projects", "/api/projects/**")).permitAll()
                         // Uploaded cover images are public assets
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/uploads/**").permitAll()
+                        .requestMatchers(readMatchers("/uploads/**")).permitAll()
                         // Public lead-generation forms (contact, quote, newsletter)
                         .requestMatchers(org.springframework.http.HttpMethod.POST,
                                 "/api/contact", "/api/quotes", "/api/newsletter", "/api/careers").permitAll()
                         // Health check. Render polls this on every deploy and keeps
                         // polling it afterwards, so it has to be reachable without a
-                        // token - but only this one path, only for GET. Everything else
-                        // under /actuator is refused outright rather than left to
-                        // anyRequest().authenticated(), so exposing another endpoint by
-                        // widening management.endpoints.web.exposure.include cannot
-                        // quietly publish it.
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/actuator/health").permitAll()
-                        .requestMatchers("/actuator/**").denyAll()
+                        // token - but only these paths, only for GET, and only with
+                        // show-details: never, so an anonymous caller learns that the
+                        // app is up and nothing else (not the database host, not which
+                        // components are failing).
+                        .requestMatchers(readMatchers(
+                                "/actuator/health", "/actuator/health/liveness", "/actuator/health/readiness"))
+                        .permitAll()
+                        // Everything else under /actuator - metrics, prometheus,
+                        // caches, info - is operational data: request rates, cache
+                        // hit ratios, connection-pool depth, the JVM's own
+                        // properties. Useful to an operator, and equally useful to
+                        // someone deciding where this app is weakest. ADMIN only,
+                        // stated here rather than left to anyRequest().authenticated(),
+                        // so a widened management.endpoints.web.exposure.include can
+                        // never quietly publish a new endpoint to any logged-in user.
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
                         // API docs
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         // Admin-only management endpoints
@@ -125,9 +175,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         List<String> allowedOrigins = corsProperties.allowedOrigins();
 
-        // The browser refuses "Access-Control-Allow-Origin: *" together with
-        // credentials anyway; failing fast at startup turns that into an
-        // obvious misconfiguration instead of CORS errors nobody can explain.
+        // An unset or wildcarded origin list is a deployment mistake, and one
+        // that only shows up later as CORS errors nobody can explain. Failing
+        // at startup turns it into an obvious one.
         if (allowedOrigins == null || allowedOrigins.isEmpty()) {
             throw new IllegalStateException(
                     "app.cors.allowed-origins (CORS_ALLOWED_ORIGINS) must list at least one origin.");
@@ -135,15 +185,23 @@ public class SecurityConfig {
         if (allowedOrigins.stream().anyMatch(origin -> origin.contains("*"))) {
             throw new IllegalStateException(
                     "app.cors.allowed-origins (CORS_ALLOWED_ORIGINS) must be an explicit list of origins; "
-                            + "wildcards cannot be combined with credentialed requests. Got: " + allowedOrigins);
+                            + "a wildcard lets any site on the internet read this API's responses in a "
+                            + "visitor's browser. Got: " + allowedOrigins);
         }
 
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
-        configuration.setExposedHeaders(List.of("Authorization"));
-        configuration.setAllowCredentials(true);
+        // Retry-After so the frontend can read it off a 429 instead of guessing.
+        configuration.setExposedHeaders(List.of("Authorization", "Retry-After"));
+        // False, because this API has no cookies and no session: the browser
+        // sends an Authorization header, which is not a credential in the CORS
+        // sense. Allowing credentials would let a page on an allowed origin
+        // make authenticated requests with the browser's ambient state - a
+        // capability nothing here needs, and the precondition for CSRF against
+        // an API whose CSRF protection is switched off.
+        configuration.setAllowCredentials(false);
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

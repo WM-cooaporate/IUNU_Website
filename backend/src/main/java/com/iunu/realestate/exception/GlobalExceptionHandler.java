@@ -5,11 +5,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -95,11 +98,51 @@ public class GlobalExceptionHandler {
                 .body(ApiError.of(HttpStatus.NOT_FOUND.value(), "Not Found", ex.getMessage(), request.getRequestURI()));
     }
 
+    /**
+     * A URL nothing is mapped to. Without this the catch-all below turns every
+     * probe for a path that does not exist into a 500 plus an ERROR-level stack
+     * trace - so a scanner walking a wordlist both gets told "something went
+     * wrong here" (which reads as "keep looking") and fills the logs on the way
+     * through. It is a 404.
+     */
+    @ExceptionHandler({NoResourceFoundException.class, NoHandlerFoundException.class})
+    public ResponseEntity<ApiError> handleUnmappedPath(Exception ex, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiError.of(HttpStatus.NOT_FOUND.value(), "Not Found",
+                        "The requested resource was not found", request.getRequestURI()));
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(ApiError.of(HttpStatus.FORBIDDEN.value(), "Forbidden",
                         "You do not have permission to access this resource", request.getRequestURI()));
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiError> handleConflict(ConflictException ex, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiError.of(HttpStatus.CONFLICT.value(), "Conflict", ex.getMessage(), request.getRequestURI()));
+    }
+
+    /**
+     * An unknown or non-sortable ?sort= property. Spring Data raises this from
+     * deep inside query creation, so without a mapping it reaches the catch-all
+     * and becomes a 500 - which both looks like a server fault and tells the
+     * caller, via the logged stack trace and the error shape, that they found
+     * something. It is a bad parameter: 400.
+     *
+     * <p>The message is deliberately generic. Echoing the rejected property
+     * back turns this endpoint into a field oracle: try ?sort=password, see
+     * whether the error changes, and learn the entity's shape one guess at a
+     * time.
+     */
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<ApiError> handleUnknownSortProperty(
+            PropertyReferenceException ex, HttpServletRequest request) {
+        return ResponseEntity.badRequest()
+                .body(ApiError.of(HttpStatus.BAD_REQUEST.value(), "Bad Request",
+                        "Unsupported sort or filter parameter", request.getRequestURI()));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

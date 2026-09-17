@@ -14,13 +14,19 @@ package com.iunu.realestate.translation;
  * @param readTimeoutMs   Response budget for one call. Translation happens on the
  *                        request thread before any DB connection is taken, so this
  *                        is the worst case a save can be slowed by per batch.
+ * @param dailyCharLimit  Characters per UTC day, across every caller. Google bills
+ *                        per character, so this is the ceiling on what a loop over
+ *                        the preview or backfill endpoint can cost. 0 or less means
+ *                        unlimited - appropriate only when a real quota is set in
+ *                        the Google Cloud Console. See TranslationBudget.
  */
 @org.springframework.boot.context.properties.ConfigurationProperties(prefix = "app.translation.google")
 public record GoogleTranslateProperties(
         String apiKey,
         String baseUrl,
         Integer connectTimeoutMs,
-        Integer readTimeoutMs
+        Integer readTimeoutMs,
+        Long dailyCharLimit
 ) {
     public String baseUrlOrDefault() {
         return (baseUrl == null || baseUrl.isBlank()) ? "https://translation.googleapis.com" : baseUrl.trim();
@@ -32,5 +38,9 @@ public record GoogleTranslateProperties(
 
     public int readTimeoutMsOrDefault() {
         return readTimeoutMs == null ? 10000 : readTimeoutMs;
+    }
+
+    public long dailyCharLimitOrDefault() {
+        return dailyCharLimit == null ? 200_000L : dailyCharLimit;
     }
 }

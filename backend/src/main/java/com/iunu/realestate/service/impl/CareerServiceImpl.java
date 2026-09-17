@@ -1,6 +1,7 @@
 package com.iunu.realestate.service.impl;
 
 import com.iunu.realestate.service.CareerService;
+import com.iunu.realestate.util.LogSanitizer;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,11 @@ public class CareerServiceImpl implements CareerService {
     @Override
     public void sendApplication(String fullName, String email, String phone, String position, String message, MultipartFile resume) {
         if (!mailEnabled) {
-            log.info("Career mail disabled. Application from {} for {} was received.", email, position);
+            // position is only length-limited, so it can contain newlines -
+            // which in a line-oriented log means the applicant writes their own
+            // log lines. See LogSanitizer.
+            log.info("Career mail disabled. Application from {} for {} was received.",
+                    email, LogSanitizer.forLog(position));
             return;
         }
 
@@ -42,7 +47,15 @@ public class CareerServiceImpl implements CareerService {
             helper.setFrom(fromEmail);
             helper.setTo(COMPANY_EMAIL);
             helper.setReplyTo(email);
-            helper.setSubject("Career application: " + position + " - " + fullName);
+            // Stripped of line breaks before going into a header. A mail header
+            // is terminated by CRLF, so an unfiltered newline in a subject is
+            // the classic header-injection primitive - it lets the applicant
+            // append headers of their own (Bcc:, Reply-To:) and use the
+            // company's mail server to send somewhere else. JavaMail's encoding
+            // makes that hard to exploit; not relying on that is cheaper than
+            // being sure of it.
+            helper.setSubject("Career application: "
+                    + LogSanitizer.forLog(position) + " - " + LogSanitizer.forLog(fullName));
             helper.setText(""
                     + "New career application\n\n"
                     + "Name: " + fullName + "\n"

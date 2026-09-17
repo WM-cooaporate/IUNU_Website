@@ -1,6 +1,7 @@
 package com.iunu.realestate.translation;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.iunu.realestate.metrics.AbuseMetrics;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,9 +50,18 @@ public class GoogleTranslationService implements TranslationService {
 
     private final RestClient restClient;
     private final GoogleTranslateProperties properties;
+    private final TranslationBudget budget;
+    private final AbuseMetrics metrics;
 
-    public GoogleTranslationService(RestClient.Builder builder, GoogleTranslateProperties properties) {
+    public GoogleTranslationService(
+            RestClient.Builder builder,
+            GoogleTranslateProperties properties,
+            TranslationBudget budget,
+            AbuseMetrics metrics
+    ) {
         this.properties = properties;
+        this.budget = budget;
+        this.metrics = metrics;
         this.restClient = builder.build();
     }
 
@@ -111,6 +121,16 @@ public class GoogleTranslationService implements TranslationService {
     /** One HTTP call for a batch; on any failure the batch's chunks stay untranslated. */
     private void translateBatch(List<Chunk> batch) {
         List<String> payload = batch.stream().map(Chunk::source).toList();
+        long billableChars = payload.stream().mapToLong(String::length).sum();
+
+        // Reserved before the call, not after: an over-budget batch must not be
+        // sent at all. Leaving the chunks untranslated is the same outcome as
+        // any other failure here - the field stays null and the save succeeds.
+        if (!budget.tryReserve(billableChars)) {
+            return;
+        }
+        metrics.translationCall(billableChars);
+
         try {
             TranslateResponse response = restClient.post()
                     .uri(properties.baseUrlOrDefault() + PATH)

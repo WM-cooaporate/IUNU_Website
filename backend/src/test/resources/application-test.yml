@@ -31,6 +31,17 @@ app:
     reset-token-expiry-minutes: 30
     refresh-token-expiry-days: 7
     trust-forwarded-header: false
+    rate-limit:
+      # Off for the shared suite. The whole suite runs against one cached
+      # application context, so a limiter counting across every test in the run
+      # makes a failure depend on which tests ran first. RateLimitingFilterTest
+      # turns it back on under its own profile and @DirtiesContext.
+      enabled: false
+  client-ip:
+    mode: remote-addr
+  edge:
+    # Off by default; EdgeSecretFilterTest enables it under its own profile.
+    shared-secret: ""
   cors:
     allowed-origins: http://localhost:5173
   # Deliberately blank: the suite must never reach Google. Tests that need a

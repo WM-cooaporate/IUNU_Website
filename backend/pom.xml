@@ -119,6 +119,26 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- Prometheus scrape endpoint. Without a registry on the classpath
+             Actuator collects no metrics at all, so /actuator/metrics is empty
+             and a load test cannot see where the app is spending its time. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
+        <!-- In-process caching of public property reads. Caffeine rather than
+             Redis on purpose: this app runs as a single instance. See
+             CacheConfig for what has to change if that stops being true. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+
         <!-- Test (kept minimal; no test suite authored per project scope) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -172,4 +192,42 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!--
+          Dependency CVE scan. Behind a profile because the plugin downloads and
+          updates a local copy of the NVD feed, which takes minutes on a cold
+          cache and needs network access - neither belongs in the build every
+          contributor runs. Run it deliberately:
+
+              mvn -Psecurity org.owasp:dependency-check-maven:check
+
+          An NVD API key (NVD_API_KEY) makes the feed update roughly an order of
+          magnitude faster; without one the download is heavily rate limited.
+        -->
+        <profile>
+            <id>security</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <version>10.0.4</version>
+                        <configuration>
+                            <!-- Only genuinely serious findings fail the build;
+                                 everything else is still listed in the report. -->
+                            <failBuildOnCVSS>7</failBuildOnCVSS>
+                            <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+                            <formats>
+                                <format>HTML</format>
+                                <format>JSON</format>
+                            </formats>
+                            <!-- Test-only dependencies are not shipped. -->
+                            <skipTestScope>true</skipTestScope>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

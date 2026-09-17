@@ -33,7 +33,9 @@ public class TranslationClientConfig {
     @Bean
     public TranslationService translationService(
             @Qualifier(BUILDER) RestClient.Builder builder,
-            GoogleTranslateProperties properties) {
-        return new GoogleTranslationService(builder, properties);
+            GoogleTranslateProperties properties,
+            TranslationBudget budget,
+            com.iunu.realestate.metrics.AbuseMetrics metrics) {
+        return new GoogleTranslationService(builder, properties, budget, metrics);
     }
 }

@@ -20,8 +20,10 @@ spring:
     password: ${DB_PASSWORD}
     hikari:
       # Render's free Postgres allows few connections and the free instance has
-      # 0.1 CPU; a small pool is the realistic ceiling, not a throttle.
-      maximum-pool-size: ${DB_POOL_SIZE:5}
+      # 0.1 CPU; a small pool is the realistic ceiling, not a throttle. Raising
+      # this above the plan's connection limit does not buy throughput - it
+      # turns a slow request into a failed one.
+      maximum-pool-size: ${DB_POOL_MAX:${DB_POOL_SIZE:5}}
 
   jpa:
     open-in-view: false
@@ -36,12 +38,28 @@ app:
     secret: ${JWT_SECRET}
 
   security:
-    # Behind Render's proxy every request arrives from the proxy's address, so
-    # the per-IP rate limits are only meaningful if X-Forwarded-For is read.
-    # Env-driven rather than hard-coded: if this ever runs somewhere the header
-    # is not set by a trusted hop, trusting it lets clients spoof their way
-    # past the limiter. render.yaml sets it to true.
+    # Superseded by app.client-ip.mode below; kept because an existing Render
+    # deployment sets it and a release must not silently change how the limiter
+    # keys requests. When CLIENT_IP_MODE is unset, true here means
+    # x-forwarded-for. render.yaml sets it to true.
     trust-forwarded-header: ${RATE_LIMIT_TRUST_FORWARDED_HEADER:false}
+
+  client-ip:
+    # Behind Render's proxy every request arrives from the proxy's address, so
+    # the per-IP limits are only meaningful if X-Forwarded-For is read - and
+    # only from the right-hand side, which is what the proxy actually wrote.
+    #
+    # Switch to `cloudflare` ONLY after traffic is proxied through Cloudflare
+    # AND the origin is closed to direct access (EDGE_SHARED_SECRET). Until
+    # then CF-Connecting-IP is a header anyone can send.
+    mode: ${CLIENT_IP_MODE:x-forwarded-for}
+    # One hop: Render's own proxy. Two once Cloudflare is in front of it.
+    trusted-proxy-hops: ${TRUSTED_PROXY_HOPS:1}
+    # Strongly recommended: without it the forwarding header is honoured from
+    # any peer, so anything that can reach this process directly can choose its
+    # own rate-limit bucket. Set it to Render's internal proxy range. Startup
+    # logs a WARN while it is unset.
+    trusted-proxies: ${TRUSTED_PROXIES:}
 
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS}
@@ -56,11 +74,13 @@ app:
 
   frontend-url: ${FRONTEND_URL}
 
+# Exposure is inherited from application.yml (health, info, metrics,
+# prometheus, caches) rather than narrowed back to health here. During an
+# incident /actuator/metrics is how you tell "we are being flooded" from "the
+# database is the bottleneck", and it is reachable only with an ADMIN token -
+# see SecurityConfig. Only the health probes are anonymous, and they say
+# nothing but UP or DOWN.
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health
   endpoint:
     health:
       show-details: never
