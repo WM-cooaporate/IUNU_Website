@@ -26,6 +26,11 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import org.springframework.http.HttpMethod;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -40,6 +45,27 @@ public class SecurityConfig {
     private final AccessDeniedHandlerImpl accessDeniedHandler;
     private final UserDetailsService userDetailsService;
     private final CorsProperties corsProperties;
+
+
+    /**
+     * Matchers for GET <em>and</em> HEAD on each pattern.
+     *
+     * <p>Spring Security's method matcher is exact, so a rule written for GET
+     * alone answers 401 to a HEAD of the same URL. HEAD is a GET without a
+     * body and carries the same authorization decision, so a public path that
+     * refuses HEAD is simply broken - it breaks CDN cache validation, link
+     * previews and uptime checks, and on an admin path it would leak the
+     * difference between "exists" and "does not" to an unauthenticated caller
+     * if the rule were the other way round.
+     */
+    private static RequestMatcher[] readMatchers(String... patterns) {
+        List<RequestMatcher> matchers = new ArrayList<>(patterns.length * 2);
+        for (String pattern : patterns) {
+            matchers.add(AntPathRequestMatcher.antMatcher(HttpMethod.GET, pattern));
+            matchers.add(AntPathRequestMatcher.antMatcher(HttpMethod.HEAD, pattern));
+        }
+        return matchers.toArray(RequestMatcher[]::new);
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -102,13 +128,13 @@ public class SecurityConfig {
                         // GET rule below - otherwise "/api/properties/**" would permitAll them
                         // and only the controller's @PreAuthorize would stand between a
                         // stranger and every draft.
-                        .requestMatchers(org.springframework.http.HttpMethod.GET,
-                                "/api/properties/admin", "/api/properties/admin/**").hasRole("ADMIN")
+                        .requestMatchers(readMatchers("/api/properties/admin", "/api/properties/admin/**"))
+                        .hasRole("ADMIN")
                         // Public read of published properties/projects
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/properties/**").permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/projects", "/api/projects/**").permitAll()
+                        .requestMatchers(readMatchers("/api/properties", "/api/properties/**")).permitAll()
+                        .requestMatchers(readMatchers("/api/projects", "/api/projects/**")).permitAll()
                         // Uploaded cover images are public assets
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/uploads/**").permitAll()
+                        .requestMatchers(readMatchers("/uploads/**")).permitAll()
                         // Public lead-generation forms (contact, quote, newsletter)
                         .requestMatchers(org.springframework.http.HttpMethod.POST,
                                 "/api/contact", "/api/quotes", "/api/newsletter", "/api/careers").permitAll()
@@ -118,8 +144,8 @@ public class SecurityConfig {
                         // show-details: never, so an anonymous caller learns that the
                         // app is up and nothing else (not the database host, not which
                         // components are failing).
-                        .requestMatchers(org.springframework.http.HttpMethod.GET,
-                                "/actuator/health", "/actuator/health/liveness", "/actuator/health/readiness")
+                        .requestMatchers(readMatchers(
+                                "/actuator/health", "/actuator/health/liveness", "/actuator/health/readiness"))
                         .permitAll()
                         // Everything else under /actuator - metrics, prometheus,
                         // caches, info - is operational data: request rates, cache

@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.head;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -108,5 +109,27 @@ class SecurityHeadersTest extends IntegrationTest {
         mockMvc.perform(get("/api/properties/admin").header(HttpHeaders.AUTHORIZATION, adminBearer()))
                 .andExpect(status().isOk())
                 .andExpect(header().doesNotExist(HttpHeaders.ETAG));
+    }
+
+    /**
+     * Spring Security's method matcher is exact, so a rule written for GET
+     * alone answers 401 to a HEAD of the same URL. Nothing in the app issues a
+     * HEAD, which is why this went unnoticed - but CDN cache validation, link
+     * previews and uptime checks all do.
+     */
+    @Test
+    @DisplayName("HEAD is allowed wherever GET is public")
+    void headIsAllowedOnPublicPaths() throws Exception {
+        mockMvc.perform(head("/api/properties")).andExpect(status().isOk());
+        mockMvc.perform(head("/api/projects")).andExpect(status().isOk());
+        mockMvc.perform(head("/actuator/health")).andExpect(status().isOk());
+    }
+
+    /** And HEAD must not become a way around an admin-only rule. */
+    @Test
+    @DisplayName("HEAD on an admin path is still refused")
+    void headDoesNotBypassAdminRules() throws Exception {
+        mockMvc.perform(head("/api/properties/admin")).andExpect(status().isUnauthorized());
+        mockMvc.perform(head("/actuator/metrics")).andExpect(status().isUnauthorized());
     }
 }
