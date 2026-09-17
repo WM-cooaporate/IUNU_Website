@@ -1,7 +1,7 @@
 # Security audit — IUNU website
 
 **Date:** 2026-09-17
-**Scope:** `backend/` (Spring Boot 3.3.5, Java 21, PostgreSQL) and `src/` (React 19 + Vite, deployed to Vercel)
+**Scope:** `backend/` (Spring Boot 3.3.5, Java 21, PostgreSQL) and `src/` (React 19 + Vite, deployed to Vercel, Netlify and Render — see M12)
 **Method:** manual review of every controller, service, filter and configuration file; dependency scans; a running instance probed with `curl` and the k6 abuse suite; the production frontend bundle loaded in a headless browser under the proposed CSP.
 
 Findings marked **Fixed in this PR** have a test. Findings marked **Recommended** are for you to decide on — each one either changes product behaviour, needs a decision that is not mine, or lives outside the code.
@@ -14,7 +14,7 @@ Findings marked **Fixed in this PR** have a test. Findings marked **Recommended*
 |---|---|---|
 | Critical | 0 | 0 |
 | High | 3 | 1 |
-| Medium | 6 | 5 |
+| Medium | 7 | 5 |
 | Low | 4 | 3 |
 | Info | — | 4 |
 
@@ -230,6 +230,28 @@ Spring Data logs a warning on every such response: the JSON shape of a serialise
 
 **Fix:** `@EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)`, plus whatever frontend adjustment the new shape needs. Not done here because it changes the public API response shape, which is a coordinated frontend change and outside this PR's scope.
 
+### M12. The site deploys to three hosts, and security headers were configured for one
+
+**Severity:** Medium
+**Location:** `vercel.json`, `public/_headers` (new), `render.yaml`
+**Status:** **Fixed in this PR**
+
+**Evidence.** This repository is deployed by **three** static hosts, each of which reads a different configuration file and ignores the others:
+
+| Host | Reads | Had headers before this finding |
+|---|---|---|
+| Vercel (`iunu-website`) | `vercel.json` | Yes — added earlier in this PR |
+| Netlify (`iunuwebsite`) | `_headers` at the publish root | **No file existed at all** |
+| Render (`iunu-web`) | the `headers:` block in `render.yaml` | **No block existed** |
+
+The Netlify deployment surfaced only when its bot commented on this PR; nothing in the repository referenced it.
+
+**Impact.** Every header in M7's mitigation — the strict CSP that is the practical defence for tokens held in `localStorage`, plus `X-Frame-Options`, HSTS and the rest — applied to exactly one of three deployments. Which host serves the production domain is not something the code can know, so a CSP present in `vercel.json` alone is not a CSP the client is protected by. Worse, it reads as done: the audit would have claimed the headers were shipped, and the browser verification would have passed, while two live deployments served nothing.
+
+**Fix.** `public/_headers` (Vite copies `public/` into `dist/` verbatim, which is where Netlify looks) and a `headers:` block in `render.yaml`, both carrying the identical header set. A check confirms all three files declare the same six headers with byte-identical CSP values, and the browser verification was re-run reading the shipped `dist/_headers` rather than a copy of it — zero violations on every route.
+
+**Standing risk:** three files now have to stay in sync by hand, and nothing enforces it at build time. Each carries a comment saying so. If a fourth host ever appears, or the backend moves to a custom domain, all three need the same edit — the `connect-src` directive names the API origin, and getting it wrong blocks every API call with no server-side error to find.
+
 ---
 
 ## Low
@@ -380,7 +402,7 @@ Verified live against a running instance:
 |---|---|
 | No `dangerouslySetInnerHTML`, `innerHTML` or `eval` | **Pass** — zero occurrences in `src/` |
 | No secrets in `VITE_*` | **Pass** — `VITE_API_URL` is the only one, and it is a public URL. `grep -rn "GOOGLE_TRANSLATE\|JWT_SECRET\|EDGE_SHARED_SECRET" src/` returns nothing |
-| Security headers on the static site | **Fixed in this PR** — added to `vercel.json`; the existing SPA rewrite is kept |
+| Security headers on the static site | **Fixed in this PR** — see M12; added to all three host configs |
 | CSP verified, not just written | **Pass** — see below |
 
 **CSP verification.** A wrong CSP is a white screen, so it was tested rather than reasoned about. The production bundle was built with `VITE_API_URL=https://iunu-api.onrender.com/api`, served by a local server replaying the exact headers from `vercel.json`, and loaded in headless Chromium. Every route — `/home`, `/project`, `/about`, `/contact`, `/careers`, `/admin`, and a 404 — rendered with **zero CSP violations**. The script is in this PR's history; re-run it after any change to what the app loads.

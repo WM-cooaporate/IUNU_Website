@@ -105,6 +105,38 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
+    # Security headers. Render reads them from here; Vercel reads vercel.json
+    # and Netlify reads public/_headers, and this site is deployed to more than
+    # one of those - so a header added to only one file protects only one
+    # deployment. KEEP ALL THREE IN SYNC.
+    #
+    # Every CSP directive is derived from something the app actually loads
+    # (Google Fonts, framer-motion's inline styles, the backend origin). See
+    # docs/SECURITY_AUDIT.md, and re-verify in a browser after any change - a
+    # wrong CSP is a white screen with no server-side error to find.
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000; includeSubDomains
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()
+      # connect-src must name the backend origin. Update it here, in
+      # vercel.json and in public/_headers when the API moves to a custom
+      # domain, or the browser blocks every API call.
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self' https://iunu-api.onrender.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+
     envVars:
       # The variable the code reads is VITE_API_URL, and the value MUST include
       # the /api path segment - e.g. https://iunu-api.onrender.com/api.
