@@ -1,0 +1,25 @@
+# Security headers for hosts that read Netlify's `_headers` format.
+#
+# This file exists because the same site is deployed to more than one host and
+# each reads a different configuration file. Vercel reads `vercel.json`,
+# Netlify reads this file, and Render reads the `headers:` block in
+# `render.yaml`. A header added to only one of them protects only one
+# deployment - and which host serves the production domain is not something the
+# code can know.
+#
+# Vite copies everything in `public/` into `dist/` verbatim, so this lands at
+# the publish root where Netlify looks for it. Hosts that do not use this
+# format ignore it, which is why it is safe to ship everywhere.
+#
+# KEEP THE THREE IN SYNC. If you change a directive here, change it in
+# `vercel.json` and `render.yaml` too. The CSP in particular is derived from
+# what the app actually loads - see docs/SECURITY_AUDIT.md for what each
+# directive is for, and re-verify in a browser after changing it, because a
+# wrong CSP is a white screen.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self' https://iunu-api.onrender.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'
