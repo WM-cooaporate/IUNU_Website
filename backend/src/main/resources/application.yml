@@ -145,6 +145,21 @@ app:
     # RIGHT of X-Forwarded-For is the real client; entries further left are
     # caller-controlled.
     trusted-proxy-hops: ${TRUSTED_PROXY_HOPS:1}
+    # Comma-separated addresses or CIDR blocks. Forwarding headers are honoured
+    # ONLY from a peer inside one of these; anything else falls back to the
+    # socket address.
+    #
+    # This is what makes the header trustworthy. "The last X-Forwarded-For entry
+    # is the real client" holds only if a proxy appended it - a request that
+    # reaches this process directly carries whatever the caller typed, end to
+    # end, and can therefore pick its own rate-limit bucket. The socket address
+    # is the one part of a request nobody can forge, so it is what decides
+    # whether the rest is believable.
+    #
+    # Blank keeps the older behaviour (trust any peer) and logs a WARN at
+    # startup. Find the value by checking the platform's docs for its proxy
+    # range, or by logging getRemoteAddr() on a real request once.
+    trusted-proxies: ${TRUSTED_PROXIES:}
 
   edge:
     # Blank = disabled. Set this ONLY after a Cloudflare Transform Rule is

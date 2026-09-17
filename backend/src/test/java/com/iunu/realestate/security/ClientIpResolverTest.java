@@ -28,7 +28,11 @@ class ClientIpResolverTest {
     }
 
     private static ClientIpResolver resolver(String mode, int hops) {
-        return new ClientIpResolver(mode, hops, false);
+        return new ClientIpResolver(mode, hops, false, "");
+    }
+
+    private static ClientIpResolver resolver(String mode, int hops, String trustedProxies) {
+        return new ClientIpResolver(mode, hops, false, trustedProxies);
     }
 
     @Nested
@@ -147,7 +151,7 @@ class ClientIpResolverTest {
         @Test
         @DisplayName("the legacy trust-forwarded-header flag still selects x-forwarded-for")
         void legacyFlagIsHonoured() {
-            ClientIpResolver legacy = new ClientIpResolver("", 1, true);
+            ClientIpResolver legacy = new ClientIpResolver("", 1, true, "");
             MockHttpServletRequest request = request();
             request.addHeader("X-Forwarded-For", "6.6.6.6, 203.0.113.9");
 
@@ -158,7 +162,7 @@ class ClientIpResolverTest {
         @Test
         @DisplayName("an explicit mode overrides the legacy flag")
         void explicitModeWins() {
-            ClientIpResolver resolver = new ClientIpResolver("remote-addr", 1, true);
+            ClientIpResolver resolver = new ClientIpResolver("remote-addr", 1, true, "");
             MockHttpServletRequest request = request();
             request.addHeader("X-Forwarded-For", "6.6.6.6");
 
@@ -169,7 +173,7 @@ class ClientIpResolverTest {
         @Test
         @DisplayName("an unrecognised mode fails at startup rather than guessing")
         void unknownModeFailsFast() {
-            assertThatThrownBy(() -> new ClientIpResolver("x-real-ip", 1, false))
+            assertThatThrownBy(() -> new ClientIpResolver("x-real-ip", 1, false, ""))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("CLIENT_IP_MODE");
         }
@@ -181,6 +185,98 @@ class ClientIpResolverTest {
             request.addHeader("X-Forwarded-For", "6.6.6.6, 203.0.113.9");
 
             assertThat(resolver("x-forwarded-for", 0).resolve(request)).isEqualTo("203.0.113.9");
+        }
+    }
+
+    /**
+     * The check that makes a forwarding header trustworthy at all.
+     *
+     * <p>"The last X-Forwarded-For entry is the real client" holds only if a
+     * proxy appended it. A request that reaches the app directly - over the
+     * platform's own *.onrender.com URL, say - carries whatever the caller
+     * typed, end to end, so without this the caller picks their own rate-limit
+     * bucket and the limit is decoration. The socket address is the one part of
+     * a request nobody can forge, so it is what decides.
+     */
+    @Nested
+    @DisplayName("trusted-proxy allowlist")
+    class TrustedProxies {
+
+        @Test
+        @DisplayName("a forwarding header from an untrusted peer is ignored")
+        void untrustedPeerCannotForgeTheHeader() {
+            MockHttpServletRequest request = request(); // socket address 10.0.0.5
+            request.addHeader("X-Forwarded-For", "6.6.6.6");
+
+            ClientIpResolver resolver = resolver("x-forwarded-for", 1, "172.16.0.0/12");
+
+            assertThat(resolver.resolve(request)).isEqualTo(SOCKET_ADDRESS);
+        }
+
+        @Test
+        @DisplayName("a forwarding header from the real proxy is honoured")
+        void trustedPeerIsBelieved() {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRemoteAddr("10.4.1.9");
+            request.addHeader("X-Forwarded-For", "6.6.6.6, 203.0.113.9");
+
+            ClientIpResolver resolver = resolver("x-forwarded-for", 1, "10.0.0.0/8");
+
+            assertThat(resolver.resolve(request)).isEqualTo("203.0.113.9");
+        }
+
+        @Test
+        @DisplayName("CF-Connecting-IP from an untrusted peer is ignored too")
+        void cloudflareHeaderAlsoNeedsATrustedPeer() {
+            MockHttpServletRequest request = request();
+            request.addHeader("CF-Connecting-IP", "6.6.6.6");
+
+            assertThat(resolver("cloudflare", 1, "172.16.0.0/12").resolve(request))
+                    .isEqualTo(SOCKET_ADDRESS);
+        }
+
+        @Test
+        @DisplayName("several blocks are accepted, and any one matching is enough")
+        void multipleBlocks() {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRemoteAddr("172.20.0.3");
+            request.addHeader("X-Forwarded-For", "203.0.113.9");
+
+            assertThat(resolver("x-forwarded-for", 1, "10.0.0.0/8, 172.16.0.0/12").resolve(request))
+                    .isEqualTo("203.0.113.9");
+        }
+
+        @Test
+        @DisplayName("a bare address is an exact match, not a range")
+        void bareAddressIsExact() {
+            MockHttpServletRequest neighbour = new MockHttpServletRequest();
+            neighbour.setRemoteAddr("10.0.0.6");
+            neighbour.addHeader("X-Forwarded-For", "203.0.113.9");
+
+            // 10.0.0.5 is allowed; 10.0.0.6 is not, even though it is adjacent.
+            assertThat(resolver("x-forwarded-for", 1, "10.0.0.5").resolve(neighbour))
+                    .isEqualTo("10.0.0.6");
+        }
+
+        @Test
+        @DisplayName("an IPv4 block never matches an IPv6 peer")
+        void addressFamiliesDoNotMix() {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRemoteAddr("::1");
+            request.addHeader("X-Forwarded-For", "6.6.6.6");
+
+            assertThat(resolver("x-forwarded-for", 1, "0.0.0.0/0").resolve(request)).isEqualTo("::1");
+        }
+
+        @Test
+        @DisplayName("a malformed entry fails at startup rather than silently trusting nothing")
+        void malformedEntryFailsFast() {
+            assertThatThrownBy(() -> resolver("x-forwarded-for", 1, "not-an-address"))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("TRUSTED_PROXIES");
+            assertThatThrownBy(() -> resolver("x-forwarded-for", 1, "10.0.0.0/99"))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("TRUSTED_PROXIES");
         }
     }
 }

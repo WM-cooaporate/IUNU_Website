@@ -55,6 +55,11 @@ app:
     mode: ${CLIENT_IP_MODE:x-forwarded-for}
     # One hop: Render's own proxy. Two once Cloudflare is in front of it.
     trusted-proxy-hops: ${TRUSTED_PROXY_HOPS:1}
+    # Strongly recommended: without it the forwarding header is honoured from
+    # any peer, so anything that can reach this process directly can choose its
+    # own rate-limit bucket. Set it to Render's internal proxy range. Startup
+    # logs a WARN while it is unset.
+    trusted-proxies: ${TRUSTED_PROXIES:}
 
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS}
