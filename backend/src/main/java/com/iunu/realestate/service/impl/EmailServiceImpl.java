@@ -5,6 +5,8 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 public class EmailServiceImpl implements EmailService {
 
     private final JavaMailSender mailSender;
+    private final Environment environment;
 
     @Value("${app.mail.from}")
     private String fromAddress;
@@ -26,10 +29,24 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendPasswordResetEmail(String toEmail, String fullName, String resetLink) {
         if (!mailEnabled) {
-            // SMTP not configured for this environment (e.g. local dev). Never
-            // fail the caller for this - forgot-password always returns a
-            // generic success response regardless of delivery.
-            log.info("app.mail.enabled=false - skipping real email send. Reset link for {}: {}", toEmail, resetLink);
+            // SMTP not configured for this environment. Never fail the caller
+            // for this - forgot-password always returns a generic success
+            // response regardless of delivery.
+            //
+            // The link is a working password-reset token, so it is printed only
+            // outside production. app.mail.enabled defaults to FALSE, which
+            // means a deployment that never configured SMTP would otherwise
+            // write a valid account-takeover link to its log stream on every
+            // forgot-password request - readable by anyone with access to the
+            // hosting dashboard, a log drain, or an exported log file. Locally
+            // it is the only way to complete the flow, so there it still prints.
+            if (isProduction()) {
+                log.warn("app.mail.enabled=false in production: the password reset email for {} was NOT sent. "
+                        + "Configure SMTP (MAIL_ENABLED=true) - password reset does not work without it.", toEmail);
+            } else {
+                log.info("app.mail.enabled=false - skipping real email send. Reset link for {}: {}",
+                        toEmail, resetLink);
+            }
             return;
         }
 
@@ -56,5 +73,14 @@ public class EmailServiceImpl implements EmailService {
             // block the API response - just log it for operators to notice.
             log.error("Failed to send password reset email to {}", toEmail, e);
         }
+    }
+
+    /**
+     * Profile-based rather than a separate flag, so nobody has to remember to
+     * set one: the environment that must not print tokens is exactly the one
+     * already marked as production.
+     */
+    private boolean isProduction() {
+        return environment.acceptsProfiles(Profiles.of("prod"));
     }
 }
