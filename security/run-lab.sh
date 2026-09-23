@@ -179,7 +179,7 @@ zap_record "zap baseline" zap-baseline.json $?
 ZAP_ACTIVE_LIMITS="-config scanner.maxScanDurationInMins=15 -config scanner.maxRuleDurationInMins=3"
 log "ZAP API scan, anonymous"
 docker run --rm --network "$NETWORK" -v "$REPORT:/zap/wrk:rw" "$ZAP_IMAGE" \
-  zap-api-scan.py -t http://proxy/v3/api-docs -f openapi -O proxy:80 -c zap-rules.tsv -I \
+  zap-api-scan.py -t http://proxy/v3/api-docs -f openapi -O http://proxy -c zap-rules.tsv -I \
   -z "$ZAP_ACTIVE_LIMITS" -J zap-api-anon.json -r zap-api-anon.html > "$REPORT/zap-api-anon.log" 2>&1
 zap_record "zap api (anonymous)" zap-api-anon.json $?
 
@@ -188,7 +188,7 @@ zap_record "zap api (anonymous)" zap-api-anon.json $?
 log "ZAP API scan, as the lab admin"
 docker run --rm --network "$NETWORK" -v "$REPORT:/zap/wrk:rw" \
   -e ZAP_AUTH_HEADER=Authorization -e ZAP_AUTH_HEADER_VALUE="Bearer $ADMIN_TOKEN" -e ZAP_AUTH_HEADER_SITE=proxy \
-  "$ZAP_IMAGE" zap-api-scan.py -t http://proxy/v3/api-docs -f openapi -O proxy:80 -c zap-rules.tsv -I \
+  "$ZAP_IMAGE" zap-api-scan.py -t http://proxy/v3/api-docs -f openapi -O http://proxy -c zap-rules.tsv -I \
   -z "$ZAP_ACTIVE_LIMITS" -J zap-api-admin.json -r zap-api-admin.html > "$REPORT/zap-api-admin.log" 2>&1
 zap_record "zap api (admin)" zap-api-admin.json $?
 
