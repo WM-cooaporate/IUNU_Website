@@ -9,7 +9,7 @@ const translations = {
     "EXPLORE PROJECTS": "استكشف المشروعات", "SCROLL TO EXPLORE": "مرر للاستكشاف", "CREATING ENDURING SPACES": "نصنع مساحات تدوم",
     "A Commitment to Legacy": "التزام يصنع إرثًا", "ENDURING SPACES": "مساحات تدوم", "Designed with": "مصمم بهدف", "purpose.": "ورؤية.", "A glimpse into": "لمحة عما", "what we create.": "نصنعه.",
     "OUR APPROACH": "نهجنا", "Spaces that": "مساحات", "remain.": "تبقى.", "FEATURED DEVELOPMENT": "مشروع مميز",
-    "THE IUNU VISION": "رؤية إيونو", "View image": "عرض الصورة", "Previous image": "الصورة السابقة", "Next image": "الصورة التالية",
+    "THE IUNU VISION": "رؤية إيونو",  "Previous image": "الصورة السابقة", "Next image": "الصورة التالية",
     "Choose gallery image": "اختر صورة من المعرض", "Image preview": "معاينة الصورة", "Close image preview": "إغلاق معاينة الصورة",
     "OUR DEVELOPMENTS": "مشروعاتنا", "Spaces designed": "مساحات مصممة", "to belong.": "لتنتمي إليها.", "VIEW PROJECT": "عرض المشروع", "VIEW ALL": "عرض الكل", "DISCOVER ALL DEVELOPMENTS": "اكتشف كل المشروعات",
     "CONTACT US": "تواصل معنا", "Get In Touch": "تواصل معنا", "SEND A MESSAGE": "أرسل رسالة", "STAY CONNECTED": "ابقَ على تواصل",
