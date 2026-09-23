@@ -379,16 +379,6 @@ html[dir="rtl"] .development-gallery-controls {
     font-size: 9px;
 }
 
-.development-gallery-feature-caption span {
-    font-size: 20px;
-    line-height: 1;
-    transition: transform 250ms ease;
-}
-
-.development-gallery-feature:hover .development-gallery-feature-caption span {
-    transform: translate(3px, -3px);
-}
-
 
 /* Controls overlay — arrows only, no counter */
 
@@ -517,23 +507,41 @@ html[dir="rtl"] .development-gallery-controls {
 }
 
 
-/* LIGHTBOX */
+/* =====================================================
+   LIGHTBOX
+   Rendered through a React portal into <body>, so it
+   always covers the whole viewport and stays centered,
+   regardless of any transformed ancestor.
+===================================================== */
 
 .development-lightbox {
     position: fixed;
-    z-index: 1000;
-    inset: 0;
-    display: grid;
-    place-items: center;
+    z-index: 9999;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     padding: 40px;
+    margin: 0;
+
     background: rgba(20, 35, 39, 0.88);
     cursor: zoom-out;
+
+    transform: none;
+    isolation: isolate;
 }
 
 .development-lightbox-image {
     display: block;
     max-width: min(1100px, 92vw);
     max-height: 88vh;
+    width: auto;
+    height: auto;
     object-fit: contain;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
     cursor: default;
