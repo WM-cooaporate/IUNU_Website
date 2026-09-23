@@ -10,6 +10,10 @@ on:
   schedule:
     - cron: "0 1 * * 0" # Sundays 01:00 UTC
   workflow_dispatch:
+  # Add the "security-scan" label to a pull request to run the lab on it -
+  # for a change to auth, filters or config that should not wait for Sunday.
+  pull_request:
+    types: [labeled]
 
 permissions:
   contents: read
@@ -17,6 +21,7 @@ permissions:
 jobs:
   lab:
     name: Attack lab
+    if: github.event_name != 'pull_request' || github.event.label.name == 'security-scan'
     runs-on: ubuntu-latest
     timeout-minutes: 180
     steps:

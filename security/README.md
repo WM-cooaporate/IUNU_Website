@@ -7,7 +7,7 @@ setup on this machine, and reports what held and what did not.
 bash security/run-lab.sh
 ```
 
-It also runs every Sunday at 01:00 UTC in GitHub Actions (`.github/workflows/security-scan.yml`),
+It also runs every Sunday at 01:00 UTC in GitHub Actions (`.github/workflows/security-scan.yml`), on any pull request given the `security-scan` label,
 and on demand from the Actions tab.
 
 ## The rule: it never targets production
