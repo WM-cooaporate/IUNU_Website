@@ -543,7 +543,22 @@ match.
 
 ### Lab results
 
-_The results table from the confirming run, with the N6 fix in place, is added below once that run completes._
+First confirming run with every fix in place (`20260923T174155Z`). The backend ran with the
+`prod` profile behind the lab proxy, with the edge secret on.
+
+| Tool | Result | Detail |
+|---|---|---|
+| gitleaks (full history) | **Pass** | 0 findings. One false positive, a truncated example JWT header in `backend/README.md`, is recorded in `.gitleaksignore` |
+| OWASP dependency-check | **Did not run** | NVD and CISA feeds blocked in this environment; see "Not done" |
+| `npm audit --omit=dev` | **Pass** | 0 high or critical |
+| k6 `smoke.js` | **Pass** | all checks |
+| k6 `abuse.js` (`BEHIND_PROXY=yes`) | **Pass** | 20/20. The spoofed `X-Forwarded-For` check failed on the two earlier runs; that failure was N6 |
+| ZAP baseline (frontend) | **Pass** | 0 High. Medium: CSP `img-src https:` and `style-src 'unsafe-inline'`, both deliberate (CSP table above). Info: a "suspicious comment" in the bundle, and "modern web app" |
+| ZAP API scan, anonymous | **Pass** | 0 High, 5 alerts (informational: 4xx responses, auth request identified) |
+| ZAP API scan, as admin | **Pass** | 0 High, 6 alerts. Low: a private IP in `/api/admin/audit-log`, which is that endpoint's purpose |
+| k6 `attack.js` | **Pass** | every check. Groups: refresh replay, refresh race, wrong-role and malformed tokens, path tricks, verb tampering, upload abuse, big body, origin bypass, lead-form spam, translation cost, cache busting, credential stuffing |
+| Upload traversal | **Pass** | no file named `evil*` anywhere in the container after the `../../evil.png` upload |
+| Log hygiene | **Pass** | no token, lab password or `Bearer` string in the backend's own log |
 
 ### Report-only measurements
 
@@ -552,7 +567,7 @@ These are findings you have accepted. The lab measures them; it does not change 
 | Item | Measurement | Reading |
 |---|---|---|
 | **M2** chunked body | A 2MB JSON body with no `Content-Length` returned **400**, not 413 | The body was read and parsed, then refused by `@Size` validation. The `Content-Length` check cannot see it. Still needs the edge body-size rule |
-| **M8** reset timing | `forgot-password` median **8.6ms** for an existing account vs **2.9ms** for a missing one (10 samples each, mail disabled) | Account existence is still visible from timing. With SMTP on, the gap grows by the SMTP round trip |
+| **M8** reset timing | `forgot-password` median **6.6ms** for an existing account vs **2.6ms** for a missing one (10 samples each, mail disabled) | Account existence is still visible from timing. With SMTP on, the gap grows by the SMTP round trip |
 | **M9** lockout | Real password after 6 failures: **200** | No lockout at all today (N5), so M9's lockout denial of service cannot happen yet |
 | Cache busting | 500 distinct `page`/`size` combinations, paced under the limit: **0% hit ratio**, 0 × 429, all served | An attacker who stays under 5/s defeats the property cache completely. Cloudflare's cache rule and a query-string rule are the lever (runbook Part 2 §3) |
 
@@ -566,12 +581,12 @@ Counters read from `/actuator/metrics` after `attack.js`:
 | `REFRESH_REUSE_DETECTED` | 1 | refresh replay |
 | `REFRESH_RACE_LOST` | 1 | refresh race |
 | `ADMIN_LOGIN_NEW_IP` | 2 | first admin sign-in from each client |
-| `RATE_LIMITED` | 20,562 | ZAP, k6 |
-| `ACCESS_DENIED` | 251 | USER sweep, anonymous probes |
-| `UPLOAD_REJECTED` | 8 | upload abuse |
+| `RATE_LIMITED` | 37,331 | ZAP, k6 |
+| `ACCESS_DENIED` | 495 | USER sweep, anonymous probes |
+| `UPLOAD_REJECTED` | 10 | upload abuse |
 | `EDGE_SECRET_REJECTED` | 1 | origin bypass |
 | `TOKEN_INVALID` | 1 | malformed bearer |
-| `PASSWORD_RESET_REQUESTED` | 20 | reset timing |
+| `PASSWORD_RESET_REQUESTED` | 21 | reset timing |
 | **`ACCOUNT_LOCKED`** | **0** | **gap: N5** |
 
 `PASSWORD_RESET_COMPLETED` and `PASSWORD_CHANGED` are not exercised by the lab. They need a

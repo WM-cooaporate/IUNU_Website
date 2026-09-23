@@ -142,7 +142,7 @@ different measurements - say which is which.
 
 | Date | Commit | Environment | Test | Peak VUs | p95 (list) | Error rate | First bottleneck observed |
 |---|---|---|---|---|---|---|---|
-| | | | | | | | |
+| 2026-09-23 | 01caeb6 | **local lab** (`security/run-lab.sh`, prod profile, tmpfs PostgreSQL) | smoke, abuse, attack | 1 | not measured (single-VU functional runs) | smoke 0%; abuse and attack: all checks pass | none under 1 VU. N6 (X-Forwarded-For bypass) found and fixed in the runs before this one |
 | | | | | | | | |
 
 ## A note on what this can and cannot show
