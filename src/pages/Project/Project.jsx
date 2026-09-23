@@ -9,6 +9,11 @@ import { toUserMessage } from "../../services/apiClient";
 import demoProperties from "../../data/demoProperties";
 
 import { useLanguage } from "../../i18n/LanguageContext";
+import {
+  imageSrcSet,
+  imageUrl,
+  showPlaceholderOnError,
+} from "../../utils/imageUrl";
 
 import "./Project.css";
 
@@ -245,9 +250,13 @@ function Project() {
                       <div className="project-property-image">
                         {property.coverImageUrl ? (
                           <img
-                            src={property.coverImageUrl}
+                            src={imageUrl(property.coverImageUrl, 800)}
+                            srcSet={imageSrcSet(property.coverImageUrl) || undefined}
+                            sizes="(max-width: 768px) 100vw, 33vw"
                             alt={localize(property, "title")}
                             loading="lazy"
+                            decoding="async"
+                            onError={showPlaceholderOnError}
                           />
                         ) : (
                           <div className="project-property-image-placeholder">

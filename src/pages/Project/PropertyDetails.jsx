@@ -7,6 +7,11 @@ import propertyServices from "../../services/propertyServices";
 import demoProperties from "../../data/demoProperties";
 
 import { useLanguage } from "../../i18n/LanguageContext";
+import {
+  imageSrcSet,
+  imageUrl,
+  showPlaceholderOnError,
+} from "../../utils/imageUrl";
 
 import "./PropertyDetails.css";
 
@@ -198,8 +203,17 @@ function PropertyDetails() {
               <div className="property-main-image">
                 {selectedImage ? (
                   <img
-                    src={selectedImage}
+                    // Keyed on the image so switching thumbnails gets a
+                    // fresh element - and a fresh onError guard - each time.
+                    key={selectedImage}
+                    src={imageUrl(selectedImage, 1600)}
+                    srcSet={imageSrcSet(selectedImage) || undefined}
+                    sizes="(max-width: 1024px) 100vw, 70vw"
                     alt={localize(property, "title")}
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
+                    onError={showPlaceholderOnError}
                   />
                 ) : (
                   <div className="property-no-image">
@@ -231,10 +245,13 @@ function PropertyDetails() {
                         }
                       >
                         <img
-                          src={image}
+                          src={imageUrl(image, 400)}
                           alt={`${localize(property, "title")} ${
                             index + 1
                           }`}
+                          loading="lazy"
+                          decoding="async"
+                          onError={showPlaceholderOnError}
                         />
                       </button>
                     )
