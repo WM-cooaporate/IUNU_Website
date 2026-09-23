@@ -124,7 +124,12 @@ else
     "$REPORT/dependency-check-report.json" 2>/dev/null || echo "?")"
   if [ $code -eq 0 ]; then record dependency-check PASS "0 with CVSS >= 7"
   elif [ "$high" != "?" ]; then record dependency-check FAIL "$high with CVSS >= 7"
-  else record dependency-check ERROR "did not run (exit $code), see dependency-check.log"; fi
+  else
+    # The first error line says why (no NVD key, NVD down, a blocked feed), so
+    # it goes in the summary rather than only in a log inside an artifact.
+    why="$(grep -m1 -E '^\[ERROR\] (Error|org\.|.*Exception)' "$REPORT/dependency-check.log" | cut -c1-160)"
+    record dependency-check ERROR "did not run (exit $code): ${why:-see dependency-check.log}"
+  fi
 fi
 
 log "npm audit (production dependencies, high and above)"
