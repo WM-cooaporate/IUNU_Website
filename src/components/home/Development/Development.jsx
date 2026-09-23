@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import "./Development.css";
 import { useLanguage } from "../../../i18n/LanguageContext";
 
@@ -281,9 +282,8 @@ function Development() {
 
               <span className="development-gallery-feature-shade" />
 
-                <span aria-hidden="true">
-                  &#8599;
-                </span>
+              <span className="development-gallery-feature-caption">
+                {t("View image")}
               </span>
             </button>
 
@@ -365,35 +365,39 @@ function Development() {
         </div>
       </div>
 
-      {/* LIGHTBOX */}
+      {/* LIGHTBOX — rendered through a portal into <body>
+          so it always covers the full viewport and stays
+          centered, regardless of any transformed ancestor. */}
 
-      {selectedImage && (
-        <div
-          className="development-lightbox"
-          role="dialog"
-          aria-modal="true"
-          aria-label={t("Image preview")}
-          onClick={() => setSelectedImage(null)}
-        >
-          <button
-            type="button"
-            className="development-lightbox-close"
+      {selectedImage &&
+        createPortal(
+          <div
+            className="development-lightbox"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("Image preview")}
             onClick={() => setSelectedImage(null)}
-            aria-label={t("Close image preview")}
           >
-            <span aria-hidden="true">&times;</span>
-          </button>
+            <button
+              type="button"
+              className="development-lightbox-close"
+              onClick={() => setSelectedImage(null)}
+              aria-label={t("Close image preview")}
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
 
-          <img
-            className="development-lightbox-image"
-            src={selectedImage.src}
-            alt={selectedImage.alt}
-            onClick={(event) =>
-              event.stopPropagation()
-            }
-          />
-        </div>
-      )}
+            <img
+              className="development-lightbox-image"
+              src={selectedImage.src}
+              alt={selectedImage.alt}
+              onClick={(event) =>
+                event.stopPropagation()
+              }
+            />
+          </div>,
+          document.body
+        )}
     </section>
   );
 }
