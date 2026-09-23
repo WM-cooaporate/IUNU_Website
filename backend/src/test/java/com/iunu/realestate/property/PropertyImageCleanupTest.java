@@ -47,7 +47,7 @@ class PropertyImageCleanupTest {
     void setUp() {
         repository = mock(PropertyRepository.class);
         imageStorage = mock(ImageStorage.class);
-        service = new PropertyServiceImpl(repository, imageStorage);
+        service = new PropertyServiceImpl(repository, imageStorage, mock(com.iunu.realestate.service.AuditLogService.class));
     }
 
     private static Property property(Long id, String cover, String... gallery) {

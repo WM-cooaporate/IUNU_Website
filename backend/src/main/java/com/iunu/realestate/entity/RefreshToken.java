@@ -43,6 +43,14 @@ public class RefreshToken {
     @Column(nullable = false)
     private boolean revoked = false;
 
+    /** When it stopped working. Null while live, and on rows revoked before V6. */
+    private Instant revokedAt;
+
+    /** Why it stopped working. See {@link RevocationReason}. */
+    @Enumerated(EnumType.STRING)
+    @Column(length = 32)
+    private RevocationReason revokedReason;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private Instant createdAt;

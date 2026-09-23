@@ -194,7 +194,9 @@ public class SecurityConfig {
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
         // Retry-After so the frontend can read it off a 429 instead of guessing.
-        configuration.setExposedHeaders(List.of("Authorization", "Retry-After"));
+        // X-Request-Id so the dashboard can show it next to an error, and an
+        // admin reporting a problem can hand over the exact request.
+        configuration.setExposedHeaders(List.of("Authorization", "Retry-After", "X-Request-Id"));
         // False, because this API has no cookies and no session: the browser
         // sends an Authorization header, which is not a credential in the CORS
         // sense. Allowing credentials would let a page on an allowed origin

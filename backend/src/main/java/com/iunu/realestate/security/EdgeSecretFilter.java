@@ -2,6 +2,8 @@ package com.iunu.realestate.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iunu.realestate.dto.response.ApiError;
+import com.iunu.realestate.security.events.SecurityEventType;
+import com.iunu.realestate.security.events.SecurityEvents;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.Map;
 
 /**
  * Closes the origin to anything that did not come through the edge.
@@ -58,13 +61,16 @@ public class EdgeSecretFilter extends OncePerRequestFilter {
     public static final String HEADER = "X-Edge-Auth";
 
     private final ObjectMapper objectMapper;
+    private final SecurityEvents securityEvents;
     private final byte[] expectedSecret;
 
     public EdgeSecretFilter(
             ObjectMapper objectMapper,
+            SecurityEvents securityEvents,
             @Value("${app.edge.shared-secret:}") String sharedSecret
     ) {
         this.objectMapper = objectMapper;
+        this.securityEvents = securityEvents;
         this.expectedSecret = (sharedSecret == null || sharedSecret.isBlank())
                 ? null
                 : sharedSecret.getBytes(StandardCharsets.UTF_8);
@@ -95,6 +101,12 @@ public class EdgeSecretFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+
+        // Someone reached the origin without passing through the edge. The
+        // header's value is never logged - only whether one was sent at all.
+        securityEvents.record(SecurityEventType.EDGE_SECRET_REJECTED, null, null, request,
+                Map.of("headerPresent", String.valueOf(request.getHeader(HEADER) != null),
+                        "path", request.getRequestURI()));
 
         response.setStatus(HttpStatus.FORBIDDEN.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);

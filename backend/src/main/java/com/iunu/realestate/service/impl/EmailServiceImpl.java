@@ -11,6 +11,12 @@ import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import com.iunu.realestate.util.LogSanitizer;
+
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 @Slf4j
 @Service
@@ -19,6 +25,11 @@ public class EmailServiceImpl implements EmailService {
 
     private final JavaMailSender mailSender;
     private final Environment environment;
+
+    /** The business is in Egypt; a UTC time in an alert email is one more thing to get wrong at 2am. */
+    private static final DateTimeFormatter CAIRO_TIME =
+            DateTimeFormatter.ofPattern("d MMM yyyy, HH:mm 'Cairo time'", Locale.ENGLISH)
+                    .withZone(ZoneId.of("Africa/Cairo"));
 
     @Value("${app.mail.from}")
     private String fromAddress;
@@ -42,7 +53,8 @@ public class EmailServiceImpl implements EmailService {
             // it is the only way to complete the flow, so there it still prints.
             if (isProduction()) {
                 log.warn("app.mail.enabled=false in production: the password reset email for {} was NOT sent. "
-                        + "Configure SMTP (MAIL_ENABLED=true) - password reset does not work without it.", toEmail);
+                        + "Configure SMTP (MAIL_ENABLED=true) - password reset does not work without it.",
+                        LogSanitizer.maskEmail(toEmail));
             } else {
                 log.info("app.mail.enabled=false - skipping real email send. Reset link for {}: {}",
                         toEmail, resetLink);
@@ -71,7 +83,36 @@ public class EmailServiceImpl implements EmailService {
         } catch (MailException | jakarta.mail.MessagingException e) {
             // Delivery failure must never leak whether the account exists or
             // block the API response - just log it for operators to notice.
-            log.error("Failed to send password reset email to {}", toEmail, e);
+            log.error("Failed to send password reset email to {}", LogSanitizer.maskEmail(toEmail), e);
+        }
+    }
+
+    @Override
+    public void sendNewSignInAlert(String toEmail, String fullName, String clientIp, Instant when) {
+        if (!mailEnabled) {
+            // The SECURITY log already carries ADMIN_LOGIN_NEW_IP, and the alert
+            // rule fires on it; the email is the second channel, not the only one.
+            log.info("app.mail.enabled=false - new sign-in alert for {} not emailed", LogSanitizer.maskEmail(toEmail));
+            return;
+        }
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+            helper.setFrom(fromAddress);
+            helper.setTo(toEmail);
+            helper.setSubject("New sign-in to the IUNU dashboard");
+            helper.setText("""
+                    Hello %s,
+
+                    New sign-in to the IUNU dashboard from %s at %s.
+
+                    If this wasn't you, change your password now - that signs out every session.
+
+                    - IUNU
+                    """.formatted(fullName, clientIp, CAIRO_TIME.format(when)));
+            mailSender.send(message);
+        } catch (MailException | jakarta.mail.MessagingException e) {
+            log.error("Failed to send new sign-in alert to {}", LogSanitizer.maskEmail(toEmail), e);
         }
     }
 

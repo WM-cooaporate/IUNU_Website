@@ -99,6 +99,16 @@ spring:
         default-page-size: 12
         max-page-size: 50
 
+  # @Async work - today only the admin new-sign-in email. Bounded, so a
+  # stuck SMTP server fills a small queue and then fails loudly rather than
+  # growing an unbounded one in the heap.
+  task:
+    execution:
+      pool:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+
   servlet:
     multipart:
       # Matches what LocalImageStorage is willing to hold in memory per file.
@@ -118,6 +128,11 @@ app:
     lock-duration-minutes: ${ACCOUNT_LOCK_DURATION_MINUTES:15}
     reset-token-expiry-minutes: ${RESET_TOKEN_EXPIRY_MINUTES:30}
     refresh-token-expiry-days: ${REFRESH_TOKEN_EXPIRY_DAYS:7}
+    # A rotated refresh token presented again within this many seconds is a
+    # plain 401 (two tabs refreshing at once). After it, the replay is treated
+    # as theft: every live token of that user is revoked and
+    # REFRESH_REUSE_DETECTED is raised. See AuthServiceImpl.refresh().
+    refresh-reuse-grace-seconds: ${APP_SECURITY_REFRESH_REUSE_GRACE_SECONDS:10}
     # Superseded by app.client-ip.mode below, which distinguishes the three
     # deployments this app can be in instead of one boolean. Still read, so an
     # existing deployment that sets it keeps working: when app.client-ip.mode
@@ -133,6 +148,16 @@ app:
     # Largest non-multipart request body accepted, checked against
     # Content-Length before anything reads the stream. See ContentLengthLimitFilter.
     max-json-request-bytes: ${MAX_JSON_REQUEST_BYTES:1048576}
+
+    events:
+      # Ceiling on the (type, client IP) pairs the SECURITY log remembers for
+      # its once-a-minute sampling. Bounded for the same reason as the rate
+      # limiter's bucket store. See SecurityEvents.
+      max-sampled-clients: 10000
+
+  # Admin audit trail (audit_log). Rows older than this are purged nightly.
+  audit:
+    retention-days: ${APP_AUDIT_RETENTION_DAYS:365}
 
   # Which address the per-IP rate limits key on. Getting this wrong silently
   # breaks the limiter in one of two directions - see ClientIpResolver.
@@ -225,6 +250,19 @@ management:
         http.server.requests: 0.5,0.95,0.99
     tags:
       application: iunu-backend
+  # Push to a hosted metrics backend (Grafana Cloud, or anything that speaks
+  # OTLP). Enabled only when OTLP_METRICS_URL is set - see
+  # OptionalIntegrationsEnvironmentPostProcessor, which also reads
+  # OTLP_METRICS_HEADERS for the auth header.
+  otlp:
+    metrics:
+      export:
+        step: 60s
+        # Seconds rather than the OTLP registry's default milliseconds, so the
+        # names the backend derives (http_server_requests_seconds_bucket, ...)
+        # are the same as an /actuator/prometheus scrape - and the same as
+        # monitoring/alert-rules.yml expects.
+        base-time-unit: seconds
   health:
     # The mail indicator opens an SMTP connection to MAIL_HOST on every probe.
     # With mail disabled (the default) there is nothing listening, so it reports
@@ -245,8 +283,20 @@ springdoc:
   swagger-ui:
     enabled: ${SWAGGER_ENABLED:false}
 
+# Backend error tracking. Off unless SENTRY_DSN is set (Spring reads it as
+# sentry.dsn). SentryConfig strips credentials, cookies and bodies from every
+# event before it leaves.
+sentry:
+  send-default-pii: false
+  environment: ${SENTRY_ENVIRONMENT:${spring.profiles.active:default}}
+  # Errors only. traces-sample-rate is deliberately absent: setting it at all,
+  # even to 0, switches on Sentry's tracing configuration.
+
 logging:
   level:
     root: INFO
     com.iunu.realestate: INFO
     org.springframework.security: WARN
+    # Security events (SecurityEvents). Stated rather than inherited from root,
+    # so quietening the root logger can never silence them.
+    SECURITY: INFO

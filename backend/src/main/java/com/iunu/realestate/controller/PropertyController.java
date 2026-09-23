@@ -2,7 +2,9 @@ package com.iunu.realestate.controller;
 
 import com.iunu.realestate.dto.request.PropertyRequest;
 import com.iunu.realestate.dto.response.PropertyResponse;
+import com.iunu.realestate.entity.AuditAction;
 import com.iunu.realestate.entity.PropertyType;
+import com.iunu.realestate.service.AuditLogService;
 import com.iunu.realestate.service.PropertyService;
 import com.iunu.realestate.service.ImageStorage;
 import com.iunu.realestate.translation.PropertyTranslationFiller;
@@ -32,6 +34,7 @@ public class PropertyController {
     private final PropertyService propertyService;
     private final ImageStorage imageStorage;
     private final PropertyTranslationFiller translationFiller;
+    private final AuditLogService auditLogService;
 
     /**
      * How long a browser, and Cloudflare in front of this origin, may serve a
@@ -51,7 +54,12 @@ public class PropertyController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(value = "/images", consumes = "multipart/form-data")
     public ResponseEntity<List<String>> uploadImages(@RequestParam("files") List<MultipartFile> files) {
-        return ResponseEntity.ok(files.stream().map(imageStorage::store).distinct().toList());
+        List<String> urls = files.stream().map(imageStorage::store).distinct().toList();
+        // Written after every file is stored: a batch with one bad file
+        // stores none of the later ones and records nothing.
+        auditLogService.record(AuditAction.IMAGE_UPLOADED, "PROPERTY_IMAGE", null,
+                urls.size() + " image(s) uploaded");
+        return ResponseEntity.ok(urls);
     }
 
     @GetMapping

@@ -13,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.iunu.realestate.entity.AuditAction;
+import com.iunu.realestate.service.AuditLogService;
 
 @Slf4j
 @Service
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ContactServiceImpl implements ContactService {
 
     private final ContactMessageRepository contactMessageRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional
@@ -51,6 +54,7 @@ public class ContactServiceImpl implements ContactService {
                 .orElseThrow(() -> new ResourceNotFoundException("Contact message not found"));
         message.setHandled(true);
         contactMessageRepository.save(message);
+        auditLogService.record(AuditAction.LEAD_MARKED_HANDLED, "CONTACT", id, "marked handled");
         return ContactMessageResponse.from(message);
     }
 }

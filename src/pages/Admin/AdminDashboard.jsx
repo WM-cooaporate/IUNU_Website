@@ -45,6 +45,90 @@ const formatDate = (value) =>
       }).format(new Date(value))
     : "-";
 
+/** Audit times are shown in Cairo time whatever the admin's own time zone is. */
+const formatCairoTime = (value) =>
+  value
+    ? new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Africa/Cairo",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date(value))
+    : "-";
+
+/** The backend's AuditAction names, in the order the filter lists them. */
+const AUDIT_ACTIONS = [
+  "LOGIN_SUCCEEDED",
+  "PROPERTY_CREATED",
+  "PROPERTY_UPDATED",
+  "PROPERTY_PUBLISHED",
+  "PROPERTY_UNPUBLISHED",
+  "PROPERTY_DELETED",
+  "IMAGE_UPLOADED",
+  "PROJECT_CREATED",
+  "PROJECT_UPDATED",
+  "PROJECT_DELETED",
+  "ADMIN_USER_CREATED",
+  "PASSWORD_CHANGED",
+  "TRANSLATION_BACKFILL_RUN",
+  "LEAD_MARKED_HANDLED",
+];
+
+const AUDIT_PAGE_SIZE = 20;
+
+const humanize = (value) => (value ? value.replaceAll("_", " ").toLowerCase() : "-");
+
+/**
+ * Read-only view of who did what in the dashboard. There is nothing to edit
+ * here on purpose: a trail an admin can change is not evidence of what that
+ * admin did.
+ */
+function AdminActivity() {
+  const [action, setAction] = useState("");
+  const [page, setPage] = useState(0);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const result = await adminServices.getAuditLog({
+          page,
+          size: AUDIT_PAGE_SIZE,
+          ...(action ? { action } : {}),
+        });
+        if (!cancelled) setData(result);
+      } catch (requestError) {
+        if (!cancelled) setError(toUserMessage(requestError, "Unable to load the activity log."));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [action, page]);
+
+  const rows = data?.content || [];
+  const totalPages = data?.totalPages || 0;
+
+  return (
+    <section className="admin-properties">
+      <div className="admin-section-header"><div><span className="admin-eyebrow">AUDIT TRAIL</span><h2>Activity</h2><p>Every change made in this dashboard, newest first. Times are Cairo time.</p></div><select className="admin-search" value={action} onChange={(event) => { setAction(event.target.value); setPage(0); }} aria-label="Filter by action"><option value="">All actions</option>{AUDIT_ACTIONS.map((name) => <option key={name} value={name}>{humanize(name)}</option>)}</select></div>
+      {error && <div className="admin-alert admin-alert-error">{error}</div>}
+      {loading ? <div className="admin-loading"><div className="admin-spinner" /><p>Loading activity...</p></div> : rows.length === 0 ? <div className="empty-properties"><h3>No activity yet</h3><p>Changes made in the dashboard will appear here.</p></div> : <div className="properties-table-wrapper"><table className="properties-table activity-table"><thead><tr><th>Time</th><th>Admin</th><th>Action</th><th>Target</th><th>IP</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td>{formatCairoTime(row.occurredAt)}</td><td>{row.actorEmail || "-"}</td><td><strong>{humanize(row.action)}</strong>{row.summary && <span className="activity-summary">{row.summary}</span>}</td><td>{row.targetType ? `${humanize(row.targetType)}${row.targetId ? ` #${row.targetId}` : ""}` : "-"}</td><td>{row.clientIp || "-"}</td></tr>)}</tbody></table></div>}
+      {totalPages > 1 && <div className="activity-pager"><button className="cancel-button" type="button" onClick={() => setPage((current) => Math.max(0, current - 1))} disabled={page === 0 || loading}>Previous</button><span>Page {page + 1} of {totalPages}</span><button className="cancel-button" type="button" onClick={() => setPage((current) => current + 1)} disabled={page + 1 >= totalPages || loading}>Next</button></div>}
+    </section>
+  );
+}
+
 /**
  * The dashboard is only shown for a stored ADMIN session that still has a
  * token. A stored user object on its own is not enough - that was how an
@@ -160,6 +244,7 @@ function AdminDashboard() {
   const [translating, setTranslating] = useState(false);
   const [translationNotice, setTranslationNotice] = useState("");
   const [backfilling, setBackfilling] = useState(false);
+  const [tab, setTab] = useState("projects");
 
   const loadProperties = useCallback(async () => {
     setLoading(true);
@@ -470,10 +555,11 @@ function AdminDashboard() {
           <div className="admin-stat-card"><span>Published projects</span><strong>{stats.published}</strong></div>
           <div className="admin-stat-card"><span>Draft projects</span><strong>{stats.drafts}</strong></div>
         </section>
-        <section className="admin-properties">
+        {!demoMode && <div className="admin-tabs" role="tablist"><button type="button" role="tab" aria-selected={tab === "projects"} className={tab === "projects" ? "admin-tab admin-tab-active" : "admin-tab"} onClick={() => setTab("projects")}>Projects</button><button type="button" role="tab" aria-selected={tab === "activity"} className={tab === "activity" ? "admin-tab admin-tab-active" : "admin-tab"} onClick={() => setTab("activity")}>Activity</button></div>}
+        {!demoMode && tab === "activity" ? <AdminActivity /> : <section className="admin-properties">
           <div className="admin-section-header"><div><span className="admin-eyebrow">PROJECT CATALOGUE</span><h2>All projects</h2><p>{filteredProperties.length} project{filteredProperties.length === 1 ? "" : "s"} shown</p></div><input className="admin-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search projects..." aria-label="Search projects" /></div>
           {loading ? <div className="admin-loading"><div className="admin-spinner" /><p>Loading projects...</p></div> : filteredProperties.length === 0 ? <div className="empty-properties"><h3>No projects found</h3><p>Create your first project or try another search.</p><button className="add-property-button" type="button" onClick={openCreate}>Add project</button></div> : <div className="properties-table-wrapper"><table className="properties-table"><thead><tr><th>Project</th><th>Location</th><th>Area</th><th>Status</th><th>Published</th><th>Created</th><th>Actions</th></tr></thead><tbody>{filteredProperties.map((property) => <tr key={property.id}><td><div className="property-name">{property.coverImageUrl ? <img src={property.coverImageUrl} alt="" /> : <div className="property-thumb-placeholder">I</div>}<div><strong>{property.title}</strong><span>{property.type}</span></div></div></td><td>{property.location || "-"}</td><td>{property.area != null ? `${Number(property.area).toLocaleString()} m²` : "-"}</td><td><span className={`status-badge status-${property.status?.toLowerCase()}`}>{property.status?.replaceAll("_", " ")}</span></td><td><span className={property.published ? "published-yes" : "published-no"}>{property.published ? "Published" : "Draft"}</span></td><td>{formatDate(property.createdAt)}</td><td><div className="property-actions"><Link className="view-button" to={`/project/${property.id}`} target="_blank">View</Link><button className="edit-button" type="button" onClick={() => openEdit(property)}>Edit</button><button className="delete-button" type="button" onClick={() => handleDelete(property)}>Delete</button></div></td></tr>)}</tbody></table></div>}
-        </section>
+        </section>}
       </main>
 
       {modal && <div className="admin-modal-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null); }}><section className="admin-modal" role="dialog" aria-modal="true" aria-labelledby="project-form-title"><div className="admin-modal-header"><div><span className="admin-eyebrow">{modal.type === "edit" ? "UPDATE PROJECT" : "NEW PROJECT"}</span><h2 id="project-form-title">{modal.type === "edit" ? "Edit project" : "Add project"}</h2></div><button className="modal-close" type="button" onClick={() => setModal(null)} aria-label="Close form">×</button></div><form className="property-form" onSubmit={handleSave}><div className="form-grid"><label className="form-field"><span>Project name *</span><input name="title" value={form.title} onChange={updateField} placeholder="IUNU Residence" required maxLength={200} /></label><label className="form-field"><span>Location</span><input name="location" value={form.location} onChange={updateField} placeholder="New Cairo" maxLength={200} /></label><label className="form-field form-field-full"><span>Description</span><textarea name="description" value={form.description} onChange={updateField} placeholder="Describe the project..." rows="5" maxLength={20000} /></label><fieldset className="form-field form-field-full arabic-fieldset"><legend>Arabic version</legend><p className="arabic-hint">Leave blank to translate automatically from English when you save. You can edit the Arabic before saving.</p><div className="arabic-grid"><label className="form-field"><span>اسم المشروع</span><input name="titleAr" value={form.titleAr} onChange={updateField} placeholder="اسم المشروع" dir="rtl" lang="ar" maxLength={400} /></label><label className="form-field"><span>الموقع</span><input name="locationAr" value={form.locationAr} onChange={updateField} placeholder="الموقع" dir="rtl" lang="ar" maxLength={400} /></label><label className="form-field form-field-full"><span>وصف المشروع</span><textarea name="descriptionAr" value={form.descriptionAr} onChange={updateField} placeholder="وصف المشروع" dir="rtl" lang="ar" rows="5" maxLength={40000} /></label></div><div className="arabic-actions"><button className="translate-button" type="button" onClick={handleTranslatePreview} disabled={translating || demoMode}>{translating ? "Translating..." : "Translate from English"}</button>{demoMode && <small>Translation requires the backend. Exit demo mode to use it.</small>}{translationNotice && <small className="arabic-notice">{translationNotice}</small>}</div></fieldset><label className="form-field"><span>Area of unit (m²)</span><input name="area" type="number" min="0" step="0.01" value={form.area} onChange={updateField} placeholder="120000" /></label><label className="form-field"><span>Project type *</span><select name="type" value={form.type} onChange={updateField}><option value="RESIDENTIAL">Residential</option><option value="COMMERCIAL">Commercial</option><option value="ADMINISTRATIVE">Administrative</option></select></label><label className="form-field"><span>Status</span><select name="status" value={form.status} onChange={updateField}><option value="AVAILABLE">Available</option><option value="COMING_SOON">Coming soon</option><option value="SOLD_OUT">Sold out</option></select></label><label className="form-field"><span>Price (optional)</span><input name="price" type="number" min="0" step="0.01" value={form.price} onChange={updateField} placeholder="Price on request" /></label><label className="form-field form-field-full"><span>Project photos</span><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={handleImageFiles} /><small>Select JPG, PNG or WEBP files from your device. The first selected image becomes the cover. Existing images stay unchanged when no new files are selected.{imageFiles.length > 0 ? ` ${imageFiles.length} file${imageFiles.length === 1 ? "" : "s"} selected.` : ""}</small></label><label className="form-checkbox"><input name="published" type="checkbox" checked={form.published} onChange={updateField} /><span>Publish this project on the website</span></label></div><div className="admin-modal-actions"><button className="cancel-button" type="button" onClick={() => setModal(null)}>Cancel</button><button className="save-button" type="submit" disabled={saving}>{saving ? "Saving..." : modal.type === "edit" ? "Update project" : "Save project"}</button></div></form></section></div>}

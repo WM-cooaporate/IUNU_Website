@@ -1,0 +1,138 @@
+# Attack lab: a throwaway, production-shaped stack for security/run-lab.sh.
+#
+# NOT backend/docker-compose.yml. That one is for local development and keeps
+# its data; this one runs the real prod profile against a database on tmpfs,
+# gets attacked, and is deleted with `down -v` at the end of every run.
+#
+#   browser/ZAP/k6 --> frontend (serve-dist.mjs, vercel.json headers)
+#                         |  /api, /uploads
+#                         v
+#   ZAP/k6 ----------> proxy (nginx: appends X-Forwarded-For, injects the edge
+#                         |   secret - the part Cloudflare plays in production)
+#                         v
+#                      backend (SPRING_PROFILES_ACTIVE=prod) --> postgres (tmpfs)
+#
+# Every secret below is generated per run by run-lab.sh (openssl rand) and
+# exists only in that shell's environment. Nothing here is a real credential.
+# Host ports bind to 127.0.0.1 only.
+
+name: iunu-lab
+
+networks:
+  lab:
+    ipam:
+      config:
+        # Fixed so TRUSTED_PROXIES can name the proxy's address exactly.
+        - subnet: ${LAB_SUBNET:-10.89.250.0/24}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: iunu_lab
+      POSTGRES_USER: iunu_lab
+      POSTGRES_PASSWORD: ${LAB_DB_PASSWORD:?run security/run-lab.sh}
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iunu_lab -d iunu_lab"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    networks:
+      lab:
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: iunu_lab
+      DB_USER: iunu_lab
+      DB_PASSWORD: ${LAB_DB_PASSWORD}
+      JWT_SECRET: ${LAB_JWT_SECRET:?run security/run-lab.sh}
+      # Two hours, so an authenticated ZAP scan does not expire half way.
+      JWT_ACCESS_TOKEN_EXPIRATION_MS: "7200000"
+      CORS_ALLOWED_ORIGINS: http://127.0.0.1:${LAB_WEB_PORT:-8082}
+      FRONTEND_URL: http://127.0.0.1:${LAB_WEB_PORT:-8082}
+      PUBLIC_API_URL: http://127.0.0.1:${LAB_API_PORT:-8081}
+      UPLOAD_DIR: /tmp/uploads
+      # The ZAP API scan needs the OpenAPI document. This is the only
+      # environment where it is ever switched on.
+      SWAGGER_ENABLED: "true"
+      CLIENT_IP_MODE: x-forwarded-for
+      TRUSTED_PROXY_HOPS: "1"
+      TRUSTED_PROXIES: ${LAB_PROXY_IP:-10.89.250.10}
+      # The lab's proxy injects this, as Cloudflare's Transform Rule would, so
+      # anything reaching the backend directly is an "origin found" attack.
+      EDGE_SHARED_SECRET: ${LAB_EDGE_SECRET:?run security/run-lab.sh}
+      ADMIN_EMAIL: ${LAB_ADMIN_EMAIL:?run security/run-lab.sh}
+      ADMIN_PASSWORD: ${LAB_ADMIN_PASSWORD:?run security/run-lab.sh}
+      MAIL_ENABLED: "false"
+      # Deliberately blank: the lab must prove the app starts and runs with
+      # every optional integration off, and must never call out.
+      GOOGLE_TRANSLATE_API_KEY: ""
+      OTLP_METRICS_URL: ""
+      SENTRY_DSN: ""
+    tmpfs:
+      - /tmp
+    healthcheck:
+      # The runtime image has bash but no curl.
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf \"GET /actuator/health/readiness HTTP/1.0\\r\\n\\r\\n\" >&3 && grep -q UP <&3'"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 20s
+    networks:
+      lab:
+
+  proxy:
+    image: nginx:1.27-alpine
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      LAB_EDGE_SECRET: ${LAB_EDGE_SECRET}
+      # Only this variable is substituted into the template; nginx's own
+      # $variables are left alone.
+      NGINX_ENVSUBST_FILTER: "^LAB_EDGE_SECRET$$"
+    volumes:
+      - ./lab/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+    ports:
+      - "127.0.0.1:${LAB_API_PORT:-8081}:80"
+    networks:
+      lab:
+        ipv4_address: ${LAB_PROXY_IP:-10.89.250.10}
+
+  frontend:
+    build:
+      context: ..
+      dockerfile_inline: |
+        FROM node:22-alpine
+        WORKDIR /app
+        COPY package.json package-lock.json ./
+        RUN npm ci --no-audit --no-fund
+        COPY index.html vite.config.js vercel.json ./
+        COPY public ./public
+        COPY src ./src
+        # Same-origin API path: serve-dist.mjs forwards /api to the proxy, so
+        # the production CSP (connect-src 'self' ...) applies unmodified.
+        RUN VITE_API_URL=/api npm run build
+        COPY security/serve-dist.mjs ./security/serve-dist.mjs
+        USER node
+        EXPOSE 8080
+        CMD ["node", "security/serve-dist.mjs"]
+    depends_on:
+      - proxy
+    environment:
+      API_UPSTREAM: http://proxy:80
+    ports:
+      - "127.0.0.1:${LAB_WEB_PORT:-8082}:8080"
+    networks:
+      lab:

@@ -5,6 +5,8 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.iunu.realestate.dto.response.ApiError;
 import com.iunu.realestate.metrics.AbuseMetrics;
+import com.iunu.realestate.security.events.SecurityEventType;
+import com.iunu.realestate.security.events.SecurityEvents;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
@@ -24,6 +26,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -68,6 +71,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     private final ClientIpResolver clientIpResolver;
     private final JwtService jwtService;
     private final AbuseMetrics metrics;
+    private final SecurityEvents securityEvents;
     private final boolean enabled;
 
     private final Cache<String, Bucket> loginBuckets;
@@ -81,6 +85,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             ClientIpResolver clientIpResolver,
             JwtService jwtService,
             AbuseMetrics metrics,
+            SecurityEvents securityEvents,
             // Off under the test profile: the integration suite shares one
             // application context, so a limiter counting across every test in
             // the run makes failures depend on test order. One dedicated class
@@ -94,6 +99,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         this.clientIpResolver = clientIpResolver;
         this.jwtService = jwtService;
         this.metrics = metrics;
+        this.securityEvents = securityEvents;
         this.enabled = enabled;
 
         this.loginBuckets = boundedStore(maxTrackedClients);
@@ -142,6 +148,10 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         }
 
         metrics.rateLimitRejected(limit.bucketName());
+        // The path is detail, never a key: it is whatever the caller typed.
+        securityEvents.record(SecurityEventType.RATE_LIMITED, null, null, ip(request),
+                Map.of("bucket", limit.bucketName().tag(), "method", request.getMethod(),
+                        "path", request.getRequestURI()));
         reject(request, response, probe.getNanosToWaitForRefill());
     }
 

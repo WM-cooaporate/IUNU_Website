@@ -21,6 +21,12 @@
     <properties>
         <java.version>21</java.version>
         <jjwt.version>0.12.6</jjwt.version>
+        <!-- Overrides the 1.19.8 Boot 3.3.5 manages. That version talks Docker
+             API 1.32, which Docker Engine 29 refuses ("client version 1.32 is
+             too old") - and because MigrationSchemaTest is disabledWithoutDocker,
+             the refusal showed up as seven SKIPPED tests rather than a failure.
+             1.21.4 negotiates the API version. -->
+        <testcontainers.version>1.21.4</testcontainers.version>
     </properties>
 
     <dependencies>
@@ -125,6 +131,32 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
+        <!-- OTLP push of the same metrics, for a hosted backend such as Grafana
+             Cloud. Push rather than scrape, so production grows no new inbound
+             endpoint. Off unless OTLP_METRICS_URL is set - see
+             OptionalIntegrationsEnvironmentPostProcessor. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-otlp</artifactId>
+        </dependency>
+
+        <!-- JSON log lines under the prod profile (logback-spring.xml), so a log
+             platform can filter on requestId and the SECURITY logger without
+             parsing free text. Boot 3.3 has no built-in structured logging. -->
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>8.0</version>
+        </dependency>
+
+        <!-- Backend error tracking. Inert unless SENTRY_DSN is set; see
+             SentryConfig for what is stripped before an event leaves. -->
+        <dependency>
+            <groupId>io.sentry</groupId>
+            <artifactId>sentry-spring-boot-starter-jakarta</artifactId>
+            <version>7.22.6</version>
         </dependency>
 
         <!-- In-process caching of public property reads. Caffeine rather than
