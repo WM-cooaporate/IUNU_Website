@@ -15,3 +15,12 @@
 # is the point of the endpoint (ADMIN only; the lab network is 10.x). Kept as
 # WARN so a private address leaking from any other endpoint is still reported.
 2	WARN	(Private IP in the admin-only audit log is by design; anywhere else it is a finding)
+
+# HTTP Only Site. The lab proxy is plain HTTP on purpose; in production TLS ends
+# at Render/Cloudflare and HSTS is sent (ForwardedProtoFilter, ForwardedHeadersBypassTest).
+10106	WARN	(Lab is HTTP by design; production TLS is at the edge)
+
+# Unexpected Content-Type. Fires on /swagger-ui/index.html, which is HTML by
+# design and exists only because the lab sets SWAGGER_ENABLED=true for the API
+# scan. The API itself answers JSON everywhere, including the root.
+100001	WARN	(Swagger UI is HTML and lab-only; any other endpoint returning HTML is a finding)
