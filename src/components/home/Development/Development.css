@@ -363,22 +363,6 @@ html[dir="rtl"] .development-gallery-controls {
     pointer-events: none;
 }
 
-.development-gallery-feature-caption {
-    position: absolute;
-    z-index: 2;
-    letter-spacing: 1.8px;
-    text-transform: uppercase;
-    right: 28px;
-    left: auto;
-    bottom: 28px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    direction: ltr;
-    color: var(--color-white);
-    font-size: 9px;
-}
-
 
 /* Controls overlay — arrows only, no counter */
 
@@ -708,11 +692,6 @@ html[dir="rtl"] .development-gallery-controls {
     .development-gallery-feature {
         min-height: 360px;
         height: 360px;
-    }
-    .development-gallery-feature-caption {
-        right: 18px;
-        left: auto;
-        bottom: 18px;
     }
     .development-gallery-shell .development-gallery-controls {
         right: 12px;
