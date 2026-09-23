@@ -73,12 +73,19 @@ app:
     allowed-origins: ${CORS_ALLOWED_ORIGINS}
 
   file-storage:
-    # On Render's free plan there is no persistent disk, so this is ephemeral
-    # and uploaded cover images are lost on every deploy and on every restart
-    # of a spun-down instance. Attach a Render Disk (paid) and point UPLOAD_DIR
-    # at its mount path to make uploads survive. See ENV_VARS.md.
-    location: ${UPLOAD_DIR}
+    # Cloudinary in production: Render's free plan has no persistent disk, so
+    # anything written locally is lost on every deploy and every wake from a
+    # spin-down. Choosing `local` here logs an ERROR at startup.
+    provider: ${FILE_STORAGE_PROVIDER:cloudinary}
+    # Only read by the local provider, and by the one-off migration of legacy
+    # /uploads/ files. Optional now.
+    location: ${UPLOAD_DIR:/tmp/uploads}
     public-base-url: ${PUBLIC_API_URL}
+    cloudinary:
+      # Required, no default: with the cloudinary provider a missing value stops
+      # startup with a message naming CLOUDINARY_URL.
+      url: ${CLOUDINARY_URL}
+      folder-root: ${CLOUDINARY_FOLDER:iunu/prod}
 
   frontend-url: ${FRONTEND_URL}
 

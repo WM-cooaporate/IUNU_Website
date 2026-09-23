@@ -4,7 +4,10 @@ import com.iunu.realestate.entity.Project;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ProjectRepository extends JpaRepository<Project, Long> {
@@ -22,4 +25,14 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     Page<Project> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     boolean existsByCoverImageUrlAndIdNot(String coverImageUrl, Long id);
+
+    boolean existsByCoverImageUrl(String coverImageUrl);
+
+    /** Every cover in use, for the orphan sweep's "is it still referenced?" check. */
+    @Query("select p.coverImageUrl from Project p where p.coverImageUrl is not null")
+    List<String> findAllCoverImageUrls();
+
+    /** Projects whose cover starts with {@code prefix} - the legacy-upload migration's work list. */
+    @Query("select p.id from Project p where p.coverImageUrl like concat(:prefix, '%')")
+    List<Long> findIdsWithCoverStartingWith(@Param("prefix") String prefix);
 }

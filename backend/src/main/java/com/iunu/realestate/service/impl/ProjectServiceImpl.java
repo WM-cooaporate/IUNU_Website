@@ -13,7 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -25,6 +27,7 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectRepository projectRepository;
     private final ImageStorage imageStorage;
     private final AuditLogService auditLogService;
+    private final PlatformTransactionManager transactionManager;
 
     private static final String AUDIT_TARGET = "PROJECT";
 
@@ -112,18 +115,43 @@ public class ProjectServiceImpl implements ProjectService {
         deleteCoverIfOrphaned(cover, null, id);
     }
 
+    /**
+     * Not @Transactional, on purpose: the upload goes to Cloudinary in
+     * production and can take seconds, and a transaction held around it holds
+     * a database connection from a pool of five for all that time. So:
+     * <ol>
+     *   <li>store the image, no transaction open;</li>
+     *   <li>point the row at it in one short transaction;</li>
+     *   <li>if that fails, remove the image again - unless something already
+     *       uses it, since storage is content-addressed and the same bytes may
+     *       be another project's cover.</li>
+     * </ol>
+     */
     @Override
-    @Transactional
     public ProjectResponse setCoverImage(Long id, MultipartFile file) {
-        Project project = findOrThrow(id);
-        String previousCover = project.getCoverImageUrl();
+        // 404 before spending an upload on a project that does not exist.
+        if (!projectRepository.existsById(id)) {
+            throw new ResourceNotFoundException(NOT_FOUND_MESSAGE);
+        }
+        String newCover = imageStorage.store(file, ImageStorage.PROJECTS_FOLDER);
+        try {
+            return new TransactionTemplate(transactionManager).execute(status -> {
+                Project project = findOrThrow(id);
+                String previousCover = project.getCoverImageUrl();
 
-        project.setCoverImageUrl(imageStorage.store(file, ImageStorage.PROJECTS_FOLDER));
-        Project saved = projectRepository.save(project);
-        auditLogService.record(AuditAction.IMAGE_UPLOADED, AUDIT_TARGET, id, "cover image replaced");
+                project.setCoverImageUrl(newCover);
+                Project saved = projectRepository.save(project);
+                auditLogService.record(AuditAction.IMAGE_UPLOADED, AUDIT_TARGET, id, "cover image replaced");
 
-        deleteCoverIfOrphaned(previousCover, saved.getCoverImageUrl(), id);
-        return ProjectResponse.from(saved);
+                deleteCoverIfOrphaned(previousCover, saved.getCoverImageUrl(), id);
+                return ProjectResponse.from(saved);
+            });
+        } catch (RuntimeException exception) {
+            if (!projectRepository.existsByCoverImageUrl(newCover)) {
+                imageStorage.deleteIfStored(newCover, ImageStorage.PROJECTS_FOLDER);
+            }
+            throw exception;
+        }
     }
 
     private Project findOrThrow(Long id) {

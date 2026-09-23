@@ -36,6 +36,19 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
             + "where p.id <> :excludeId and (p.coverImageUrl = :url or :url member of p.imageUrls)")
     boolean isImageUsedByOtherProperty(@Param("url") String url, @Param("excludeId") Long excludeId);
 
+    /** Every property cover in use, for the orphan sweep's "is it still referenced?" check. */
+    @Query("select p.coverImageUrl from Property p where p.coverImageUrl is not null")
+    List<String> findAllCoverImageUrls();
+
+    /** Every gallery image in use, across all properties. Duplicates are expected (shared images). */
+    @Query("select u from Property p join p.imageUrls u")
+    List<String> findAllGalleryImageUrls();
+
+    /** Properties with a cover or gallery image under {@code prefix} - the legacy-upload migration's work list. */
+    @Query("select distinct p.id from Property p left join p.imageUrls u "
+            + "where p.coverImageUrl like concat(:prefix, '%') or u like concat(:prefix, '%')")
+    List<Long> findIdsWithImageStartingWith(@Param("prefix") String prefix);
+
     @Query("select p.id from Property p where (p.titleAr is null and p.title <> '') "
             + "or (p.descriptionAr is null and p.description is not null and p.description <> '') "
             + "or (p.locationAr is null and p.location is not null and p.location <> '')")
