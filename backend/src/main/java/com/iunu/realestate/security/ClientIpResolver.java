@@ -111,6 +111,16 @@ public class ClientIpResolver {
      * <p>With no allowlist configured this returns true, preserving the older
      * behaviour - and the constructor warns about exactly what that costs.
      */
+    /**
+     * Whether forwarding headers from this request's peer may be believed at
+     * all. The same rule decides the client address here and the scheme in
+     * {@link ForwardedProtoFilter}, so there is one trust decision for every
+     * forwarded header, not one per component.
+     */
+    public boolean isTrustedPeer(HttpServletRequest request) {
+        return peerIsTrustedProxy(request);
+    }
+
     private boolean peerIsTrustedProxy(HttpServletRequest request) {
         if (trustedProxies.isEmpty()) {
             return true;

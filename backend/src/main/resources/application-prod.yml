@@ -7,29 +7,17 @@
 server:
   # Render injects PORT and routes to it.
   port: ${PORT:8080}
-  # TLS terminates at Render's edge proxy, so without this Spring sees plain
-  # HTTP and builds http:// redirect/absolute URLs for an https:// site.
+  # NONE, deliberately. Both other strategies rewrite the client address from
+  # X-Forwarded-For before ClientIpResolver sees the request: "framework"
+  # takes the LEFTMOST entry - the one the caller typed - and "native" does the
+  # same whenever every hop counts as trusted. Either hands an attacker their
+  # own rate-limit bucket; the attack lab sent 360 requests with a rotating
+  # fake X-Forwarded-For and got no 429 at all (N6 in docs/SECURITY_AUDIT.md).
   #
-  # NATIVE, NOT FRAMEWORK. "framework" installs Spring's ForwardedHeaderFilter,
-  # which replaces getRemoteAddr() with the LEFTMOST X-Forwarded-For entry -
-  # the one the caller typed - and then deletes the header. ClientIpResolver
-  # then keys every per-IP limit on an attacker-chosen address: the attack lab
-  # sent 360 requests with a rotating fake X-Forwarded-For and got no 429 at
-  # all (N6 in docs/SECURITY_AUDIT.md). Tomcat's RemoteIpValve is configured
-  # below to handle only the scheme and host, and to leave the client address
-  # and the X-Forwarded-For header alone for ClientIpResolver, which reads it
-  # from the right and only from TRUSTED_PROXIES.
-  forward-headers-strategy: native
-  tomcat:
-    remoteip:
-      # Blank: the valve never rewrites the client address.
-      remote-ip-header: ""
-      protocol-header: X-Forwarded-Proto
-      host-header: X-Forwarded-Host
-      # Accept X-Forwarded-Proto/Host from any peer, exactly as "framework"
-      # did. They only affect how absolute URLs are built; the client address,
-      # which is what an attacker wants to choose, is not taken from here.
-      internal-proxies: ".*"
+  # The one thing this setting was here for - knowing the request was HTTPS,
+  # so HSTS is sent - is done by ForwardedProtoFilter, which reads only
+  # X-Forwarded-Proto and only from TRUSTED_PROXIES.
+  forward-headers-strategy: none
 
 spring:
   datasource:

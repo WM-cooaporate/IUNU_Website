@@ -517,10 +517,22 @@ the prod profile behind a proxy:
 | 360 × `GET /api/properties`, no header | 316 × 200, then **44 × 429** |
 | 360 × `GET /api/properties`, rotating fake `X-Forwarded-For` | **360 × 200, no 429** |
 
-Fixed by switching to `native`, with Tomcat's `RemoteIpValve` restricted to scheme and host
-(`remote-ip-header` blank). `ClientIpResolver` alone decides the client address, reading from the
-right and only from `TRUSTED_PROXIES`. `ProdForwardedHeadersTest` pins the configuration, and
-`abuse.js`'s spoofing check proves the behaviour in the lab.
+The first fix, `native`, did not hold: with a blank `remote-ip-header`, Spring Boot falls back to
+`X-Forwarded-For`, and with every hop trusted Tomcat's valve does the same leftmost rewrite. The
+lab caught that on its next run, which is why it exists.
+
+The fix that holds is `server.forward-headers-strategy: none`. The one job that setting did,
+marking a request as HTTPS so Spring Security still sends HSTS, is now done by
+`ForwardedProtoFilter`. That filter reads only `X-Forwarded-Proto`, and only from a peer in
+`TRUSTED_PROXIES`, the same trust rule `ClientIpResolver` applies. Only `ClientIpResolver` decides
+the client address.
+
+Tests:
+- `ForwardedHeadersBypassTest` sends 400 requests with rotating fake entries through a trusted
+  proxy and requires a 429. It fails under `framework`.
+- `ProdForwardedHeadersTest` pins the prod setting.
+- The lab's `abuse.js` spoofing check covers the container-level behaviour, including the valve,
+  which MockMvc cannot run.
 
 ### N7. Health probes behind the edge secret (Low, fixed)
 
