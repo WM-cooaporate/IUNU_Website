@@ -146,8 +146,10 @@ k6_run() { # name script [extra -e args...]
     --summary-export "/reports/k6-$name.json" "/scripts/$script" > "$REPORT/k6-$name.log" 2>&1
   local code=$?
   local failed passed
-  failed="$(jq '[.. | objects | select(has("fails")) | .fails] | add // 0' "$REPORT/k6-$name.json" 2>/dev/null || echo "?")"
-  passed="$(jq '[.. | objects | select(has("passes")) | .passes] | add // 0' "$REPORT/k6-$name.json" 2>/dev/null || echo "?")"
+  # .metrics.checks only: other Rate metrics (http_req_failed) also carry
+  # passes/fails, and counting those would report requests as checks.
+  failed="$(jq '.metrics.checks.fails // 0' "$REPORT/k6-$name.json" 2>/dev/null || echo "?")"
+  passed="$(jq '.metrics.checks.passes // 0' "$REPORT/k6-$name.json" 2>/dev/null || echo "?")"
   if [ $code -eq 0 ]; then record "k6 $name" PASS "$passed checks passed"
   elif [ "$failed" != "?" ]; then record "k6 $name" FAIL "$failed of $((passed + failed)) checks failed"
   else record "k6 $name" ERROR "did not run (exit $code), see k6-$name.log"; fi

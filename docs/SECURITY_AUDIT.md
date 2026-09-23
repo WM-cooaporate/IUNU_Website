@@ -427,3 +427,152 @@ Each directive is derived from something the app actually does:
 - **The database at rest.** Backups, encryption and who holds the credentials are Render configuration.
 - **Dependency CVEs.** `npm audit` is clean; the Java side could not be scanned here (see above). Run it.
 - **Dynamic scanning.** No staging environment existed to scan.
+
+---
+
+## Addendum: attack lab, detection and monitoring (2026-09-23)
+
+The original audit hardened the code but could not run the scanners, and nothing watched the
+app afterwards. This addendum covers the gaps that remained, the first run of the attack lab
+(`security/run-lab.sh`) against a local stack built with the production configuration, and what
+that run found. Nothing in this section was run against production.
+
+### Summary
+
+| ID | Finding | Severity | Status |
+|---|---|---|---|
+| N1 | Refresh-token rotation could be raced into two valid sessions | High | **Fixed** (#12) |
+| N2 | A replayed refresh token raised nothing | High | **Fixed** (#12) |
+| N3 | No record of what an admin did | Medium | **Fixed** (#12) |
+| N4 | No CI: none of the security tests gated a merge | Medium | **Fixed** (#13) |
+| N5 | Account lockout never persisted | High | **Open**, needs a decision (see below) |
+| N6 | Every per-IP rate limit could be bypassed in production with one header | High | **Fixed** (#13), found by the lab |
+| N7 | With the edge secret on, the liveness and readiness probes returned 403 | Low | **Fixed** (#13), found by the lab |
+
+Also fixed along the way:
+- **Testcontainers skipped silently.** Testcontainers 1.19.8 is refused by Docker Engine 29, so `MigrationSchemaTest` was reported as *skipped* rather than failed. Bumped to 1.21.4, and CI now fails if the PostgreSQL tests skip.
+- **Nightly cleanup disabled reuse detection.** The cleanup deleted revoked refresh tokens, which would have turned off N2's reuse detection every night. It now deletes expired tokens only.
+
+### N1. Refresh-token rotation was not atomic (High, fixed)
+
+`refresh()` read the token, checked `revoked`, then wrote it. Under READ COMMITTED, two requests
+carrying one token both passed the check and both received a new pair. That is how a thief and
+the real admin both keep a session alive indefinitely. This was reproduced with the old code:
+both requests returned 200, on H2 and on PostgreSQL. Rotation is now a single conditional
+`UPDATE ... WHERE revoked = false`, and exactly one caller sees a row updated.
+`RefreshTokenAbuseTest` and `RefreshTokenRacePostgresTest` each run the race 20 times.
+
+### N2. No refresh-token reuse detection (High, fixed)
+
+A rotated token presented again more than 10s after rotation (`APP_SECURITY_REFRESH_REUSE_GRACE_SECONDS`)
+can only be a copy. It now revokes every live token of that user, raises `REFRESH_REUSE_DETECTED`
+(WARN, and a critical alert), and returns the same generic 401 as every other refresh failure.
+The revocation is committed despite the 401 (`noRollbackFor`), and a test proves the row is revoked.
+
+### N3. No admin audit trail (Medium, fixed)
+
+- The `audit_log` table (V7) records every admin create, update, publish and delete, uploads,
+  admin-user creation, password changes, backfills, leads marked handled, and admin sign-ins.
+- Rows are written inside the same transaction as the change, and the summary names fields, never values.
+- An admin sign-in from an address not seen in 90 days raises `ADMIN_LOGIN_NEW_IP` and emails the admin.
+- The trail is readable at `GET /api/admin/audit-log` and in the dashboard's **Activity** tab.
+
+### N4. No CI (Medium, fixed)
+
+`.github/workflows/ci.yml` runs on every push and PR to `main`:
+- `mvn verify`, including the PostgreSQL tests
+- lint, build and `npm audit`
+- gitleaks over the full history
+- the header-sync check (M12's standing risk)
+
+`security-scan.yml` runs the lab weekly. Dependabot covers Maven, npm, Actions and Docker.
+
+### N5. Account lockout never persisted (High, open)
+
+`login()` is `@Transactional`, and the `UnauthorizedException` thrown after
+`registerFailedAttempt()` rolls the counter back. After six wrong passwords the account shows
+`failed_login_attempts = 0` and is not locked. Meanwhile the `iunu.auth.account.locked` metric and
+the log line fire as if it had locked. The lab confirms it: after six wrong passwords the lab
+admin's real password still returned **200**, and `ACCOUNT_LOCKED` stayed at **0**.
+
+In practice the only brake on password guessing is the per-IP login limit (10/min), plus
+Cloudflare's rule once it exists. The fix is one annotation (`noRollbackFor`, as `refresh()`
+now uses), but a working lockout switches on M9's lockout denial of service, which you chose to
+accept as report-only. **Your call:** fix N5 alone, fix it together with M9 option (a), or leave
+both as they are.
+
+### N6. X-Forwarded-For bypass of every per-IP limit under the prod profile (High, fixed)
+
+`application-prod.yml` set `server.forward-headers-strategy: framework`. That installs Spring's
+`ForwardedHeaderFilter`, which replaces `getRemoteAddr()` with the **leftmost**
+`X-Forwarded-For` entry (the one the caller typed) and then removes the header, before
+`ClientIpResolver` ever sees the request. H2's fix was therefore bypassed in production: the
+caller chose their own bucket for the login, lead-form and public limits.
+
+The original audit's test of H2 ran without the prod profile, so it missed this. The lab runs
+the prod profile behind a proxy:
+
+| Through the lab proxy | Result |
+|---|---|
+| 360 × `GET /api/properties`, no header | 316 × 200, then **44 × 429** |
+| 360 × `GET /api/properties`, rotating fake `X-Forwarded-For` | **360 × 200, no 429** |
+
+Fixed by switching to `native`, with Tomcat's `RemoteIpValve` restricted to scheme and host
+(`remote-ip-header` blank). `ClientIpResolver` alone decides the client address, reading from the
+right and only from `TRUSTED_PROXIES`. `ProdForwardedHeadersTest` pins the configuration, and
+`abuse.js`'s spoofing check proves the behaviour in the lab.
+
+### N7. Health probes behind the edge secret (Low, fixed)
+
+`EdgeSecretFilter` exempted only `/actuator/health`. With `EDGE_SHARED_SECRET` set,
+`/actuator/health/liveness` and `/readiness` returned 403, so a platform check or uptime monitor
+pointed at them would have taken the service down. All three probe paths are now exempt, by exact
+match.
+
+### Lab results
+
+_The results table from the confirming run, with the N6 fix in place, is added below once that run completes._
+
+### Report-only measurements
+
+These are findings you have accepted. The lab measures them; it does not change them.
+
+| Item | Measurement | Reading |
+|---|---|---|
+| **M2** chunked body | A 2MB JSON body with no `Content-Length` returned **400**, not 413 | The body was read and parsed, then refused by `@Size` validation. The `Content-Length` check cannot see it. Still needs the edge body-size rule |
+| **M8** reset timing | `forgot-password` median **8.6ms** for an existing account vs **2.9ms** for a missing one (10 samples each, mail disabled) | Account existence is still visible from timing. With SMTP on, the gap grows by the SMTP round trip |
+| **M9** lockout | Real password after 6 failures: **200** | No lockout at all today (N5), so M9's lockout denial of service cannot happen yet |
+| Cache busting | 500 distinct `page`/`size` combinations, paced under the limit: **0% hit ratio**, 0 × 429, all served | An attacker who stays under 5/s defeats the property cache completely. Cloudflare's cache rule and a query-string rule are the lever (runbook Part 2 §3) |
+
+### Detection check
+
+Counters read from `/actuator/metrics` after `attack.js`:
+
+| Event | Count | |
+|---|---|---|
+| `LOGIN_FAILED` | 27 | credential stuffing, lockout probe |
+| `REFRESH_REUSE_DETECTED` | 1 | refresh replay |
+| `REFRESH_RACE_LOST` | 1 | refresh race |
+| `ADMIN_LOGIN_NEW_IP` | 2 | first admin sign-in from each client |
+| `RATE_LIMITED` | 20,562 | ZAP, k6 |
+| `ACCESS_DENIED` | 251 | USER sweep, anonymous probes |
+| `UPLOAD_REJECTED` | 8 | upload abuse |
+| `EDGE_SECRET_REJECTED` | 1 | origin bypass |
+| `TOKEN_INVALID` | 1 | malformed bearer |
+| `PASSWORD_RESET_REQUESTED` | 20 | reset timing |
+| **`ACCOUNT_LOCKED`** | **0** | **gap: N5** |
+
+`PASSWORD_RESET_COMPLETED` and `PASSWORD_CHANGED` are not exercised by the lab. They need a
+mailbox or the user's password. `SecurityLogRedactionTest` covers them on every build, and also
+asserts that no raw email, token, password or `Bearer` string reaches the `SECURITY` log.
+
+The alert rules in `monitoring/alert-rules.yml` were checked against the lab's
+`/actuator/prometheus` scrape: all eight metric names they use exist.
+
+### Not done
+
+- **OWASP dependency-check.** Its first run could not complete in the environment used for this
+  addendum, because the NVD and CISA feed downloads were blocked. The weekly CI scan runs it; set
+  the `NVD_API_KEY` repository secret so it finishes in minutes rather than hours.
+- **Out of scope:** M7 (tokens in HttpOnly cookies), M9, M10 and M11, and everything in
+  `DDOS_RUNBOOK.md` Part 1.
