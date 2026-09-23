@@ -1,0 +1,7 @@
+# Build context for the attack lab's frontend image (security/docker-compose.lab.yml).
+node_modules
+dist
+.git
+backend
+security/reports
+load-tests
