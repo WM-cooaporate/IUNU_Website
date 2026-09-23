@@ -38,8 +38,13 @@ groups:
         labels:
           severity: high
         annotations:
-          summary: An account was locked after repeated failed logins
-          description: Someone is guessing a password, or locking the admin out on purpose (M9). See DDOS_RUNBOOK.md Part 1 step 5 (the /api/auth/ rate-limiting rule).
+          summary: An account was locked after a distributed password-guessing attack
+          description: >-
+            More than 50 failed logins in an hour against one account, from several
+            addresses - the owner is locked out too for 15 minutes (the M9 residual).
+            A password reset lifts it at once. Tighten the Cloudflare /api/auth/ rule
+            (DDOS_RUNBOOK.md Part 1 step 5). Single-address guessing never raises this;
+            it only locks that address.
 
       - alert: CredentialStuffing
         expr: increase(iunu_security_events_total{type="LOGIN_FAILED"}[10m]) > 30

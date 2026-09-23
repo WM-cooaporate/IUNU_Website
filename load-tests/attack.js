@@ -37,6 +37,15 @@ const DIRECT_BACKEND = __ENV.DIRECT_BACKEND_URL || "http://backend:8080";
 const ADMIN_EMAIL = __ENV.LAB_ADMIN_EMAIL;
 const ADMIN_PASSWORD = __ENV.LAB_ADMIN_PASSWORD;
 const GRACE_SECONDS = Number(__ENV.REFRESH_REUSE_GRACE_SECONDS || 10);
+/**
+ * The same API through the lab's frontend container, which forwards to the
+ * proxy. The backend sees that container as the client, so this is "the real
+ * admin, from somewhere else" in the lockout group.
+ */
+const VIA_FRONTEND = __ENV.VIA_FRONTEND_URL || "http://frontend:8080/api";
+/** An account run-lab.sh's simulated botnet has already hammered from many addresses. */
+const BOTNET_VICTIM_EMAIL = __ENV.BOTNET_VICTIM_EMAIL || "";
+const BOTNET_VICTIM_PASSWORD = __ENV.BOTNET_VICTIM_PASSWORD || "";
 
 if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
   throw new Error("Set LAB_ADMIN_EMAIL and LAB_ADMIN_PASSWORD (security/run-lab.sh does).");
@@ -58,7 +67,6 @@ export const options = {
 // Report-only measurements. Never fail the run; printed in the summary.
 const resetExisting = new Trend("report_m8_forgot_password_existing_ms", true);
 const resetMissing = new Trend("report_m8_forgot_password_missing_ms", true);
-const lockoutRealPasswordStatus = new Gauge("report_m9_real_password_status_after_6_failures");
 const cacheHitRatio = new Gauge("report_cache_hit_ratio_during_busting");
 const cacheBustingThrottled = new Gauge("report_cache_busting_429s");
 const translationCharsDelta = new Gauge("report_translation_chars_delta");
@@ -80,8 +88,8 @@ const ADMIN_PATHS = [
   ["POST", "/admin/translations/properties/backfill"],
 ];
 
-function login(email, password) {
-  return http.post(`${BASE_URL}/auth/login`, json({ email, password }), { headers: JSON_HEADERS });
+function login(email, password, base = BASE_URL) {
+  return http.post(`${base}/auth/login`, json({ email, password }), { headers: JSON_HEADERS });
 }
 
 function refresh(refreshToken) {
@@ -352,13 +360,38 @@ export default function (data) {
     }
   });
 
-  group("admin lockout (report only, M9)", () => {
-    // Last, because a working lockout would lock the lab admin for 15 minutes.
+  group("admin lockout (N5, M9)", () => {
+    // Last, because it locks this address out of the lab admin for 15 minutes.
     waitForLoginBucket();
+    const wrong = [];
     for (let attempt = 0; attempt < 6; attempt++) {
-      login(ADMIN_EMAIL, `wrong-password-${attempt}`);
+      wrong.push(login(ADMIN_EMAIL, `wrong-password-${attempt}`).status);
     }
-    lockoutRealPasswordStatus.add(login(ADMIN_EMAIL, ADMIN_PASSWORD).status);
+    const attackerWithRealPassword = login(ADMIN_EMAIL, ADMIN_PASSWORD);
+    const ownerElsewhere = login(ADMIN_EMAIL, ADMIN_PASSWORD, VIA_FRONTEND);
+
+    check(null, {
+      "6 wrong passwords from one address are all refused": () => wrong.every((status) => status === 401),
+      "that address is now locked out, even with the real password (N5 fixed)": () => attackerWithRealPassword.status === 401,
+      "the lock looks exactly like a wrong password": () =>
+        attackerWithRealPassword.json("message") === "Invalid email or password",
+      "the real admin still signs in from another address (M9 mitigated)": () => ownerElsewhere.status === 200,
+    });
+  });
+
+  group("botnet account lock (M9 residual)", () => {
+    if (!BOTNET_VICTIM_EMAIL) {
+      check(null, { "botnet check skipped (run through security/run-lab.sh)": () => true });
+      return;
+    }
+    // run-lab.sh has already sent 55 wrong passwords at this account from 11
+    // addresses, 5 each: under the per-address lock, over the account-wide one.
+    const victim = login(BOTNET_VICTIM_EMAIL, BOTNET_VICTIM_PASSWORD, VIA_FRONTEND);
+    check(null, {
+      "a distributed attack raised ACCOUNT_LOCKED": () => securityEvents(adminToken, "ACCOUNT_LOCKED") >= 1,
+      "and locked the account from every address, with the generic error": () =>
+        victim.status === 401 && victim.json("message") === "Invalid email or password",
+    });
   });
 }
 
@@ -370,7 +403,6 @@ export function handleSummary(data) {
     m2_note: "chunked-body result is measured by run-lab.sh (curl)",
     m8_forgot_password_existing_median_ms: value("report_m8_forgot_password_existing_ms", "med"),
     m8_forgot_password_missing_median_ms: value("report_m8_forgot_password_missing_ms", "med"),
-    m9_real_password_status_after_6_failures: value("report_m9_real_password_status_after_6_failures", "value"),
     cache_hit_ratio_during_busting: value("report_cache_hit_ratio_during_busting", "value"),
     cache_busting_429s: value("report_cache_busting_429s", "value"),
     translation_chars_delta: value("report_translation_chars_delta", "value"),

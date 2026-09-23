@@ -87,8 +87,10 @@ stays reachable) carries whatever the caller typed, end to end.
 | `TOMCAT_MAX_THREADS` | Concurrent in-flight requests. Requests beyond this queue rather than fail. Keep it well above `DB_POOL_MAX`: a thread waiting on the pool is cheap, a connection the server cannot accept is a refused request. | `100` |
 | `JWT_ACCESS_TOKEN_EXPIRATION_MS` | Access-token lifetime. | `900000` (15 min) |
 | `JWT_ISSUER` | `iss` claim. | `iunu-real-estate-api` |
-| `MAX_FAILED_LOGIN_ATTEMPTS` | Failed logins before the account locks. | `5` |
-| `ACCOUNT_LOCK_DURATION_MINUTES` | Lock duration. | `15` |
+| `MAX_FAILED_LOGIN_ATTEMPTS` | Failed logins from **one client address** before that (account, address) pair is locked. Other addresses can still sign in. | `5` |
+| `ACCOUNT_LOCK_DURATION_MINUTES` | How long either kind of lock lasts. A completed password reset lifts both at once. | `15` |
+| `ACCOUNT_LOCK_THRESHOLD_PER_HOUR` | Botnet safety net: **more than** this many failed logins against one account, from all addresses together, in a rolling hour locks the account itself and raises `ACCOUNT_LOCKED`. | `50` |
+| `LOGIN_ATTEMPTS_MAX_TRACKED` | Ceiling on each in-memory lockout store, so a flood from many addresses cannot grow it without bound. | `100000` |
 | `RESET_TOKEN_EXPIRY_MINUTES` | Password-reset token lifetime. | `30` |
 | `REFRESH_TOKEN_EXPIRY_DAYS` | Refresh-token lifetime. | `7` |
 | `RATE_LIMIT_TRUST_FORWARDED_HEADER` | Read the client IP from `X-Forwarded-For`. `TRUST_FORWARDED_HEADER` is the older name and is still honoured. | `false` |

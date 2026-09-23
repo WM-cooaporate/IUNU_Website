@@ -105,7 +105,7 @@ The first action for each alert. The runbook has the detail, which is not repeat
 |---|---|
 | **RefreshTokenReuse** (critical) | The user's sessions are already revoked. Find their id and the client IP in `event=REFRESH_REUSE_DETECTED`. If it is an admin, have them change their password now and check the **Activity** tab for anything they did not do. Treat the admin's machine as the likely source (the token lives in its browser storage, see M7) |
 | **AdminLoginNewIp** (high) | Ask the admin whether it was them. If not, change the password (signs out every session) and check the **Activity** tab |
-| **AccountLocked** (high) | Someone is guessing, or locking the admin out (M9). Check the Cloudflare `/api/auth/` rule: `DDOS_RUNBOOK.md` Part 1 step 5 |
+| **AccountLocked** (high) | A distributed guess from several addresses locked the account for 15 minutes. The owner is locked out too (M9 residual); a password reset lifts it at once. Then tighten the Cloudflare `/api/auth/` rule: `DDOS_RUNBOOK.md` Part 1 step 5 |
 | **CredentialStuffing** (high) | `DDOS_RUNBOOK.md` Part 2 step 2, then tighten the `/api/auth/` rule (Part 1 step 5) |
 | **OriginFound** (high) | `DDOS_RUNBOOK.md` Part 2 step 4 |
 | **RateLimitFlood** (warning) | The defences are working. Watch capacity: `DDOS_RUNBOOK.md` Part 2 step 3 |

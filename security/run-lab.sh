@@ -179,7 +179,7 @@ zap_record "zap baseline" zap-baseline.json $?
 ZAP_ACTIVE_LIMITS="-config scanner.maxScanDurationInMins=15 -config scanner.maxRuleDurationInMins=3"
 log "ZAP API scan, anonymous"
 docker run --rm --network "$NETWORK" -v "$REPORT:/zap/wrk:rw" "$ZAP_IMAGE" \
-  zap-api-scan.py -t http://proxy/v3/api-docs -f openapi -c zap-rules.tsv -I \
+  zap-api-scan.py -t http://proxy/v3/api-docs -f openapi -O proxy:80 -c zap-rules.tsv -I \
   -z "$ZAP_ACTIVE_LIMITS" -J zap-api-anon.json -r zap-api-anon.html > "$REPORT/zap-api-anon.log" 2>&1
 zap_record "zap api (anonymous)" zap-api-anon.json $?
 
@@ -188,15 +188,35 @@ zap_record "zap api (anonymous)" zap-api-anon.json $?
 log "ZAP API scan, as the lab admin"
 docker run --rm --network "$NETWORK" -v "$REPORT:/zap/wrk:rw" \
   -e ZAP_AUTH_HEADER=Authorization -e ZAP_AUTH_HEADER_VALUE="Bearer $ADMIN_TOKEN" -e ZAP_AUTH_HEADER_SITE=proxy \
-  "$ZAP_IMAGE" zap-api-scan.py -t http://proxy/v3/api-docs -f openapi -c zap-rules.tsv -I \
+  "$ZAP_IMAGE" zap-api-scan.py -t http://proxy/v3/api-docs -f openapi -O proxy:80 -c zap-rules.tsv -I \
   -z "$ZAP_ACTIVE_LIMITS" -J zap-api-admin.json -r zap-api-admin.html > "$REPORT/zap-api-admin.log" 2>&1
 zap_record "zap api (admin)" zap-api-admin.json $?
 
-# --- 8. attack.js -----------------------------------------------------------------
+# --- 8. Simulated botnet, then attack.js --------------------------------------------
+# A distributed guess against one account: 11 containers, each on its own
+# address, 5 wrong passwords each. No single address reaches the per-address
+# lock's threshold before its 5th try, but 55 together cross the account-wide
+# one (50 an hour), which must lock the account and raise ACCOUNT_LOCKED.
+# attack.js checks the outcome. Real addresses are needed because a spoofed
+# X-Forwarded-For no longer buys one (N6).
+BOTNET_VICTIM_EMAIL="botnet-victim@iunu-lab.test"
+BOTNET_VICTIM_PASSWORD="Victim$(openssl rand -hex 8)a1"
+log "Simulated botnet: 11 addresses x 5 wrong passwords against one account"
+curl -fsS -o /dev/null -H 'Content-Type: application/json' \
+  -d "{\"fullName\":\"Botnet Victim\",\"email\":\"$BOTNET_VICTIM_EMAIL\",\"phone\":\"+20 100 000 0000\",\"password\":\"$BOTNET_VICTIM_PASSWORD\"}" \
+  "$API/api/auth/register" || echo "WARNING: could not register the botnet victim"
+for member in $(seq 1 11); do
+  docker run --rm --network "$NETWORK" -v "$REPO/load-tests:/scripts:ro" \
+    -e BASE_URL=http://proxy/api -e VICTIM_EMAIL="$BOTNET_VICTIM_EMAIL" \
+    "$K6_IMAGE" run --quiet /scripts/botnet.js > "$REPORT/k6-botnet-$member.log" 2>&1 &
+done
+wait
+
 # The authenticated scan spends the admin's per-user buckets; let them refill.
 log "Waiting 61s for the admin rate-limit buckets to refill, then k6 attack.js"
 sleep 61
 k6_run attack attack.js -e LAB_ADMIN_EMAIL="$LAB_ADMIN_EMAIL" -e LAB_ADMIN_PASSWORD="$LAB_ADMIN_PASSWORD" \
+  -e BOTNET_VICTIM_EMAIL="$BOTNET_VICTIM_EMAIL" -e BOTNET_VICTIM_PASSWORD="$BOTNET_VICTIM_PASSWORD" \
   -e REPORT_DIR=/reports
 
 # M2 residual, report only: the same 2MB body with no Content-Length.
@@ -237,7 +257,7 @@ teardown
 trap - EXIT
 
 # Nothing secret may appear in the app's own logs.
-LEAKED_LINES="$(grep -cE "Bearer |$LAB_ADMIN_PASSWORD|\"refreshToken\"" "$REPORT/backend.log" || true)"
+LEAKED_LINES="$(grep -cE "Bearer |$LAB_ADMIN_PASSWORD|$BOTNET_VICTIM_PASSWORD|\"refreshToken\"" "$REPORT/backend.log" || true)"
 if [ "$LEAKED_LINES" = "0" ]; then record "log hygiene" PASS "no token/password in backend.log"
 else record "log hygiene" FAIL "$LEAKED_LINES suspicious line(s) in backend.log"; fi
 

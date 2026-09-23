@@ -445,7 +445,8 @@ that run found. Nothing in this section was run against production.
 | N2 | A replayed refresh token raised nothing | High | **Fixed** (#12) |
 | N3 | No record of what an admin did | Medium | **Fixed** (#12) |
 | N4 | No CI: none of the security tests gated a merge | Medium | **Fixed** (#13) |
-| N5 | Account lockout never persisted | High | **Open**, needs a decision (see below) |
+| N5 | Account lockout never persisted | High | **Fixed** (#13), replaced by per-(account, IP) locks |
+| M9 | Lockout as a denial of service against the admin | Medium | **Mitigated** (#13), not eliminated |
 | N6 | Every per-IP rate limit could be bypassed in production with one header | High | **Fixed** (#13), found by the lab |
 | N7 | With the edge secret on, the liveness and readiness probes returned 403 | Low | **Fixed** (#13), found by the lab |
 
@@ -487,19 +488,53 @@ The revocation is committed despite the 401 (`noRollbackFor`), and a test proves
 
 `security-scan.yml` runs the lab weekly. Dependabot covers Maven, npm, Actions and Docker.
 
-### N5. Account lockout never persisted (High, open)
+### N5. Account lockout never persisted (High, fixed); M9 mitigated
 
-`login()` is `@Transactional`, and the `UnauthorizedException` thrown after
-`registerFailedAttempt()` rolls the counter back. After six wrong passwords the account shows
-`failed_login_attempts = 0` and is not locked. Meanwhile the `iunu.auth.account.locked` metric and
-the log line fire as if it had locked. The lab confirms it: after six wrong passwords the lab
-admin's real password still returned **200**, and `ACCOUNT_LOCKED` stayed at **0**.
+**What was wrong.** `login()` is `@Transactional`, and the `UnauthorizedException` thrown after
+`registerFailedAttempt()` rolled the counter back. After six wrong passwords the account showed
+`failed_login_attempts = 0` and was not locked, while the `iunu.auth.account.locked` metric and
+log line fired as if it had locked. The first lab run confirmed it: after six wrong passwords the
+lab admin's real password still returned **200**, and `ACCOUNT_LOCKED` stayed at **0**.
 
-In practice the only brake on password guessing is the per-IP login limit (10/min), plus
-Cloudflare's rule once it exists. The fix is one annotation (`noRollbackFor`, as `refresh()`
-now uses), but a working lockout switches on M9's lockout denial of service, which you chose to
-accept as report-only. **Your call:** fix N5 alone, fix it together with M9 option (a), or leave
-both as they are.
+**What replaced it.** Fixing only the rollback would have switched on M9 (anyone who knows the
+admin's email keeps them locked out). So the lock now has two levels, both kept in memory and never
+written to the database:
+
+- **Per (account, client IP).** Five failures from one address lock that pair for 15 minutes.
+  Other addresses are unaffected, so an attacker at one address locks out only themselves. The
+  address comes from `ClientIpResolver`, which is trustworthy now that N6 is fixed.
+- **Per account, as a botnet safety net.** More than 50 failures from all addresses together in a
+  rolling hour lock the account itself for 15 minutes, and raise `ACCOUNT_LOCKED`, which triggers
+  a high-severity alert.
+- **A completed password reset** clears every lock and counter for the account.
+- **A locked pair or account gets exactly the same response as a wrong password**
+  (`401 Invalid email or password`), and the password is still checked first, so neither the body
+  nor the timing reveals a lock. The old `423 Locked` response and its exception class are gone.
+
+The counters live in `InMemoryLoginAttemptStore`: bounded Caffeine caches, the same pattern as the
+rate limiter, behind a `LoginAttemptStore` interface so they can move to Redis if the app ever runs
+more than one instance. Like the rate limiter, today each instance has its own counts, and a
+restart resets them. The `failed_login_attempts`, `account_locked` and `locked_until` columns are
+no longer written. They are left in the schema, and an `account_locked = true` set by hand is still
+honoured as a manual lock.
+
+**Evidence.**
+- `LoginLockoutTest`, over real HTTP:
+  - the counter survives the thrown exception;
+  - a pair lock blocks the attacker's address but not a second address, with an identical body;
+  - the 51st failure across addresses locks the account and raises `ACCOUNT_LOCKED`;
+  - a reset clears both kinds of lock.
+- `InMemoryLoginAttemptStoreTest`: expiry, the rolling window, and the cache bound.
+- In the lab:
+  - after 6 wrong passwords from one address, the real password from that address is refused
+    and from another address succeeds;
+  - 11 real addresses × 5 wrong passwords lock the targeted account and raise `ACCOUNT_LOCKED`.
+
+**M9 residual risk.** A distributed attack, meaning more than 50 guesses an hour from several
+addresses (each under 5), can still lock the account for 15 minutes at a time. It can no longer do
+this quietly: every account-wide lock raises `ACCOUNT_LOCKED` and the **AccountLocked** alert. The
+admin can end a lock at once with a password reset, and Cloudflare's `/api/auth/` rate-limiting rule
+(`DDOS_RUNBOOK.md` Part 1 step 5) makes the attack more expensive.
 
 ### N6. X-Forwarded-For bypass of every per-IP limit under the prod profile (High, fixed)
 
@@ -568,7 +603,7 @@ These are findings you have accepted. The lab measures them; it does not change 
 |---|---|---|
 | **M2** chunked body | A 2MB JSON body with no `Content-Length` returned **400**, not 413 | The body was read and parsed, then refused by `@Size` validation. The `Content-Length` check cannot see it. Still needs the edge body-size rule |
 | **M8** reset timing | `forgot-password` median **6.6ms** for an existing account vs **2.6ms** for a missing one (10 samples each, mail disabled) | Account existence is still visible from timing. With SMTP on, the gap grows by the SMTP round trip |
-| **M9** lockout | Real password after 6 failures: **200** | No lockout at all today (N5), so M9's lockout denial of service cannot happen yet |
+| **M9** lockout | See N5 above | Now enforced and checked by `attack.js` rather than only measured |
 | Cache busting | 500 distinct `page`/`size` combinations, paced under the limit: **0% hit ratio**, 0 × 429, all served | An attacker who stays under 5/s defeats the property cache completely. Cloudflare's cache rule and a query-string rule are the lever (runbook Part 2 §3) |
 
 ### Detection check
@@ -587,7 +622,7 @@ Counters read from `/actuator/metrics` after `attack.js`:
 | `EDGE_SECRET_REJECTED` | 1 | origin bypass |
 | `TOKEN_INVALID` | 1 | malformed bearer |
 | `PASSWORD_RESET_REQUESTED` | 21 | reset timing |
-| **`ACCOUNT_LOCKED`** | **0** | **gap: N5** |
+| `ACCOUNT_LOCKED` | _(from the next lab run)_ | simulated botnet (11 addresses × 5) |
 
 `PASSWORD_RESET_COMPLETED` and `PASSWORD_CHANGED` are not exercised by the lab. They need a
 mailbox or the user's password. `SecurityLogRedactionTest` covers them on every build, and also
@@ -601,5 +636,5 @@ The alert rules in `monitoring/alert-rules.yml` were checked against the lab's
 - **OWASP dependency-check.** Its first run could not complete in the environment used for this
   addendum, because the NVD and CISA feed downloads were blocked. The weekly CI scan runs it; set
   the `NVD_API_KEY` repository secret so it finishes in minutes rather than hours.
-- **Out of scope:** M7 (tokens in HttpOnly cookies), M9, M10 and M11, and everything in
+- **Out of scope:** M7 (tokens in HttpOnly cookies), M10 and M11, and everything in
   `DDOS_RUNBOOK.md` Part 1.
