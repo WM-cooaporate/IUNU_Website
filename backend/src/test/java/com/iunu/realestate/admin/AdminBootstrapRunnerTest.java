@@ -2,6 +2,8 @@ package com.iunu.realestate.admin;
 
 import com.iunu.realestate.config.AdminBootstrapRunner;
 import com.iunu.realestate.entity.Role;
+import com.iunu.realestate.repository.PasswordResetTokenRepository;
+import com.iunu.realestate.repository.RefreshTokenRepository;
 import com.iunu.realestate.repository.UserRepository;
 import com.iunu.realestate.support.IntegrationTest;
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +24,19 @@ class AdminBootstrapRunnerTest extends IntegrationTest {
 
     @Autowired private UserRepository users;
     @Autowired private PasswordEncoder encoder;
+    @Autowired private RefreshTokenRepository refreshTokens;
+    @Autowired private PasswordResetTokenRepository resetTokens;
+
+    /**
+     * Empties the users table. Token rows reference users, and tests that log
+     * in for real leave some behind in the shared context, so they go first -
+     * otherwise this test's result depends on which tests ran before it.
+     */
+    private void deleteAllUsers() {
+        refreshTokens.deleteAllInBatch();
+        resetTokens.deleteAllInBatch();
+        users.deleteAll();
+    }
 
     private AdminBootstrapRunner runnerWith(String email, String password) {
         AdminBootstrapRunner runner = new AdminBootstrapRunner(users, encoder);
@@ -33,7 +48,7 @@ class AdminBootstrapRunnerTest extends IntegrationTest {
     @Test
     @DisplayName("does nothing when the env vars are absent")
     void noopWithoutEnvVars() {
-        users.deleteAll();
+        deleteAllUsers();
         runnerWith("", "").run(null);
         assertThat(users.existsByRole(Role.ADMIN)).isFalse();
     }
@@ -41,7 +56,7 @@ class AdminBootstrapRunnerTest extends IntegrationTest {
     @Test
     @DisplayName("refuses to create the account when ADMIN_PASSWORD is under 8 characters")
     void refusesShortPassword() {
-        users.deleteAll();
+        deleteAllUsers();
         runnerWith("first@iunu.test", "short1").run(null);
         assertThat(users.existsByRole(Role.ADMIN)).isFalse();
         assertThat(users.findByEmailIgnoreCase("first@iunu.test")).isEmpty();
@@ -50,7 +65,7 @@ class AdminBootstrapRunnerTest extends IntegrationTest {
     @Test
     @DisplayName("creates exactly one ADMIN, with the password hashed, and is idempotent on re-run")
     void createsFirstAdminOnceOnly() {
-        users.deleteAll();
+        deleteAllUsers();
         AdminBootstrapRunner runner = runnerWith("First.Admin@IUNU.test", "Password1");
 
         runner.run(null);
@@ -67,7 +82,7 @@ class AdminBootstrapRunnerTest extends IntegrationTest {
     @Test
     @DisplayName("will not add a second admin once one exists, even under a different email")
     void doesNotAddSecondAdmin() {
-        users.deleteAll();
+        deleteAllUsers();
         createUser("existing@iunu.test", "Password1", Role.ADMIN);
 
         runnerWith("another@iunu.test", "Password1").run(null);

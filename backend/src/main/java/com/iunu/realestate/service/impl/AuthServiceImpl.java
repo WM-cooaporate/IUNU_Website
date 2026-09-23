@@ -10,7 +10,6 @@ import com.iunu.realestate.entity.RefreshToken;
 import com.iunu.realestate.entity.RevocationReason;
 import com.iunu.realestate.entity.Role;
 import com.iunu.realestate.entity.User;
-import com.iunu.realestate.exception.AccountLockedException;
 import com.iunu.realestate.exception.BadRequestException;
 import com.iunu.realestate.exception.UnauthorizedException;
 import com.iunu.realestate.metrics.AbuseMetrics;
@@ -20,6 +19,7 @@ import com.iunu.realestate.repository.UserRepository;
 import com.iunu.realestate.security.JwtService;
 import com.iunu.realestate.security.events.SecurityEventType;
 import com.iunu.realestate.security.events.SecurityEvents;
+import com.iunu.realestate.security.lockout.LoginAttemptStore;
 import com.iunu.realestate.service.AdminSignInAlerter;
 import com.iunu.realestate.service.AuditLogService;
 import com.iunu.realestate.service.AuthService;
@@ -59,12 +59,7 @@ public class AuthServiceImpl implements AuthService {
     private final SecurityEvents securityEvents;
     private final AuditLogService auditLogService;
     private final AdminSignInAlerter adminSignInAlerter;
-
-    @Value("${app.security.max-failed-attempts:5}")
-    private int maxFailedAttempts;
-
-    @Value("${app.security.lock-duration-minutes:15}")
-    private long lockDurationMinutes;
+    private final LoginAttemptStore loginAttempts;
 
     @Value("${app.security.reset-token-expiry-minutes:30}")
     private long resetTokenExpiryMinutes;
@@ -92,6 +87,9 @@ public class AuthServiceImpl implements AuthService {
      * One message for every refresh failure, whichever branch produced it, so
      * a caller replaying tokens learns nothing about which check they tripped.
      */
+    /** The one answer to every failed login: wrong password, unknown account, or any kind of lock. */
+    private static final String INVALID_CREDENTIALS = "Invalid email or password";
+
     private static final String INVALID_REFRESH_TOKEN = "Invalid or expired refresh token";
 
     private static final String GENERIC_FORGOT_PASSWORD_MESSAGE =
@@ -120,44 +118,69 @@ public class AuthServiceImpl implements AuthService {
         return new MessageResponse("Account created successfully.");
     }
 
+    /**
+     * Signs a user in, with brute-force protection that cannot be turned
+     * against the account's owner from one address (N5, M9 - see
+     * {@link LoginAttemptStore}).
+     *
+     * <p>Failures are counted in memory, never in the database. The old
+     * counter was a column written inside this transaction and rolled back by
+     * the UnauthorizedException reporting the failure, so accounts never
+     * locked at all.
+     *
+     * <p>A locked pair or account gets exactly the same response as a wrong
+     * password, and the password is still checked first, so neither the body
+     * nor the timing says a lock exists.
+     */
     @Override
     @Transactional
     public AuthResponse login(LoginRequest request) {
         String normalizedEmail = request.email().trim().toLowerCase();
+        String clientIp = securityEvents.currentClientIp();
 
         User user = userRepository.findByEmailIgnoreCase(normalizedEmail).orElse(null);
-        unlockIfLockExpired(user);
+        String accountKey = user == null ? null : String.valueOf(user.getId());
+        boolean locked = accountKey != null && loginAttempts.isLocked(accountKey, clientIp);
 
+        boolean authenticated;
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(normalizedEmail, request.password()));
-        } catch (LockedException e) {
+            authenticated = true;
+        } catch (LockedException | DisabledException e) {
+            // An account flagged by hand in the database (account_locked or
+            // enabled columns). Same answer as everything else.
             securityEvents.record(SecurityEventType.LOGIN_FAILED, user == null ? null : user.getId(),
-                    normalizedEmail, Map.of("reason", "account_locked"));
-            throw new AccountLockedException(
-                    "This account is temporarily locked due to multiple failed login attempts. Please try again later.");
-        } catch (DisabledException e) {
-            throw new UnauthorizedException("Invalid email or password");
+                    normalizedEmail, Map.of("reason", "account_disabled"));
+            throw new UnauthorizedException(INVALID_CREDENTIALS);
         } catch (BadCredentialsException e) {
+            authenticated = false;
+        }
+
+        if (locked) {
+            // Refused whether or not the password was right. Not counted again,
+            // so a locked-out attacker cannot extend the lock.
+            securityEvents.record(SecurityEventType.LOGIN_FAILED, user.getId(), normalizedEmail, clientIp,
+                    Map.of("reason", "locked", "passwordCorrect", String.valueOf(authenticated)));
+            throw new UnauthorizedException(INVALID_CREDENTIALS);
+        }
+
+        if (!authenticated) {
             // Counted whether or not the account exists, so the metric reflects
             // guessing attempts rather than only attempts against real users.
             metrics.loginFailed();
             securityEvents.record(SecurityEventType.LOGIN_FAILED, user == null ? null : user.getId(),
-                    normalizedEmail, Map.of("reason", "bad_credentials", "knownAccount", String.valueOf(user != null)));
+                    normalizedEmail, clientIp,
+                    Map.of("reason", "bad_credentials", "knownAccount", String.valueOf(user != null)));
             if (user != null) {
-                registerFailedAttempt(user);
+                registerFailedAttempt(user, clientIp);
             }
-            throw new UnauthorizedException("Invalid email or password");
+            throw new UnauthorizedException(INVALID_CREDENTIALS);
         }
 
         // Authentication succeeded; `user` is guaranteed non-null here since
         // DaoAuthenticationProvider would otherwise have thrown BadCredentialsException.
-        if (user.getFailedLoginAttempts() > 0 || user.isAccountLocked()) {
-            user.setFailedLoginAttempts(0);
-            user.setAccountLocked(false);
-            user.setLockedUntil(null);
-            userRepository.save(user);
-        }
+        loginAttempts.recordSuccess(accountKey, clientIp);
 
         log.info("User logged in: {}", LogSanitizer.maskEmail(normalizedEmail));
         if (user.getRole() == Role.ADMIN) {
@@ -292,10 +315,10 @@ public class AuthServiceImpl implements AuthService {
 
         User user = resetToken.getUser();
         user.setPassword(passwordEncoder.encode(request.newPassword()));
-        user.setFailedLoginAttempts(0);
-        user.setAccountLocked(false);
-        user.setLockedUntil(null);
         userRepository.save(user);
+        // Whoever reset the password proved they own the mailbox; every lock
+        // on the account, from any address, is lifted.
+        loginAttempts.clearAccount(String.valueOf(user.getId()));
 
         resetToken.setUsed(true);
         passwordResetTokenRepository.save(resetToken);
@@ -340,19 +363,21 @@ public class AuthServiceImpl implements AuthService {
         return UserResponse.from(user);
     }
 
-    private void registerFailedAttempt(User user) {
-        int attempts = user.getFailedLoginAttempts() + 1;
-        user.setFailedLoginAttempts(attempts);
-
-        if (attempts >= maxFailedAttempts) {
-            user.setAccountLocked(true);
-            user.setLockedUntil(Instant.now().plus(lockDurationMinutes, ChronoUnit.MINUTES));
-            metrics.accountLocked();
-            securityEvents.record(SecurityEventType.ACCOUNT_LOCKED, user.getId(), user.getEmail(),
-                    Map.of("attempts", String.valueOf(attempts)));
+    private void registerFailedAttempt(User user, String clientIp) {
+        LoginAttemptStore.FailureOutcome outcome = loginAttempts.recordFailure(String.valueOf(user.getId()), clientIp);
+        if (outcome.pairLockedNow()) {
+            // One source locked itself out of one account. Logged, not alerted:
+            // it inconveniences nobody but the sender.
+            log.info("Login locked for {} from one address after {} failures",
+                    LogSanitizer.maskEmail(user.getEmail()), outcome.pairFailures());
         }
-
-        userRepository.save(user);
+        if (outcome.accountLockedNow()) {
+            // The distributed case: the real owner is locked out too, so a
+            // person has to hear about it.
+            metrics.accountLocked();
+            securityEvents.record(SecurityEventType.ACCOUNT_LOCKED, user.getId(), user.getEmail(), clientIp,
+                    Map.of("scope", "account", "failuresLastHour", String.valueOf(outcome.accountFailuresLastHour())));
+        }
     }
 
     /**
@@ -375,16 +400,6 @@ public class AuthServiceImpl implements AuthService {
 
         auditLogService.recordFor(user.getId(), user.getEmail(), AuditAction.LOGIN_SUCCEEDED,
                 "USER", user.getId(), "admin signed in");
-    }
-
-    private void unlockIfLockExpired(User user) {
-        if (user != null && user.isAccountLocked() && user.getLockedUntil() != null
-                && user.getLockedUntil().isBefore(Instant.now())) {
-            user.setAccountLocked(false);
-            user.setFailedLoginAttempts(0);
-            user.setLockedUntil(null);
-            userRepository.save(user);
-        }
     }
 
     private AuthResponse issueTokenPair(User user) {

@@ -1,0 +1,60 @@
+# The attack lab, weekly and on demand: gitleaks, OWASP dependency-check,
+# npm audit, ZAP (baseline + API, anonymous and as admin) and k6 (smoke,
+# abuse, attack) against a throwaway local stack on the runner.
+#
+# Never touches production: security/run-lab.sh only targets 127.0.0.1 and
+# the lab's own compose services.
+name: Security scan
+
+on:
+  schedule:
+    - cron: "0 1 * * 0" # Sundays 01:00 UTC
+  workflow_dispatch:
+  # Add the "security-scan" label to a pull request to run the lab on it -
+  # for a change to auth, filters or config that should not wait for Sunday.
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  lab:
+    name: Attack lab
+    if: github.event_name != 'pull_request' || github.event.label.name == 'security-scan'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      # The NVD feed dependency-check downloads is large; keep it between
+      # weekly runs so only the delta is fetched.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: nvd-${{ github.run_id }}
+          restore-keys: nvd-
+      - name: Run the lab
+        env:
+          # Optional repository secret. Without it the first NVD download
+          # is heavily rate limited and can take hours.
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: bash security/run-lab.sh
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: security/reports/
+          retention-days: 30

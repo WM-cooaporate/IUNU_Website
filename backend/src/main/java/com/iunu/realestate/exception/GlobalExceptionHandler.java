@@ -92,12 +92,6 @@ public class GlobalExceptionHandler {
                 .body(ApiError.of(HttpStatus.UNAUTHORIZED.value(), "Unauthorized", ex.getMessage(), request.getRequestURI()));
     }
 
-    @ExceptionHandler(AccountLockedException.class)
-    public ResponseEntity<ApiError> handleAccountLocked(AccountLockedException ex, HttpServletRequest request) {
-        return ResponseEntity.status(HttpStatus.LOCKED)
-                .body(ApiError.of(HttpStatus.LOCKED.value(), "Locked", ex.getMessage(), request.getRequestURI()));
-    }
-
     @ExceptionHandler({ResourceNotFoundException.class, NoSuchElementException.class})
     public ResponseEntity<ApiError> handleNotFound(RuntimeException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)

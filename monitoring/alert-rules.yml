@@ -1,0 +1,132 @@
+# Alert rules for the IUNU backend, in Prometheus rule-file format.
+# Import into Grafana Cloud alerting (Alerting -> Alert rules -> Import), or
+# load into any Prometheus-compatible ruler. Setup: docs/MONITORING.md.
+#
+# Metric names are the Prometheus forms of the app's Micrometer meters, as
+# Grafana Cloud derives them from the OTLP push (OTLP_METRICS_URL) and as
+# /actuator/prometheus exposes them - the two agree because the OTLP export
+# uses base-time-unit: seconds. Checked against a real scrape from the attack
+# lab (security/run-lab.sh saves it as reports/<run>/prometheus.txt).
+#
+# Every "first action" points at docs/DDOS_RUNBOOK.md or docs/MONITORING.md
+# rather than repeating them.
+groups:
+  - name: iunu-security
+    rules:
+      - alert: RefreshTokenReuse
+        expr: increase(iunu_security_events_total{type="REFRESH_REUSE_DETECTED"}[5m]) > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: A stolen refresh token was replayed
+          description: >-
+            A rotated refresh token was presented again after the grace window.
+            Every session of that user is already revoked. Find the user id and
+            client IP in the SECURITY log (event=REFRESH_REUSE_DETECTED) and
+            follow docs/MONITORING.md "RefreshTokenReuse".
+
+      - alert: AdminLoginNewIp
+        expr: increase(iunu_security_events_total{type="ADMIN_LOGIN_NEW_IP"}[5m]) > 0
+        labels:
+          severity: high
+        annotations:
+          summary: An admin signed in from an address not seen in 90 days
+          description: Confirm with the admin that it was them. If not, change the password (signs out every session) and check the dashboard's Activity tab.
+
+      - alert: AccountLocked
+        expr: increase(iunu_security_events_total{type="ACCOUNT_LOCKED"}[15m]) > 0
+        labels:
+          severity: high
+        annotations:
+          summary: An account was locked after a distributed password-guessing attack
+          description: >-
+            More than 50 failed logins in an hour against one account, from several
+            addresses - the owner is locked out too for 15 minutes (the M9 residual).
+            A password reset lifts it at once. Tighten the Cloudflare /api/auth/ rule
+            (DDOS_RUNBOOK.md Part 1 step 5). Single-address guessing never raises this;
+            it only locks that address.
+
+      - alert: CredentialStuffing
+        expr: increase(iunu_security_events_total{type="LOGIN_FAILED"}[10m]) > 30
+        labels:
+          severity: high
+        annotations:
+          summary: More than 30 failed logins in 10 minutes
+          description: Check that the Cloudflare /api/auth/ rate-limiting rule exists and tighten it (DDOS_RUNBOOK.md Part 1 step 5, Part 2 step 2).
+
+      - alert: OriginFound
+        expr: increase(iunu_security_events_total{type="EDGE_SECRET_REJECTED"}[5m]) > 50
+        labels:
+          severity: high
+        annotations:
+          summary: The origin is being hit directly, around the edge
+          description: Requests are arriving without the edge secret. DDOS_RUNBOOK.md Part 2 step 4.
+
+      - alert: RateLimitFlood
+        expr: sum(rate(iunu_ratelimit_rejected_total[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: The rate limiter is refusing more than 5 requests a second
+          description: The defences are working; watch capacity. DDOS_RUNBOOK.md Part 2 step 3.
+
+      - alert: Probing
+        expr: >-
+          sum(increase(iunu_security_events_total{type=~"ACCESS_DENIED|TOKEN_INVALID"}[10m])) > 100
+        labels:
+          severity: warning
+        annotations:
+          summary: Someone is scanning the admin API
+          description: More than 100 denied or invalid-token requests in 10 minutes. Top client IPs are in the SECURITY log (sampled once per IP per minute). DDOS_RUNBOOK.md Part 2 step 2.
+
+      - alert: TranslationBudget
+        expr: increase(iunu_translation_budget_exceeded_total[15m]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: The daily translation budget was hit
+          description: Check who is looping previews (dashboard Activity tab; SECURITY log RATE_LIMITED bucket=translation). DDOS_RUNBOOK.md Part 1 step 9.
+
+  - name: iunu-health
+    rules:
+      - alert: ServerErrors
+        expr: >-
+          sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
+            / sum(rate(http_server_requests_seconds_count[5m])) > 0.02
+        for: 5m
+        labels:
+          severity: high
+        annotations:
+          summary: More than 2% of requests are failing with a 5xx
+          description: Something is broken or overloaded. Search the logs for level:ERROR, then by requestId.
+
+      - alert: SlowPublicList
+        expr: >-
+          histogram_quantile(0.95,
+            sum by (le) (rate(http_server_requests_seconds_bucket{uri="/api/properties", method="GET"}[5m]))) > 1.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: p95 of GET /api/properties is above 1.5s
+          description: Load or database trouble. DDOS_RUNBOOK.md Part 2 step 3 (pool and cache metrics).
+
+      - alert: DbPoolStarved
+        expr: max(hikaricp_connections_pending) > 0
+        for: 5m
+        labels:
+          severity: high
+        annotations:
+          summary: Requests are queuing for a database connection
+          description: Do NOT raise DB_POOL_MAX past the database plan's limit; cut traffic at the edge. DDOS_RUNBOOK.md Part 2 step 3.
+
+      - alert: HeapHigh
+        expr: >-
+          sum(jvm_memory_used_bytes{area="heap"}) / sum(jvm_memory_max_bytes{area="heap"} > 0) > 0.85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: JVM heap above 85% for 10 minutes
+          description: A leak or a flood. If it does not fall after a GC, restart the instance and look at what traffic preceded it.

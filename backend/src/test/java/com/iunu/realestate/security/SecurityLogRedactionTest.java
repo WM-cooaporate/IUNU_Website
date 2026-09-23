@@ -39,10 +39,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  * Drives every event this test profile can reach through real requests, with
  * real secrets in them, and checks the SECURITY log for every one of those
  * secrets. The events that need another profile (RATE_LIMITED,
- * EDGE_SECRET_REJECTED), or that no request can currently trigger
- * (ACCOUNT_LOCKED - see N5 in the audit addendum - and REFRESH_RACE_LOST,
- * which needs a lost race), are recorded directly with the same arguments
- * their production call sites pass.
+ * EDGE_SECRET_REJECTED), or that take dozens of requests or a lost race to
+ * trigger (ACCOUNT_LOCKED needs 51 failures, see LoginLockoutTest;
+ * REFRESH_RACE_LOST), are recorded directly with the same arguments their
+ * production call sites pass.
  */
 @DisplayName("SECURITY log redaction")
 class SecurityLogRedactionTest extends IntegrationTest {
@@ -144,7 +144,8 @@ class SecurityLogRedactionTest extends IntegrationTest {
             mockMvc.perform(from(get("/api/admin/users")).header(HttpHeaders.AUTHORIZATION, "Bearer " + forged));
 
             // The rest, with the arguments their call sites use.
-            securityEvents.record(SecurityEventType.ACCOUNT_LOCKED, admin.getId(), email, ip, Map.of("attempts", "5"));
+            securityEvents.record(SecurityEventType.ACCOUNT_LOCKED, admin.getId(), email, ip,
+                    Map.of("scope", "account", "failuresLastHour", "51"));
             securityEvents.record(SecurityEventType.REFRESH_RACE_LOST, admin.getId(), email, ip, Map.of("tokenId", "1"));
             securityEvents.record(SecurityEventType.RATE_LIMITED, null, null, ip,
                     Map.of("bucket", "login", "method", "POST", "path", "/api/auth/login"));

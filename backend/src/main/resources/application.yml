@@ -124,8 +124,17 @@ app:
     issuer: ${JWT_ISSUER:iunu-real-estate-api}
 
   security:
+    # Failed logins from ONE client address before that (account, address)
+    # pair is locked. Other addresses are unaffected. See LoginAttemptStore.
     max-failed-attempts: ${MAX_FAILED_LOGIN_ATTEMPTS:5}
     lock-duration-minutes: ${ACCOUNT_LOCK_DURATION_MINUTES:15}
+    # Botnet safety net: MORE than this many failures against one account,
+    # from all addresses together, in a rolling hour locks the account itself
+    # and raises ACCOUNT_LOCKED.
+    account-lock-threshold-per-hour: ${ACCOUNT_LOCK_THRESHOLD_PER_HOUR:50}
+    login-attempts:
+      # Ceiling on each in-memory lockout store (pairs, account windows).
+      max-tracked: ${LOGIN_ATTEMPTS_MAX_TRACKED:100000}
     reset-token-expiry-minutes: ${RESET_TOKEN_EXPIRY_MINUTES:30}
     refresh-token-expiry-days: ${REFRESH_TOKEN_EXPIRY_DAYS:7}
     # A rotated refresh token presented again within this many seconds is a

@@ -91,6 +91,15 @@ class EdgeSecretFilterTest {
         @DisplayName("the health probe stays reachable without the header")
         void healthProbeIsExempt() throws Exception {
             mockMvc.perform(get("/actuator/health")).andExpect(status().isOk());
+            mockMvc.perform(get("/actuator/health/liveness")).andExpect(status().isOk());
+            mockMvc.perform(get("/actuator/health/readiness")).andExpect(status().isOk());
+        }
+
+        @Test
+        @DisplayName("the exemption is exact: other actuator paths still need the header")
+        void exemptionIsExact() throws Exception {
+            mockMvc.perform(get("/actuator/health/db")).andExpect(status().isForbidden());
+            mockMvc.perform(get("/actuator/metrics")).andExpect(status().isForbidden());
         }
     }
 }

@@ -45,6 +45,7 @@ docker run --rm -i -v "$PWD:/scripts" grafana/k6 run /scripts/smoke.js -e BASE_U
 | `spike.js` | 0 → 300 VUs in 10s | Does it survive a burst, and recover after? |
 | `soak.js` | 50 VUs for 60m | Does anything leak over an hour? |
 | `abuse.js` | 1 VU, sequential | Do the DoS defences still work? |
+| `attack.js` | 1 VU, sequential, ~8 min | What a real attacker tries: token replay and races, credential stuffing, path and verb tricks, hostile uploads, cache busting, origin bypass. **Local lab only**: run through `security/run-lab.sh`, which supplies the lab admin and refuses any non-local target |
 
 ```bash
 # Always smoke first. A stress run against a wrong BASE_URL is a graph of 404s.
@@ -141,7 +142,7 @@ different measurements - say which is which.
 
 | Date | Commit | Environment | Test | Peak VUs | p95 (list) | Error rate | First bottleneck observed |
 |---|---|---|---|---|---|---|---|
-| | | | | | | | |
+| 2026-09-23 | 01caeb6 | **local lab** (`security/run-lab.sh`, prod profile, tmpfs PostgreSQL) | smoke, abuse, attack | 1 | not measured (single-VU functional runs) | smoke 0%; abuse and attack: all checks pass | none under 1 VU. N6 (X-Forwarded-For bypass) found and fixed in the runs before this one |
 | | | | | | | | |
 
 ## A note on what this can and cannot show

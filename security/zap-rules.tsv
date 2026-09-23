@@ -1,0 +1,26 @@
+# ZAP rule overrides for the attack lab (zap-baseline.py / zap-api-scan.py -c).
+#
+# Format: <rule id> TAB <IGNORE|INFO|WARN|FAIL> TAB <why>
+#
+# Every IGNORE carries the reason it is safe to ignore, and what covers the
+# risk instead. A rule is never ignored because it is noisy: noise is a reason
+# to fix the finding or to downgrade it to INFO with a reason, not to hide it.
+
+# CSP: Wildcard Directive. img-src allows https: because admins can paste
+# externally hosted image URLs into a project. Documented in
+# docs/SECURITY_AUDIT.md (CSP table). Kept visible as WARN, not ignored.
+10055	WARN	(CSP: img-src https: and style-src unsafe-inline are deliberate - see SECURITY_AUDIT.md CSP table; framer-motion needs inline styles)
+
+# Private IP Disclosure. Fires on /api/admin/audit-log, whose clientIp column
+# is the point of the endpoint (ADMIN only; the lab network is 10.x). Kept as
+# WARN so a private address leaking from any other endpoint is still reported.
+2	WARN	(Private IP in the admin-only audit log is by design; anywhere else it is a finding)
+
+# HTTP Only Site. The lab proxy is plain HTTP on purpose; in production TLS ends
+# at Render/Cloudflare and HSTS is sent (ForwardedProtoFilter, ForwardedHeadersBypassTest).
+10106	WARN	(Lab is HTTP by design; production TLS is at the edge)
+
+# Unexpected Content-Type. Fires on /swagger-ui/index.html, which is HTML by
+# design and exists only because the lab sets SWAGGER_ENABLED=true for the API
+# scan. The API itself answers JSON everywhere, including the root.
+100001	WARN	(Swagger UI is HTML and lab-only; any other endpoint returning HTML is a finding)

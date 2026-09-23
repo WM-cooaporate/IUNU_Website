@@ -244,7 +244,9 @@
                     <plugin>
                         <groupId>org.owasp</groupId>
                         <artifactId>dependency-check-maven</artifactId>
-                        <version>10.0.4</version>
+                        <!-- Keep current: NVD changes its API, and old releases
+                             fail to update the feed at all (10.0.4 did). -->
+                        <version>13.0.0</version>
                         <configuration>
                             <!-- Only genuinely serious findings fail the build;
                                  everything else is still listed in the report. -->
