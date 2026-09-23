@@ -3,6 +3,8 @@ package com.iunu.realestate.controller;
 import com.iunu.realestate.dto.request.TranslationPreviewRequest;
 import com.iunu.realestate.dto.response.TranslationBackfillResponse;
 import com.iunu.realestate.dto.response.TranslationPreviewResponse;
+import com.iunu.realestate.entity.AuditAction;
+import com.iunu.realestate.service.AuditLogService;
 import com.iunu.realestate.translation.PropertyTranslationBackfillService;
 import com.iunu.realestate.translation.TranslationService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -37,6 +39,7 @@ public class AdminTranslationController {
 
     private final TranslationService translationService;
     private final PropertyTranslationBackfillService backfillService;
+    private final AuditLogService auditLogService;
 
     /** Fills the Arabic fields of the open form without saving anything. */
     @PostMapping("/preview")
@@ -59,7 +62,13 @@ public class AdminTranslationController {
     /** Fills the Arabic of existing projects, touching only the fields that are still null. */
     @PostMapping("/properties/backfill")
     public ResponseEntity<TranslationBackfillResponse> backfillProperties() {
-        return ResponseEntity.ok(backfillService.backfill());
+        TranslationBackfillResponse result = backfillService.backfill();
+        // After the run, not inside it: the backfill is deliberately one short
+        // transaction per property, so there is no single transaction to join.
+        auditLogService.record(AuditAction.TRANSLATION_BACKFILL_RUN, "PROPERTY", null,
+                "scanned " + result.scanned() + ", updated " + result.updated() + ", failed " + result.failed()
+                        + (result.enabled() ? "" : "; translation disabled"));
+        return ResponseEntity.ok(result);
     }
 
     private static String valueAt(List<String> values, int index) {

@@ -198,6 +198,47 @@
     overflow: hidden;
 }
 
+/* Projects / Activity switch. Only shown for a real admin session. */
+.admin-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+}
+
+.admin-tab {
+    padding: 10px 18px;
+    border: 1px solid #e6e2d8;
+    background: #ffffff;
+    color: #6f6857;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+}
+
+.admin-tab-active {
+    border-color: #9a8a64;
+    color: #1f1d18;
+}
+
+.activity-summary {
+    display: block;
+    margin-top: 4px;
+    color: #8a8372;
+    font-size: 12px;
+}
+
+.activity-pager {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 28px;
+    border-top: 1px solid #e9e5dc;
+    font-size: 12px;
+    color: #6f6857;
+}
+
 .admin-section-header {
     padding: 27px 28px;
     display: flex;

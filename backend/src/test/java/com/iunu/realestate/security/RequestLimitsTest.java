@@ -98,7 +98,8 @@ class RequestLimitsTest extends IntegrationTest {
         var request = new org.springframework.mock.web.MockHttpServletRequest(
                 "POST", "/api/properties/images");
 
-        var response = new com.iunu.realestate.exception.GlobalExceptionHandler()
+        var response = new com.iunu.realestate.exception.GlobalExceptionHandler(
+                        org.mockito.Mockito.mock(com.iunu.realestate.security.events.SecurityEvents.class))
                 .handleUploadTooLarge(new MaxUploadSizeExceededException(5 * 1024 * 1024), request);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);

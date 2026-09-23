@@ -2,9 +2,11 @@ package com.iunu.realestate.service.impl;
 
 import com.iunu.realestate.dto.request.ProjectRequest;
 import com.iunu.realestate.dto.response.ProjectResponse;
+import com.iunu.realestate.entity.AuditAction;
 import com.iunu.realestate.entity.Project;
 import com.iunu.realestate.exception.ResourceNotFoundException;
 import com.iunu.realestate.repository.ProjectRepository;
+import com.iunu.realestate.service.AuditLogService;
 import com.iunu.realestate.service.ImageStorage;
 import com.iunu.realestate.service.ProjectService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectRepository projectRepository;
     private final ImageStorage imageStorage;
+    private final AuditLogService auditLogService;
+
+    private static final String AUDIT_TARGET = "PROJECT";
 
     @Override
     @Transactional(readOnly = true)
@@ -63,7 +68,10 @@ public class ProjectServiceImpl implements ProjectService {
                 .published(Boolean.TRUE.equals(request.published()))
                 .build();
 
-        return ProjectResponse.from(projectRepository.save(project));
+        Project saved = projectRepository.save(project);
+        auditLogService.record(AuditAction.PROJECT_CREATED, AUDIT_TARGET, saved.getId(),
+                "created; published " + saved.isPublished());
+        return ProjectResponse.from(saved);
     }
 
     @Override
@@ -71,6 +79,7 @@ public class ProjectServiceImpl implements ProjectService {
     public ProjectResponse update(Long id, ProjectRequest request) {
         Project project = findOrThrow(id);
         String previousCover = project.getCoverImageUrl();
+        boolean wasPublished = project.isPublished();
 
         project.setTitle(request.title().trim());
         project.setDescription(request.description());
@@ -85,6 +94,10 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         Project saved = projectRepository.save(project);
+        auditLogService.record(AuditAction.PROJECT_UPDATED, AUDIT_TARGET, id,
+                wasPublished == saved.isPublished()
+                        ? "updated"
+                        : "updated; published " + wasPublished + "\u2192" + saved.isPublished());
         deleteCoverIfOrphaned(previousCover, saved.getCoverImageUrl(), id);
         return ProjectResponse.from(saved);
     }
@@ -95,6 +108,7 @@ public class ProjectServiceImpl implements ProjectService {
         Project project = findOrThrow(id);
         String cover = project.getCoverImageUrl();
         projectRepository.delete(project);
+        auditLogService.record(AuditAction.PROJECT_DELETED, AUDIT_TARGET, id, "deleted");
         deleteCoverIfOrphaned(cover, null, id);
     }
 
@@ -106,6 +120,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         project.setCoverImageUrl(imageStorage.store(file, ImageStorage.PROJECTS_FOLDER));
         Project saved = projectRepository.save(project);
+        auditLogService.record(AuditAction.IMAGE_UPLOADED, AUDIT_TARGET, id, "cover image replaced");
 
         deleteCoverIfOrphaned(previousCover, saved.getCoverImageUrl(), id);
         return ProjectResponse.from(saved);

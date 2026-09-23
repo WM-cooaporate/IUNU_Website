@@ -68,6 +68,15 @@ const adminServices = {
     return response.data;
   },
 
+  /**
+   * The admin audit trail, newest first. params: { page, size, action } -
+   * action is one of the backend's AuditAction names, or omitted for all.
+   */
+  getAuditLog: async (params = {}) => {
+    const response = await apiClient.get("/admin/audit-log", { params });
+    return response.data;
+  },
+
   /** Fills the Arabic of existing projects that have none yet. */
   backfillTranslations: async () => {
     const response = await apiClient.post("/admin/translations/properties/backfill");

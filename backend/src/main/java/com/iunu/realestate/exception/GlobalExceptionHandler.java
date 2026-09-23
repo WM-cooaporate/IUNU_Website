@@ -1,8 +1,11 @@
 package com.iunu.realestate.exception;
 
 import com.iunu.realestate.dto.response.ApiError;
+import com.iunu.realestate.security.events.SecurityEventType;
+import com.iunu.realestate.security.events.SecurityEvents;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mapping.PropertyReferenceException;
@@ -34,7 +37,10 @@ import java.util.NoSuchElementException;
  */
 @Slf4j
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private final SecurityEvents securityEvents;
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
@@ -167,6 +173,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ApiError> handleUploadTooLarge(MaxUploadSizeExceededException ex, HttpServletRequest request) {
+        securityEvents.record(SecurityEventType.UPLOAD_REJECTED, null, null, request, Map.of("reason", "too_large"));
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
                 .body(ApiError.of(HttpStatus.PAYLOAD_TOO_LARGE.value(), "Payload Too Large",
                         "The uploaded file is too large", request.getRequestURI()));

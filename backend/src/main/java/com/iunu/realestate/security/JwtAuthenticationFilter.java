@@ -1,5 +1,8 @@
 package com.iunu.realestate.security;
 
+import com.iunu.realestate.security.events.SecurityEventType;
+import com.iunu.realestate.security.events.SecurityEvents;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -29,6 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final SecurityEvents securityEvents;
 
     @Override
     protected void doFilterInternal(
@@ -47,24 +52,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(BEARER_PREFIX.length());
 
         try {
-            if (jwtService.isValid(token)) {
-                String email = jwtService.extractEmail(token);
+            // Parsed here rather than through isValid(), which swallows the
+            // reason: an expired token is a client that needs to refresh, a bad
+            // signature is someone forging one, and the two read very
+            // differently in an incident.
+            String email = jwtService.parseAndValidate(token).getSubject();
 
-                if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-                    var authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                var authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                }
+                SecurityContextHolder.getContext().setAuthentication(authToken);
             }
-        } catch (JwtException | IllegalArgumentException | org.springframework.security.core.AuthenticationException e) {
-            log.debug("Rejected invalid JWT: {}", e.getMessage());
-            SecurityContextHolder.clearContext();
+        } catch (ExpiredJwtException e) {
+            rejectToken(request, "expired");
+        } catch (JwtException | IllegalArgumentException e) {
+            rejectToken(request, "invalid");
+        } catch (org.springframework.security.core.AuthenticationException e) {
+            // Well-signed, but for an account that no longer loads - deleted,
+            // or disabled since the token was issued.
+            rejectToken(request, "unknown_account");
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /** The token itself is never logged, not even a prefix of it. */
+    private void rejectToken(HttpServletRequest request, String reason) {
+        SecurityContextHolder.clearContext();
+        securityEvents.record(SecurityEventType.TOKEN_INVALID, null, null, request,
+                Map.of("reason", reason, "path", request.getRequestURI()));
     }
 }

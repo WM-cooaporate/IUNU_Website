@@ -2,11 +2,13 @@ package com.iunu.realestate.service.impl;
 
 import com.iunu.realestate.dto.request.PropertyRequest;
 import com.iunu.realestate.dto.response.PropertyResponse;
+import com.iunu.realestate.entity.AuditAction;
 import com.iunu.realestate.entity.Property;
 import com.iunu.realestate.entity.PropertyStatus;
 import com.iunu.realestate.entity.PropertyType;
 import com.iunu.realestate.exception.ResourceNotFoundException;
 import com.iunu.realestate.repository.PropertyRepository;
+import com.iunu.realestate.service.AuditLogService;
 import com.iunu.realestate.service.PropertyService;
 import com.iunu.realestate.service.ImageStorage;
 import com.iunu.realestate.config.CacheConfig;
@@ -20,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -40,6 +44,10 @@ public class PropertyServiceImpl implements PropertyService {
 
     private final PropertyRepository propertyRepository;
     private final ImageStorage imageStorage;
+    private final AuditLogService auditLogService;
+
+    /** Audit target type for every row this service writes. */
+    private static final String AUDIT_TARGET = "PROPERTY";
 
     @Override
     @Transactional(readOnly = true)
@@ -104,6 +112,8 @@ public class PropertyServiceImpl implements PropertyService {
                 .build();
 
         propertyRepository.save(property);
+        auditLogService.record(AuditAction.PROPERTY_CREATED, AUDIT_TARGET, property.getId(),
+                "created; published " + property.isPublished());
         return PropertyResponse.from(property);
     }
 
@@ -118,6 +128,7 @@ public class PropertyServiceImpl implements PropertyService {
         Property property = propertyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found"));
         Set<String> previousImages = imageUrlsOf(property);
+        Snapshot before = Snapshot.of(property);
 
         property.setTitle(request.title().trim());
         property.setDescription(request.description());
@@ -140,6 +151,7 @@ public class PropertyServiceImpl implements PropertyService {
         }
 
         propertyRepository.save(property);
+        auditUpdate(before, Snapshot.of(property), id);
         previousImages.removeAll(imageUrlsOf(property));
         deleteUnusedImages(previousImages, id);
         return PropertyResponse.from(property);
@@ -154,7 +166,70 @@ public class PropertyServiceImpl implements PropertyService {
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found"));
         Set<String> images = imageUrlsOf(property);
         propertyRepository.deleteById(id);
+        auditLogService.record(AuditAction.PROPERTY_DELETED, AUDIT_TARGET, id, "deleted");
         deleteUnusedImages(images, id);
+    }
+
+    /**
+     * One audit row per update. A change to {@code published} is the row's
+     * action, since "who took this listing down" is the question most often
+     * asked; any other field changes ride along in the summary.
+     *
+     * <p>The summary names fields, never their values - a description can be
+     * a page of text and has no business being duplicated into the audit
+     * table. The two exceptions are {@code published} and {@code status},
+     * whose values are a closed set and are the useful part.
+     */
+    private void auditUpdate(Snapshot before, Snapshot after, Long id) {
+        List<String> changes = new ArrayList<>();
+        before.changedFields(after).forEach(field -> changes.add(field + " changed"));
+        if (before.status() != after.status()) {
+            changes.add("status " + before.status() + "\u2192" + after.status());
+        }
+        AuditAction action = AuditAction.PROPERTY_UPDATED;
+        if (before.published() != after.published()) {
+            changes.add("published " + before.published() + "\u2192" + after.published());
+            action = after.published() ? AuditAction.PROPERTY_PUBLISHED : AuditAction.PROPERTY_UNPUBLISHED;
+        }
+        auditLogService.record(action, AUDIT_TARGET, id, changes.isEmpty() ? "saved; no changes" : String.join("; ", changes));
+    }
+
+    /** The fields an audit summary talks about, captured before and after an update. */
+    private record Snapshot(String title, String description, PropertyType type, PropertyStatus status,
+                            String location, String titleAr, String descriptionAr, String locationAr,
+                            Object area, Object price, String coverImageUrl, List<String> imageUrls,
+                            boolean published) {
+
+        static Snapshot of(Property p) {
+            return new Snapshot(p.getTitle(), p.getDescription(), p.getType(), p.getStatus(), p.getLocation(),
+                    p.getTitleAr(), p.getDescriptionAr(), p.getLocationAr(), p.getArea(), p.getPrice(),
+                    p.getCoverImageUrl(), p.getImageUrls() == null ? List.of() : List.copyOf(p.getImageUrls()),
+                    p.isPublished());
+        }
+
+        List<String> changedFields(Snapshot other) {
+            List<String> fields = new ArrayList<>();
+            if (!Objects.equals(title, other.title)) fields.add("title");
+            if (!Objects.equals(description, other.description)) fields.add("description");
+            if (type != other.type) fields.add("type");
+            if (!Objects.equals(location, other.location)) fields.add("location");
+            if (!Objects.equals(titleAr, other.titleAr)
+                    || !Objects.equals(descriptionAr, other.descriptionAr)
+                    || !Objects.equals(locationAr, other.locationAr)) fields.add("arabic text");
+            if (!sameNumber(area, other.area)) fields.add("area");
+            if (!sameNumber(price, other.price)) fields.add("price");
+            if (!Objects.equals(coverImageUrl, other.coverImageUrl)) fields.add("cover image");
+            if (!Objects.equals(imageUrls, other.imageUrls)) fields.add("images");
+            return fields;
+        }
+
+        /** BigDecimal equals() counts scale, so 1.0 and 1.00 would read as a change. */
+        private static boolean sameNumber(Object a, Object b) {
+            if (a instanceof java.math.BigDecimal x && b instanceof java.math.BigDecimal y) {
+                return x.compareTo(y) == 0;
+            }
+            return Objects.equals(a, b);
+        }
     }
 
     /**

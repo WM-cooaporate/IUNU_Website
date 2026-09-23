@@ -29,4 +29,28 @@ public final class LogSanitizer {
     public static String forLog(String value) {
         return value == null ? null : value.replaceAll("[\\r\\n\\t]", " ");
     }
+
+    /**
+     * {@code michael@iunu-eg.com} becomes {@code m***@iunu-eg.com}.
+     *
+     * <p>Enough to tell two accounts apart when reading an incident's logs
+     * ("was it the admin, or the throwaway address from the stuffing list?"),
+     * not enough to hand a log reader a list of real customer addresses. The
+     * domain stays because it is the useful half: a burst against one domain
+     * is a pattern, a burst against one mailbox is a target.
+     *
+     * <p>Anything without a usable {@code @} is masked completely rather than
+     * guessed at. Null passes through unchanged.
+     */
+    public static String maskEmail(String email) {
+        if (email == null) {
+            return null;
+        }
+        String clean = forLog(email.trim());
+        int at = clean.lastIndexOf('@');
+        if (at <= 0 || at == clean.length() - 1) {
+            return "***";
+        }
+        return clean.charAt(0) + "***" + clean.substring(at);
+    }
 }

@@ -2,6 +2,8 @@ package com.iunu.realestate.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iunu.realestate.dto.response.ApiError;
+import com.iunu.realestate.security.events.SecurityEventType;
+import com.iunu.realestate.security.events.SecurityEvents;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Map;
 
 /** Handles requests to protected endpoints with no/invalid credentials -> 401. */
 @Slf4j
@@ -21,11 +24,17 @@ import java.io.IOException;
 public class AuthEntryPointJwt implements AuthenticationEntryPoint {
 
     private final ObjectMapper objectMapper;
+    private final SecurityEvents securityEvents;
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
             throws IOException {
         log.debug("Unauthorized request to {}: {}", request.getRequestURI(), authException.getMessage());
+        // Recorded as ACCESS_DENIED (status 401) so an anonymous scan of the
+        // admin API shows up in the same Probing alert as a signed-in one.
+        // Without it a scanner that never sends a token raises nothing at all.
+        securityEvents.record(SecurityEventType.ACCESS_DENIED, null, null, request,
+                Map.of("status", "401", "method", request.getMethod(), "path", request.getRequestURI()));
 
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);

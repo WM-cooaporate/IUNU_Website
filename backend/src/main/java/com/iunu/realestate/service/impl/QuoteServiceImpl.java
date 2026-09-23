@@ -13,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.iunu.realestate.entity.AuditAction;
+import com.iunu.realestate.service.AuditLogService;
 
 @Slf4j
 @Service
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class QuoteServiceImpl implements QuoteService {
 
     private final QuoteRequestRepository quoteRequestRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional
@@ -53,6 +56,7 @@ public class QuoteServiceImpl implements QuoteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Quote request not found"));
         quoteRequest.setHandled(true);
         quoteRequestRepository.save(quoteRequest);
+        auditLogService.record(AuditAction.LEAD_MARKED_HANDLED, "QUOTE", id, "marked handled");
         return QuoteRequestResponse.from(quoteRequest);
     }
 }

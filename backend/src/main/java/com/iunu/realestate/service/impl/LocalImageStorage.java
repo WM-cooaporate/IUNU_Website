@@ -1,5 +1,7 @@
 package com.iunu.realestate.service.impl;
 
+import com.iunu.realestate.security.events.SecurityEventType;
+import com.iunu.realestate.security.events.SecurityEvents;
 import com.iunu.realestate.service.ImageStorage;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +19,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Content-addressed image storage on the local filesystem - the default
@@ -39,11 +42,14 @@ public class LocalImageStorage implements ImageStorage {
 
     private final Path uploadRoot;
     private final String publicBaseUrl;
+    private final SecurityEvents securityEvents;
 
     public LocalImageStorage(
             @Value("${app.file-storage.location:uploads}") String uploadLocation,
-            @Value("${app.file-storage.public-base-url:http://localhost:8080}") String publicBaseUrl
+            @Value("${app.file-storage.public-base-url:http://localhost:8080}") String publicBaseUrl,
+            SecurityEvents securityEvents
     ) {
+        this.securityEvents = securityEvents;
         this.uploadRoot = Paths.get(uploadLocation).toAbsolutePath().normalize();
         this.publicBaseUrl = publicBaseUrl.replaceAll("/$", "");
     }
@@ -81,10 +87,10 @@ public class LocalImageStorage implements ImageStorage {
     @Override
     public String store(MultipartFile file, String folder) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Image file cannot be empty");
+            throw rejected("empty", "Image file cannot be empty");
         }
         if (!ALLOWED_TYPES.contains(file.getContentType())) {
-            throw new IllegalArgumentException("Only JPG, PNG and WEBP images are supported");
+            throw rejected("content_type_not_allowed", "Only JPG, PNG and WEBP images are supported");
         }
 
         Path folderRoot = folderRoot(folder);
@@ -95,7 +101,7 @@ public class LocalImageStorage implements ImageStorage {
             // Content-Type is whatever the client typed into the request, so
             // the bytes get the final say on whether this is really an image.
             if (!matchesDeclaredType(content, file.getContentType())) {
-                throw new IllegalArgumentException("Only JPG, PNG and WEBP images are supported");
+                throw rejected("magic_bytes_mismatch", "Only JPG, PNG and WEBP images are supported");
             }
 
             String extension = extensionFor(file.getContentType(), file.getOriginalFilename());
@@ -103,13 +109,25 @@ public class LocalImageStorage implements ImageStorage {
             Path target = folderRoot.resolve(filename).normalize();
 
             if (!target.startsWith(folderRoot)) {
-                throw new IllegalArgumentException("Invalid image filename");
+                throw rejected("path_escape", "Invalid image filename");
             }
             if (!Files.exists(target)) Files.write(target, content);
             return publicUrlPrefix(folder) + filename;
         } catch (IOException exception) {
             throw new IllegalStateException("Unable to store image", exception);
         }
+    }
+
+    /**
+     * Counts and logs the rejection, then returns the exception to throw. Only
+     * an admin token can reach an upload, so a run of these is either a
+     * confused admin or a stolen token probing for a stored-XSS foothold -
+     * worth seeing either way. The filename is never logged: it is the one
+     * part of an upload the attacker fully controls.
+     */
+    private IllegalArgumentException rejected(String reason, String message) {
+        securityEvents.record(SecurityEventType.UPLOAD_REJECTED, null, null, Map.of("reason", reason));
+        return new IllegalArgumentException(message);
     }
 
     @Override
