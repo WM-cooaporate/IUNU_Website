@@ -43,13 +43,20 @@ function Development() {
   const [activeIndex, setActiveIndex] = useState(0);
 
   /* =====================================================
+     LANGUAGE DIRECTION
+  ===================================================== */
+
+  const isRTL = language === "ar";
+
+  /* =====================================================
      GALLERY NAVIGATION
   ===================================================== */
 
   const goPrevious = () => {
     setActiveIndex((currentIndex) => {
+      const step = isRTL ? 1 : -1;
       return (
-        (currentIndex - 1 + galleryImages.length) %
+        (currentIndex + step + galleryImages.length) %
         galleryImages.length
       );
     });
@@ -57,7 +64,11 @@ function Development() {
 
   const goNext = () => {
     setActiveIndex((currentIndex) => {
-      return (currentIndex + 1) % galleryImages.length;
+      const step = isRTL ? -1 : 1;
+      return (
+        (currentIndex + step + galleryImages.length) %
+        galleryImages.length
+      );
     });
   };
 
@@ -108,11 +119,13 @@ function Development() {
       }
 
       if (event.key === "ArrowRight") {
-        goNext();
+        if (isRTL) goPrevious();
+        else goNext();
       }
 
       if (event.key === "ArrowLeft") {
-        goPrevious();
+        if (isRTL) goNext();
+        else goPrevious();
       }
     };
 
@@ -124,7 +137,8 @@ function Development() {
       document.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
     };
-  }, [selectedImage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedImage, isRTL]);
 
   /* =====================================================
      AUTO GALLERY SLIDER
@@ -136,16 +150,15 @@ function Development() {
     }, 5500);
 
     return () => window.clearInterval(interval);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRTL]);
 
   return (
     <section
       ref={sectionRef}
       className="development-section"
     >
-      {/* =================================================
-          INTRO
-      ================================================= */}
+      {/* INTRO */}
 
       <div className="development-intro development-reveal">
         <div className="development-intro-label">
@@ -169,9 +182,7 @@ function Development() {
         </div>
       </div>
 
-      {/* =================================================
-          FEATURED DEVELOPMENT
-      ================================================= */}
+      {/* FEATURED DEVELOPMENT */}
 
       <div className="development-feature development-reveal">
         <div className="development-feature-image">
@@ -224,9 +235,7 @@ function Development() {
         </div>
       </div>
 
-      {/* =================================================
-          GALLERY
-      ================================================= */}
+      {/* GALLERY */}
 
       <div className="development-gallery-wrapper">
         <div className="development-gallery-header development-reveal">
@@ -251,9 +260,7 @@ function Development() {
 
         <div className="development-gallery-shell development-reveal">
           <div className="development-gallery-stage">
-            {/* =================================================
-                MAIN GALLERY IMAGE
-            ================================================= */}
+            {/* MAIN GALLERY IMAGE */}
 
             <button
               type="button"
@@ -274,11 +281,6 @@ function Development() {
 
               <span className="development-gallery-feature-shade" />
 
-              <span className="development-gallery-feature-label">
-                IUNU /{" "}
-                {String(activeIndex + 1).padStart(2, "0")}
-              </span>
-
               <span className="development-gallery-feature-caption">
                 {t("View image")}
 
@@ -288,9 +290,7 @@ function Development() {
               </span>
             </button>
 
-            {/* =================================================
-                GALLERY CONTROLS
-            ================================================= */}
+            {/* GALLERY CONTROLS — arrows only */}
 
             <div
               className={`development-gallery-controls ${
@@ -300,23 +300,7 @@ function Development() {
               }`}
               aria-label={t("Gallery controls")}
             >
-              <span className="development-gallery-progress">
-                <strong>
-                  {String(activeIndex + 1).padStart(2, "0")}
-                </strong>
-
-                <span>
-                  {" / "}
-                  {String(galleryImages.length).padStart(
-                    2,
-                    "0"
-                  )}
-                </span>
-              </span>
-
-              {/* =================================================
-                  PREVIOUS
-              ================================================= */}
+              {/* PREVIOUS */}
 
               <button
                 type="button"
@@ -324,14 +308,10 @@ function Development() {
                 onClick={goPrevious}
                 aria-label={t("Previous image")}
               >
-                <span aria-hidden="true">
-                  ←
-                </span>
+                <span aria-hidden="true">←</span>
               </button>
 
-              {/* =================================================
-                  NEXT
-              ================================================= */}
+              {/* NEXT */}
 
               <button
                 type="button"
@@ -339,16 +319,12 @@ function Development() {
                 onClick={goNext}
                 aria-label={t("Next image")}
               >
-                <span aria-hidden="true">
-                  →
-                </span>
+                <span aria-hidden="true">→</span>
               </button>
             </div>
           </div>
 
-          {/* =================================================
-              THUMBNAILS
-          ================================================= */}
+          {/* THUMBNAILS */}
 
           <div
             className="development-gallery-thumbs"
@@ -385,10 +361,6 @@ function Development() {
                     alt=""
                     loading="lazy"
                   />
-
-                  <span>
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
                 </button>
               );
             })}
@@ -396,9 +368,7 @@ function Development() {
         </div>
       </div>
 
-      {/* =================================================
-          LIGHTBOX
-      ================================================= */}
+      {/* LIGHTBOX */}
 
       {selectedImage && (
         <div
@@ -414,9 +384,7 @@ function Development() {
             onClick={() => setSelectedImage(null)}
             aria-label={t("Close image preview")}
           >
-            <span aria-hidden="true">
-              &times;
-            </span>
+            <span aria-hidden="true">&times;</span>
           </button>
 
           <img
