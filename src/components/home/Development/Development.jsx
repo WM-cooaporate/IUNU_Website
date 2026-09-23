@@ -281,10 +281,6 @@ function Development() {
               />
 
               <span className="development-gallery-feature-shade" />
-
-              <span className="development-gallery-feature-caption">
-                {t("View image")}
-              </span>
             </button>
 
             {/* GALLERY CONTROLS — arrows only */}
