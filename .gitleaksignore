@@ -1,0 +1,7 @@
+# gitleaks findings reviewed and confirmed as not secrets. One fingerprint per
+# line (commit:file:rule:line). Never add one without the reason above it.
+
+# backend/README.md example login response: "eyJhbGciOiJIUzI1NiJ9..." is the
+# base64 of {"alg":"HS256"} - a JWT header with no payload or signature,
+# truncated by hand for the docs. Not a credential.
+f329dc1f747def920cf058f2df276b63e4ad2e03:backend/README.md:generic-api-key:146

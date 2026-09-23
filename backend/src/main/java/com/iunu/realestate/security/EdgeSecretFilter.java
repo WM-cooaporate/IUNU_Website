@@ -42,7 +42,7 @@ import java.util.Map;
  * order in docs/DDOS_RUNBOOK.md is: add the rule at the edge, verify traffic
  * still works, then set the variable.
  *
- * <p>{@code /actuator/health} is exempt. The hosting platform probes it from
+ * <p>{@code /actuator/health} and its liveness/readiness probes are exempt. The hosting platform probes it from
  * inside its own network, never through Cloudflare, and gating it would make
  * every deploy fail its health check and roll back.
  */
@@ -59,6 +59,15 @@ public class EdgeSecretFilter extends OncePerRequestFilter {
      * it does not stand out in a header dump as the thing to brute force.
      */
     public static final String HEADER = "X-Edge-Auth";
+
+    /**
+     * The same three probe paths SecurityConfig leaves anonymous. A platform
+     * or uptime monitor pointed at liveness or readiness must keep working
+     * with the secret on; exempting only the aggregate path used to turn
+     * those into 403s. Exact matches only - nothing else under /actuator.
+     */
+    private static final java.util.Set<String> HEALTH_PROBES = java.util.Set.of(
+            "/actuator/health", "/actuator/health/liveness", "/actuator/health/readiness");
 
     private final ObjectMapper objectMapper;
     private final SecurityEvents securityEvents;
@@ -87,7 +96,7 @@ public class EdgeSecretFilter extends OncePerRequestFilter {
      */
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
-        return expectedSecret == null || "/actuator/health".equals(request.getRequestURI());
+        return expectedSecret == null || HEALTH_PROBES.contains(request.getRequestURI());
     }
 
     @Override

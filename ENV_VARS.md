@@ -100,10 +100,24 @@ stays reachable) carries whatever the caller typed, end to end.
 | `GOOGLE_TRANSLATE_BASE_URL` | Override for the translation API host. Only useful for pointing the backend at a stub in tests. | `https://translation.googleapis.com` |
 | `GOOGLE_TRANSLATE_DAILY_CHAR_LIMIT` | Characters per UTC day across every caller. Google bills per character, so this bounds what a loop over the preview or backfill endpoint can cost. Past it the translator behaves as disabled: saves still succeed with English fallback. `0` means unlimited. **A backstop, not the cap** — it lives in one JVM's memory and resets on every deploy. The real cap is a quota in the Google Cloud Console (runbook step 9). | `200000` |
 | `SWAGGER_ENABLED` | Publishes `/v3/api-docs` and `/swagger-ui`. **Off by default**, deliberately: a deploy that forgets `SPRING_PROFILES_ACTIVE=prod` must not hand an anonymous visitor the shape of every admin endpoint. Turn on temporarily for a ZAP scan. | `false` |
-| `EDGE_SHARED_SECRET` | When set, requests without a matching `X-Edge-Auth` header are refused with 403, closing the origin to anything that did not come through Cloudflare. **Blank (disabled) by default.** Set it only *after* the Cloudflare Transform Rule that injects the header exists — the other order takes the API offline. `/actuator/health` stays exempt so deploys keep passing. See `docs/DDOS_RUNBOOK.md` step 8. | *(empty)* |
+| `EDGE_SHARED_SECRET` | When set, requests without a matching `X-Edge-Auth` header are refused with 403, closing the origin to anything that did not come through Cloudflare. **Blank (disabled) by default.** Set it only *after* the Cloudflare Transform Rule that injects the header exists — the other order takes the API offline. `/actuator/health` and its `liveness`/`readiness` probes stay exempt so deploys and uptime checks keep passing. See `docs/DDOS_RUNBOOK.md` step 8. | *(empty)* |
 | `RATE_LIMIT_ENABLED` | Master switch for the in-app rate limiter. Leave on. Exists so the test suite can disable it. | `true` |
 | `RATE_LIMIT_MAX_TRACKED_CLIENTS` | Ceiling on the limiter's bucket store. Bounded so a flood from many addresses cannot grow it until the JVM runs out of memory. | `100000` |
 | `MAX_JSON_REQUEST_BYTES` | Largest non-multipart body accepted, checked against `Content-Length` before the stream is read. | `1048576` (1MB) |
+
+### Monitoring and security tuning — all optional, all off or defaulted when unset
+
+With every variable in this table unset the app starts normally and makes no outbound call. Setup
+steps: `docs/MONITORING.md`.
+
+| Variable | What it does | When unset |
+|---|---|---|
+| `OTLP_METRICS_URL` | Pushes metrics every 60s to an OTLP endpoint (Grafana Cloud, for example: `https://otlp-gateway-<region>.grafana.net/otlp/v1/metrics`). | No push, and no background exporter. |
+| `OTLP_METRICS_HEADERS` | Headers for that push, `name=value,name2=value2` with URL-encoded values, which is how Grafana shows its `Authorization=Basic%20...` line. Only read when `OTLP_METRICS_URL` is set. | No headers. |
+| `SENTRY_DSN` | Sends backend errors to Sentry. Credentials, cookies, bodies, query strings and user identity are stripped first (`SentryConfig`). | Sentry is disabled. |
+| `SENTRY_ENVIRONMENT` | Environment name on Sentry events. | The active Spring profile. |
+| `APP_SECURITY_REFRESH_REUSE_GRACE_SECONDS` | How long after a refresh-token rotation the old token may be presented again (two tabs refreshing at once) before a replay counts as theft and revokes every session of that user. | `10` |
+| `APP_AUDIT_RETENTION_DAYS` | Admin audit-trail rows older than this are purged nightly. | `365` |
 
 ### Arabic auto-translation
 
@@ -191,3 +205,11 @@ uses `Authorization: Bearer` tokens, not cookies, so the frontend never sets
   document is where the protection actually lives.
 - `docs/SECURITY_AUDIT.md` — what was found, what was fixed, and the decisions
   left to you.
+
+---
+
+## GitHub repository secrets
+
+| Secret | Used by | When unset |
+|---|---|---|
+| `NVD_API_KEY` | The weekly `Security scan` workflow (`security/run-lab.sh` → OWASP dependency-check). Free from <https://nvd.nist.gov/developers/request-an-api-key>. | The scan still runs, but the first NVD download is heavily rate-limited and can take hours. The workflow caches the feed between runs. |

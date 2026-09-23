@@ -85,6 +85,14 @@ services:
       - key: GOOGLE_TRANSLATE_API_KEY
         sync: false
 
+      # Optional monitoring. Each is off while blank; see docs/MONITORING.md.
+      - key: OTLP_METRICS_URL
+        sync: false
+      - key: OTLP_METRICS_HEADERS
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+
       # One-time admin bootstrap. Set both on the first deploy, then clear them:
       # they only take effect while the database contains no ADMIN at all.
       # ADMIN_PASSWORD must be at least 8 characters.
