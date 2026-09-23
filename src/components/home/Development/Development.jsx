@@ -281,9 +281,6 @@ function Development() {
 
               <span className="development-gallery-feature-shade" />
 
-              <span className="development-gallery-feature-caption">
-                {t("View image")}
-
                 <span aria-hidden="true">
                   &#8599;
                 </span>
