@@ -69,14 +69,26 @@ services:
       # Used in password-reset links. Same origin as above.
       - key: FRONTEND_URL
         sync: false
-      # Origin the API serves uploaded images from, e.g.
-      # https://iunu-api.onrender.com (no /api suffix).
+      # Public origin of this API, e.g. https://iunu-api.onrender.com (no /api
+      # suffix). Legacy /uploads/ image URLs start with it; the "Move images to
+      # cloud" migration uses it to find them.
       - key: PUBLIC_API_URL
         sync: false
 
-      # NOTE: the free plan has no persistent disk, so uploaded cover images are
-      # lost on redeploy and whenever a spun-down instance restarts. To keep
-      # them, attach a Render Disk (paid) and set this to its mount path.
+      # Image storage + CDN. The prod profile uses Cloudinary by default and
+      # REFUSES TO START without CLOUDINARY_URL - set it before deploying.
+      # cloudinary://<api_key>:<api_secret>@<cloud_name>, from the Cloudinary
+      # dashboard -> API Keys -> "API environment variable". Backend only:
+      # never on the static site, never a VITE_ variable. See ENV_VARS.md.
+      - key: CLOUDINARY_URL
+        sync: false
+      # Everything this environment uploads, deletes or sweeps lives here.
+      - key: CLOUDINARY_FOLDER
+        value: iunu/prod
+
+      # Only used by the local storage provider (FILE_STORAGE_PROVIDER=local)
+      # and by the one-off migration of legacy /uploads/ files. The free plan
+      # has no persistent disk, so anything written here is lost on redeploy.
       - key: UPLOAD_DIR
         value: /tmp/uploads
 

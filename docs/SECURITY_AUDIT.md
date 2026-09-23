@@ -220,6 +220,8 @@ On Render's free plan there is no persistent disk. Every deploy, and every wake 
 
 **Fix:** attach a Render Disk (paid) and point `UPLOAD_DIR` at its mount path, or move to object storage. The `ImageStorage` interface exists precisely so that an S3 or Cloudinary implementation is a new class and a property change, with no call-site edits.
 
+**Update 2026-09-23 — resolved.** Production now stores images on Cloudinary (`CloudinaryImageStorage`, selected by `FILE_STORAGE_PROVIDER`, default `cloudinary` under `prod`; startup fails without `CLOUDINARY_URL`). Uploads still pass through the backend (admin-only, magic-byte validation, rate limiting unchanged) and no Cloudinary credential reaches the browser. Deletes only touch this environment's folder on this cloud, parsed with `java.net.URI` and compared exactly. Legacy `/uploads/` images are moved with the dashboard's "Move images to cloud". Uploads now also **strip EXIF, including GPS**: the dashboard re-encodes every photo through a canvas before upload, so a phone's location is no longer published with its pictures.
+
 ### M11. `PageImpl` is serialised directly
 
 **Severity:** Medium (stability, not security)
