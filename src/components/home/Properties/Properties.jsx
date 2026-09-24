@@ -3,6 +3,12 @@ import { Link } from "react-router-dom";
 import propertyServices from "../../../services/propertyServices";
 import demoProperties from "../../../data/demoProperties";
 import { useLanguage } from "../../../i18n/LanguageContext";
+import {
+  imageSrcSet,
+  imageUrl,
+  PLACEHOLDER_IMAGE,
+  showPlaceholderOnError,
+} from "../../../utils/imageUrl";
 import "./Properties.css";
 
 function Properties() {
@@ -112,12 +118,16 @@ function Properties() {
             >
               <img
                 src={
-                  property.coverImageUrl ||
-                  "/images/hh.jpg"
+                  imageUrl(property.coverImageUrl, 800) ||
+                  PLACEHOLDER_IMAGE
                 }
+                srcSet={imageSrcSet(property.coverImageUrl) || undefined}
+                sizes="(max-width: 768px) 100vw, 33vw"
                 alt={localize(property, "title")}
                 className="property-image"
                 loading="lazy"
+                decoding="async"
+                onError={showPlaceholderOnError}
               />
 
               <div className="property-image-overlay" />

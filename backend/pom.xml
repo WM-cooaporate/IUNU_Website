@@ -171,6 +171,16 @@
             <artifactId>caffeine</artifactId>
         </dependency>
 
+        <!-- Image storage and CDN in production (CloudinaryImageStorage).
+             Only the backend talks to Cloudinary; CLOUDINARY_URL never reaches
+             the browser. The http5 flavour uses Apache HttpClient 5, which
+             Boot already manages. -->
+        <dependency>
+            <groupId>com.cloudinary</groupId>
+            <artifactId>cloudinary-http5</artifactId>
+            <version>2.4.0</version>
+        </dependency>
+
         <!-- Test (kept minimal; no test suite authored per project scope) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

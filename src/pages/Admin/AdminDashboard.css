@@ -1117,3 +1117,289 @@
         width: 100%;
     }
 }
+
+
+/* =========================
+   PHOTO GALLERY (project form)
+========================= */
+
+.admin-wake-notice {
+    margin-bottom: 18px;
+    padding: 10px 16px;
+    border-left: 3px solid #9a8a64;
+    background: #f7f5ef;
+    color: #6f654b;
+    font-size: 12px;
+}
+
+.gallery-manager {
+    padding: 16px;
+    border: 1px dashed #d8d4ca;
+    background: #fbfaf7;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.gallery-manager.gallery-drag {
+    border-color: #9a8a64;
+    background: #f5f2e9;
+}
+
+.gallery-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    color: #31505c;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+.gallery-notice,
+.gallery-error,
+.gallery-empty {
+    margin: 0;
+    font-size: 12px;
+}
+
+.gallery-notice {
+    color: #6f654b;
+}
+
+.gallery-error {
+    color: #8c3f3f;
+}
+
+.gallery-empty {
+    color: #999e9d;
+}
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.gallery-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+/* A fixed box, so a tile never changes size as its image loads. */
+.gallery-thumb {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: #e7e4dc;
+}
+
+.gallery-thumb img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.gallery-tile-preparing .gallery-thumb img,
+.gallery-tile-uploading .gallery-thumb img {
+    opacity: 0.55;
+}
+
+.gallery-thumb-name {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    color: #7f7d75;
+    font-size: 10px;
+    text-align: center;
+    word-break: break-all;
+}
+
+.gallery-cover-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    padding: 3px 7px;
+    background: #31505c;
+    color: #ffffff;
+    font-size: 9px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+}
+
+.gallery-progress {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: 6px 8px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #31505c;
+    font-size: 10px;
+}
+
+.gallery-progress-bar {
+    height: 4px;
+    margin-top: 4px;
+    background: #e7e4dc;
+}
+
+.gallery-progress-bar div {
+    height: 100%;
+    background: #9a8a64;
+    transition: width 0.2s ease;
+}
+
+.gallery-error-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px;
+    background: rgba(251, 241, 239, 0.95);
+    color: #8c3f3f;
+    font-size: 10px;
+    text-align: center;
+}
+
+.gallery-error-overlay button {
+    padding: 4px 12px;
+    border: 1px solid #a54d4d;
+    background: #ffffff;
+    color: #8c3f3f;
+    font-family: inherit;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.gallery-size {
+    color: #999e9d;
+    font-size: 10px;
+}
+
+.gallery-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+}
+
+/* Big enough to hit with a thumb. */
+.gallery-actions button {
+    min-height: 34px;
+    border: 1px solid #dcd8ce;
+    background: #ffffff;
+    color: #31505c;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.gallery-actions button:hover:not(:disabled) {
+    border-color: #9a8a64;
+    color: #9a8a64;
+}
+
+.gallery-actions button:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.gallery-actions button[aria-pressed="true"] {
+    color: #9a8a64;
+}
+
+.gallery-actions .gallery-remove:hover:not(:disabled) {
+    border-color: #a54d4d;
+    color: #a54d4d;
+}
+
+.gallery-add {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: stretch;
+}
+
+.gallery-file-button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 0 20px;
+    border: 1px solid #31505c;
+    background: #31505c;
+    color: #ffffff;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.gallery-file-button:hover {
+    background: #9a8a64;
+    border-color: #9a8a64;
+}
+
+.gallery-file-button-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Visually hidden but still reachable by keyboard and screen readers. */
+.gallery-file-button input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    overflow: hidden;
+}
+
+.gallery-file-button:focus-within {
+    box-shadow: 0 0 0 2px rgba(154, 138, 100, 0.4);
+}
+
+.gallery-url {
+    display: flex;
+    flex: 1 1 260px;
+    gap: 8px;
+    min-width: 0;
+}
+
+.gallery-url input {
+    flex: 1;
+    min-width: 0;
+}
+
+.gallery-hint {
+    display: block;
+}
+
+@media (max-width: 650px) {
+    .gallery-manager {
+        padding: 12px;
+    }
+
+    .gallery-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .gallery-add {
+        flex-direction: column;
+    }
+
+    .gallery-file-button {
+        justify-content: center;
+    }
+}

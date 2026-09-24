@@ -86,6 +86,18 @@ public class GlobalExceptionHandler {
                 .body(ApiError.of(HttpStatus.BAD_REQUEST.value(), "Bad Request", ex.getMessage(), request.getRequestURI()));
     }
 
+    /**
+     * Cloudinary refused or timed out. The cause was already logged, redacted,
+     * where it happened; the admin gets a message that says "try again" rather
+     * than a 500 that says "we are broken".
+     */
+    @ExceptionHandler(ImageServiceUnavailableException.class)
+    public ResponseEntity<ApiError> handleImageServiceUnavailable(
+            ImageServiceUnavailableException ex, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(ApiError.of(HttpStatus.BAD_GATEWAY.value(), "Bad Gateway", ex.getMessage(), request.getRequestURI()));
+    }
+
     @ExceptionHandler({UnauthorizedException.class, BadCredentialsException.class})
     public ResponseEntity<ApiError> handleUnauthorized(RuntimeException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -154,8 +166,9 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Rejected uploads (empty file, disallowed content type, bad storage
-     * folder) surface as IllegalArgumentException from the ImageStorage provider.
+     * A bad storage folder surfaces as IllegalArgumentException from the
+     * ImageStorage provider (rejected uploads themselves are a
+     * BadRequestException from ImageValidator).
      * These are caller mistakes, so they get a 400 with the specific reason
      * rather than falling through to a generic 500.
      */

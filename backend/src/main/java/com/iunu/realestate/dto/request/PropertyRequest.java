@@ -49,6 +49,7 @@ public record PropertyRequest(
         @Size(max = 500)
         String coverImageUrl,
 
+        @Size(max = 30, message = "A project can have at most 30 images.")
         List<@Size(max = 500) String> imageUrls,
 
         Boolean published
