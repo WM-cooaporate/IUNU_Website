@@ -18,6 +18,17 @@ server:
   # so HSTS is sent - is done by ForwardedProtoFilter, which reads only
   # X-Forwarded-Proto and only from TRUSTED_PROXIES.
   forward-headers-strategy: none
+  # Also set in application.yml; stated here too so the production profile is
+  # safe on its own even if the base file changes. No stack traces, exception
+  # messages or binding details in any error response, and no whitelabel HTML
+  # page - Tomcat's own error page (server info and report hidden) instead.
+  error:
+    include-stacktrace: never
+    include-message: never
+    include-binding-errors: never
+    include-exception: false
+    whitelabel:
+      enabled: false
 
 spring:
   datasource:
@@ -32,6 +43,14 @@ spring:
       # this above the plan's connection limit does not buy throughput - it
       # turns a slow request into a failed one.
       maximum-pool-size: ${DB_POOL_MAX:${DB_POOL_SIZE:5}}
+
+  # Same limits as application.yml, pinned for production: 5MB per file (the
+  # dashboard sends 200-600KB WebP), 25MB per multi-image request. Anything
+  # bigger is a 413 from GlobalExceptionHandler.
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 25MB
 
   jpa:
     open-in-view: false

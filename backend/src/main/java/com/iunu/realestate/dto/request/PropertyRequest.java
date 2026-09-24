@@ -3,6 +3,7 @@ package com.iunu.realestate.dto.request;
 import com.iunu.realestate.entity.PropertyStatus;
 import com.iunu.realestate.entity.PropertyType;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -40,10 +41,14 @@ public record PropertyRequest(
         @Size(max = 400)
         String locationAr,
 
+        // Digits match the DECIMAL(12,2) / DECIMAL(14,2) columns. Without them a
+        // value that does not fit fails in the database instead of here.
         @DecimalMin(value = "0", inclusive = true, message = "Area cannot be negative")
+        @Digits(integer = 10, fraction = 2, message = "Area is too large or has more than 2 decimals")
         BigDecimal area,
 
         @DecimalMin(value = "0", inclusive = true, message = "Price cannot be negative")
+        @Digits(integer = 12, fraction = 2, message = "Price is too large or has more than 2 decimals")
         BigDecimal price,
 
         @Size(max = 500)
