@@ -131,9 +131,14 @@ services:
     # deployment. KEEP ALL THREE IN SYNC.
     #
     # Every CSP directive is derived from something the app actually loads
-    # (Google Fonts, framer-motion's inline styles, the backend origin). See
-    # docs/SECURITY_AUDIT.md, and re-verify in a browser after any change - a
-    # wrong CSP is a white screen with no server-side error to find.
+    # (Google Fonts, Cloudinary and legacy /uploads/ images, the backend
+    # origin). See docs/SECURITY_AUDIT.md, and re-verify in a browser after any
+    # change - a wrong CSP is a white screen with no server-side error to find.
+    #
+    # style-src has no 'unsafe-inline': nothing in the bundle injects <style>
+    # elements (React style={{}} props go through the CSSOM, which CSP allows).
+    # Adding a CSS-in-JS, toast or animation library that does will need it
+    # back - check the browser console for CSP violations before shipping one.
     headers:
       - path: /*
         name: X-Content-Type-Options
@@ -149,13 +154,15 @@ services:
         value: max-age=31536000; includeSubDomains
       - path: /*
         name: Permissions-Policy
-        value: camera=(), microphone=(), geolocation=()
-      # connect-src must name the backend origin. Update it here, in
-      # vercel.json and in public/_headers when the API moves to a custom
-      # domain, or the browser blocks every API call.
+        value: camera=(), microphone=(), geolocation=(), payment=()
+      # connect-src and img-src must name the backend origin (img-src for
+      # legacy /uploads/ images). Update both here, in vercel.json and in
+      # public/_headers when the API moves to a custom domain, or the browser
+      # blocks every API call. img-src also names Cloudinary's delivery host;
+      # the dashboard only accepts pasted image URLs from these origins.
       - path: /*
         name: Content-Security-Policy
-        value: "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self' https://iunu-api.onrender.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+        value: "default-src 'self'; img-src 'self' data: https://res.cloudinary.com https://iunu-api.onrender.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self' https://iunu-api.onrender.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
 
     envVars:
       # The variable the code reads is VITE_API_URL, and the value MUST include

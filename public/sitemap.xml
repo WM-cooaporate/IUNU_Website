@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Public static routes from src/Routes/AppRoutes.jsx. /admin is excluded
+     (see robots.txt); / redirects to /home and /project/:id pages come from
+     the API, so neither is listed.
+     TODO: switch the base URL to the custom domain (https://iunu-eg.com) once
+     it serves this site - and in robots.txt too. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://iunu-web.onrender.com/home</loc></url>
+  <url><loc>https://iunu-web.onrender.com/project</loc></url>
+  <url><loc>https://iunu-web.onrender.com/about</loc></url>
+  <url><loc>https://iunu-web.onrender.com/contact</loc></url>
+  <url><loc>https://iunu-web.onrender.com/careers</loc></url>
+</urlset>

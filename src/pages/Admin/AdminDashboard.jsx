@@ -10,7 +10,7 @@ import {
 } from "../../services/apiClient";
 import { getDemoProperties, saveDemoProperties } from "../../data/demoPropertyStorage";
 import { prepareImage, thumbnailDataUrl } from "../../utils/prepareImage";
-import { imageUrl, showPlaceholderOnError } from "../../utils/imageUrl";
+import { imageUrl, isAllowedImageUrl, showPlaceholderOnError } from "../../utils/imageUrl";
 import "./AdminDashboard.css";
 
 const emptyForm = {
@@ -58,7 +58,7 @@ function GallerySection({ gallery, coverUrl, demoMode, wakeNotice, galleryError,
       {wakeNotice && !demoMode && <p className="gallery-notice" role="status">Waking up the server — the first upload may take a moment.</p>}
       {galleryError && <p className="gallery-error" role="alert">{galleryError}</p>}
       {gallery.length === 0 ? <p className="gallery-empty">No photos yet. Choose files or drop them here. The first photo becomes the cover unless you pick another with the star.</p> : <ul className="gallery-grid">{gallery.map((tile, index) => <li key={tile.id} className={`gallery-tile gallery-tile-${tile.status}`}><div className="gallery-thumb">{tile.url ? <img src={imageUrl(tile.url, 400)} alt={`Photo ${index + 1}`} loading="lazy" decoding="async" onError={showPlaceholderOnError} /> : tile.localPreview ? <img src={tile.localPreview} alt={`Photo ${index + 1}`} /> : <span className="gallery-thumb-name">{tile.name || "Photo"}</span>}{tile.url && tile.url === effectiveCover && <span className="gallery-cover-badge">Cover</span>}{isBusy(tile) && <div className="gallery-progress"><span>{tile.status === "preparing" ? "Preparing..." : `Uploading ${tile.progress}%`}</span><div className="gallery-progress-bar"><div style={{ width: `${tile.status === "uploading" ? tile.progress : 0}%` }} /></div></div>}{tile.status === "error" && <div className="gallery-error-overlay"><span>{tile.error}</span>{tile.file && <button type="button" onClick={() => onRetry(tile.id)}>Retry</button>}</div>}</div>{tile.sizeNote && tile.status !== "error" && <small className="gallery-size">{tile.sizeNote}</small>}<div className="gallery-actions"><button type="button" title="Set as cover" aria-label={`Set photo ${index + 1} as cover`} aria-pressed={tile.url !== "" && tile.url === effectiveCover} disabled={tile.status !== "ready" || tile.url === effectiveCover} onClick={() => onSetCover(tile.url)}>★</button><button type="button" title="Move left" aria-label={`Move photo ${index + 1} left`} disabled={index === 0} onClick={() => onMove(tile.id, -1)}>←</button><button type="button" title="Move right" aria-label={`Move photo ${index + 1} right`} disabled={index === gallery.length - 1} onClick={() => onMove(tile.id, 1)}>→</button><button type="button" title="Remove" aria-label={`Remove photo ${index + 1}`} className="gallery-remove" onClick={() => onRemove(tile.id)}>×</button></div></li>)}</ul>}
-      <div className="gallery-add"><label className={demoMode || full ? "gallery-file-button gallery-file-button-disabled" : "gallery-file-button"}>Add photos<input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={demoMode || full} onChange={(event) => { onAddFiles(event.target.files); event.target.value = ""; }} /></label><div className="gallery-url"><input type="url" value={urlInput} onChange={(event) => onUrlInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); onAddUrl(); } }} placeholder="Add image by URL (https://...)" aria-label="Add image by URL" disabled={full} /><button type="button" className="cancel-button" onClick={onAddUrl} disabled={full || !urlInput.trim()}>Add URL</button></div></div>
+      <div className="gallery-add"><label className={demoMode || full ? "gallery-file-button gallery-file-button-disabled" : "gallery-file-button"}>Add photos<input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={demoMode || full} onChange={(event) => { onAddFiles(event.target.files); event.target.value = ""; }} /></label><div className="gallery-url"><input type="url" value={urlInput} onChange={(event) => onUrlInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); onAddUrl(); } }} placeholder="Add Cloudinary image URL (https://res.cloudinary.com/...)" aria-label="Add image by URL" disabled={full} /><button type="button" className="cancel-button" onClick={onAddUrl} disabled={full || !urlInput.trim()}>Add URL</button></div></div>
       <small className="gallery-hint">Photos are resized automatically before upload. JPG, PNG or WebP. iPhone: Settings → Camera → Formats → Most Compatible.</small>
       {demoMode && <small className="gallery-hint">Image upload requires the backend. Exit demo mode and sign in to upload local files. You can still add images by URL.</small>}
     </section>
@@ -617,8 +617,10 @@ function AdminDashboard() {
   const handleAddUrl = () => {
     const url = urlInput.trim();
     if (!url) return;
-    if (!/^https?:\/\/\S+$/i.test(url)) {
-      setGalleryError("Enter a full image address starting with https://");
+    // The site's CSP only loads images from Cloudinary and the API, so a link
+    // to anywhere else would save fine and then never display.
+    if (!/^https?:\/\/\S+$/i.test(url) || !isAllowedImageUrl(url)) {
+      setGalleryError("Only Cloudinary image links (https://res.cloudinary.com/...) can be added by URL. Use \"Add photos\" to upload anything else.");
       return;
     }
     if (gallery.length >= MAX_IMAGES) {

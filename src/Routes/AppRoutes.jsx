@@ -57,10 +57,17 @@ function AppRoutes() {
       {/* AdminDashboard gates itself: without a stored ADMIN session it
           renders the sign-in card instead of the dashboard, and any 401 from
           the API drops straight back to it. The backend is still the real
-          authority - nothing under /api/admin answers without an ADMIN token. */}
+          authority - nothing under /api/admin answers without an ADMIN token.
+          React 19 hoists the <meta> into <head> while this route is mounted,
+          so search engines that reach /admin despite robots.txt drop it. */}
       <Route
         path="/admin"
-        element={<AdminDashboard />}
+        element={
+          <>
+            <meta name="robots" content="noindex, nofollow" />
+            <AdminDashboard />
+          </>
+        }
       />
 
       {/* Catch-all: an unmatched URL used to render a blank page. */}

@@ -1,0 +1,8 @@
+# TODO: switch every https://iunu-web.onrender.com URL here and in
+# sitemap.xml to the custom domain (https://iunu-eg.com, which index.html
+# already names as canonical) once it serves this site.
+User-agent: *
+Allow: /
+Disallow: /admin
+
+Sitemap: https://iunu-web.onrender.com/sitemap.xml

@@ -1,3 +1,5 @@
+import { API_URL } from "../services/apiClient";
+
 /**
  * Responsive delivery for images stored on Cloudinary.
  *
@@ -40,6 +42,32 @@ export function imageUrl(url, width) {
   if (TRANSFORMATION_SEGMENT.test(rest.split("/")[0])) return url;
 
   return `${parsed.origin}${head}f_auto,q_auto,c_limit,w_${snapWidth(width)}/${rest}${parsed.search}`;
+}
+
+const API_ORIGIN = (() => {
+  try {
+    return new URL(API_URL).origin;
+  } catch {
+    return "";
+  }
+})();
+
+/**
+ * True for an image URL the site's Content-Security-Policy lets the browser
+ * load: Cloudinary, or a legacy /uploads/ file on the API's own origin. The
+ * CSP img-src names only these (plus the site itself), so a URL from anywhere
+ * else would be saved and then render as the placeholder on every page.
+ * Keep in step with img-src in render.yaml, vercel.json and public/_headers.
+ */
+export function isAllowedImageUrl(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol === "https:" && parsed.hostname === HOST && parsed.port === "") return true;
+  return API_ORIGIN !== "" && parsed.origin === API_ORIGIN;
 }
 
 /** "url-400 400w, url-800 800w, ..." for a Cloudinary URL; "" for anything else. */
