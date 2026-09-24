@@ -357,12 +357,21 @@ password must be at least 8 characters with a letter and a digit.
 
 ### Error shape
 
-Every error is the same JSON object, from one `@RestControllerAdvice`:
+Errors raised inside a controller are RFC 7807 problem details
+(`application/problem+json`) from one `@RestControllerAdvice`. They also
+carry the fields of the API's earlier error object (`timestamp`, `error`,
+`message`, `path`, `fieldErrors`), which the dashboard reads and which the
+servlet filters (401, 403, 413 body too large, 429) still write as plain
+`application/json`:
 
 ```json
 {
-  "timestamp": "2026-09-05T20:16:44.512Z",
+  "type": "about:blank",
+  "title": "Bad Request",
   "status": 400,
+  "detail": "Validation failed",
+  "instance": "/api/admin/projects",
+  "timestamp": "2026-09-05T20:16:44.512Z",
   "error": "Bad Request",
   "message": "Validation failed",
   "path": "/api/admin/projects",
@@ -372,12 +381,17 @@ Every error is the same JSON object, from one `@RestControllerAdvice`:
 }
 ```
 
-`fieldErrors` is `[]` for everything except Bean Validation failures.
-Statuses used: `400` validation/malformed/bad upload, `401` missing or
-invalid token, `403` valid token without ROLE_ADMIN, `404` missing or
-unpublished, `409` data conflict, `413` upload too large, `429` rate
-limited, `500` unexpected (generic message; details are logged, never
-returned).
+`fieldErrors` is `[]` for everything except validation failures, and its
+messages come only from constraint annotations. No message from a framework
+or library exception is ever returned.
+Statuses used: `400` validation/malformed body/bad parameter/bad multipart,
+`401` missing or invalid token, `403` valid token without ROLE_ADMIN, `404`
+missing or unpublished, `405` wrong method (with `Allow`), `406`
+unproducible `Accept`, `409` data conflict, `413` upload too large, `415`
+unsupported `Content-Type` (with `Accept`), `429` rate limited, `500`
+unexpected. A 500 returns only `"detail": "Unexpected error"` and a
+`correlationId` - the request's `X-Request-Id`, under which the full stack
+trace is logged.
 
 ### Projects vs. properties
 

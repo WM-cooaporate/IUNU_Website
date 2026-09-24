@@ -6,10 +6,10 @@
 # risk instead. A rule is never ignored because it is noisy: noise is a reason
 # to fix the finding or to downgrade it to INFO with a reason, not to hide it.
 
-# CSP: Wildcard Directive. img-src allows https: because admins can paste
-# externally hosted image URLs into a project. Documented in
-# docs/SECURITY_AUDIT.md (CSP table). Kept visible as WARN, not ignored.
-10055	WARN	(CSP: img-src https: and style-src unsafe-inline are deliberate - see SECURITY_AUDIT.md CSP table; framer-motion needs inline styles)
+# CSP findings. img-src names exact origins and style-src has no
+# unsafe-inline since the September 2026 ZAP fixes, so any 10055 alert is a
+# regression - see docs/SECURITY_AUDIT.md (CSP table).
+10055	WARN	(Expected clean: a CSP wildcard or unsafe-inline here is a regression - see SECURITY_AUDIT.md CSP table)
 
 # Private IP Disclosure. Fires on /api/admin/audit-log, whose clientIp column
 # is the point of the endpoint (ADMIN only; the lab network is 10.x). Kept as

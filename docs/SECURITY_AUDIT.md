@@ -414,9 +414,9 @@ Each directive is derived from something the app actually does:
 | Directive | Why |
 |---|---|
 | `script-src 'self'` | Vite emits a single module bundle; there are no inline scripts. No `unsafe-inline`, no `unsafe-eval` — this is what makes the CSP worth having against M7 |
-| `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com` | `global.css` `@import`s Google Fonts; framer-motion writes inline styles, which needs `unsafe-inline`. (Unavoidable with this animation library, and far less dangerous for styles than for scripts) |
+| `style-src 'self' https://fonts.googleapis.com` | `global.css` `@import`s Google Fonts. No `unsafe-inline`: nothing in the bundle injects `<style>` elements (framer-motion and react-hot-toast are dependencies but never imported), and React `style={{}}` props are applied through the CSSOM, which CSP does not block. A library that injects `<style>` at runtime would need it back |
 | `font-src 'self' https://fonts.gstatic.com` | Where the Google Fonts stylesheet fetches the woff2 files from |
-| `img-src 'self' data: https:` | Property images come from the backend origin, and admins can paste externally hosted URLs. Broad by necessity |
+| `img-src 'self' data: https://res.cloudinary.com https://iunu-api.onrender.com` | Bundled `/images`, `data:` upload previews in the dashboard (`prepareImage.js` avoids `blob:` on purpose), Cloudinary delivery URLs, and legacy `/uploads/` files on the API origin. The dashboard's "add by URL" field accepts only these origins (`isAllowedImageUrl`), so a pasted link cannot be saved and then blocked. **Update the API origin here too if the backend moves** |
 | `connect-src 'self' https://iunu-api.onrender.com` | The only host the app calls. **Update this if the backend moves to a custom domain** — the API will silently stop working otherwise |
 | `frame-ancestors 'none'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'` | Clickjacking, plugin content, base-tag hijacking and form exfiltration |
 

@@ -4,6 +4,7 @@ import com.iunu.realestate.security.AccessDeniedHandlerImpl;
 import com.iunu.realestate.security.AuthEntryPointJwt;
 import com.iunu.realestate.security.JwtAuthenticationFilter;
 import com.iunu.realestate.security.RateLimitingFilter;
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -118,6 +119,14 @@ public class SecurityConfig {
                         .permissionsPolicy(permissions -> permissions
                                 .policy("camera=(), microphone=(), geolocation=()")))
                 .authorizeHttpRequests(auth -> auth
+                        // The container's forward to /error for a failure outside
+                        // any controller - a URL the firewall rejects, a request
+                        // Tomcat refuses. Without this the forward itself is
+                        // refused, and an anonymous caller gets 401 instead of the
+                        // real status. It grants nothing: the original request was
+                        // already authorized or refused on its own dispatch, and
+                        // /error renders only status and path (include-* = never).
+                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         // These two live under /api/auth/** but require a valid token -
                         // listed before the blanket permitAll below so they win.
                         .requestMatchers("/api/auth/me", "/api/auth/change-password").authenticated()

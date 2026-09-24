@@ -104,10 +104,10 @@ class RequestLimitsTest extends IntegrationTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().status()).isEqualTo(413);
-        assertThat(response.getBody().error()).isEqualTo("Payload Too Large");
+        assertThat(response.getBody().getStatus()).isEqualTo(413);
+        assertThat(response.getBody().getTitle()).isEqualTo("Payload Too Large");
         // The message the admin sees must not name a class, a limit source or
         // a path on disk.
-        assertThat(response.getBody().message()).doesNotContain("Exception").doesNotContain("org.spring");
+        assertThat(response.getBody().getDetail()).doesNotContain("Exception").doesNotContain("org.spring");
     }
 }
