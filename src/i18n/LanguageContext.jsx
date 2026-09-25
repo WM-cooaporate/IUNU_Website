@@ -63,10 +63,13 @@ const translations = {
 "Select project type":" أختر مشروعك",
 "Select space type":" أختر مساحتك",
 "Space Type":" المساحة",
-
+"Page not found":"الصفحة غير موجودة",
+"The page you are looking for has moved or no longer exists.":"لقد تم نقل الصفحة التي تبحث عنها أو أنها لم تعد موجودة.",
 "Plot No. 306–307, Galaxy Mall, South 90th Street, Second Floor, Fifth Settlement, New Cairo, Egypt.":"القطعة رقم 306–307، جالكسي مول، شارع التسعين الجنوبي، الطابق الثاني، التجمع الخامس، القاهرة الجديدة، مصر.",
 // eslint-disable-next-line no-dupe-keys
 "Spaces": "مساحات",
+"Back to home":"أرجع الي الصفحة الرئيسية",
+"View our projects":"شاهد مشاريعنا",
 
 "Quiet": "ثقة",
 "Confidence": "هادئة",
