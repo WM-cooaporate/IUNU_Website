@@ -4,38 +4,27 @@ import apiClient from "./apiClient";
  * Public, unauthenticated reads. These only ever hit /api/properties, which
  * the backend filters to published rows - the admin listing that includes
  * drafts lives in adminServices and is never called from a public page.
+ *
+ * `skipAuth` keeps a stored admin token off these requests so the browser does
+ * not preflight them (see the request interceptor in apiClient).
+ *
+ * Pages do not call these directly: they go through the hooks in
+ * src/hooks/useProperties.js, which share one cached request across pages.
  */
 
-const PAGE_SIZE = 50;
-/** Stops a malformed totalPages from turning pagination into an infinite loop. */
-const MAX_PAGES = 100;
-
 const propertyServices = {
-  getProperties: async () => {
-    const response = await apiClient.get("/properties");
+  /** One page of published properties: `{ content, totalPages, ... }`. */
+  getPropertiesPage: async ({ page, size, signal }) => {
+    const response = await apiClient.get("/properties", {
+      params: { page, size },
+      signal,
+      skipAuth: true,
+    });
     return response.data;
   },
 
-  getAllProperties: async () => {
-    const properties = [];
-    let page = 0;
-    let totalPages;
-
-    do {
-      const response = await apiClient.get("/properties", {
-        params: { page, size: PAGE_SIZE },
-      });
-
-      properties.push(...(response.data?.content || []));
-      totalPages = response.data?.totalPages || 1;
-      page += 1;
-    } while (page < totalPages && page < MAX_PAGES);
-
-    return properties;
-  },
-
   getPropertyById: async (id) => {
-    const response = await apiClient.get(`/properties/${id}`);
+    const response = await apiClient.get(`/properties/${id}`, { skipAuth: true });
     return response.data;
   },
 };

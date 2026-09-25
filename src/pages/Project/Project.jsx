@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import Navbar from "../../components/layout/Navbar/Navbar";
 import Footer from "../../components/layout/Footer/Footer";
-import propertyServices from "../../services/propertyServices";
 import leadServices from "../../services/leadServices";
 import { toUserMessage } from "../../services/apiClient";
-import demoProperties from "../../data/demoProperties";
+import { useProperties } from "../../hooks/useProperties";
 
 import { useLanguage } from "../../i18n/LanguageContext";
 import {
@@ -20,9 +19,11 @@ import "./Project.css";
 function Project() {
   const { t, localize } = useLanguage();
 
-  const [properties, setProperties] = useState(demoProperties);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  // Same query (and cache entry) as the home page's properties section, so
+  // arriving here from Home costs no request, and switching language no
+  // longer refetches (the old effect depended on t, which changes with it).
+  const { data, isPending, isError, error, refetch } = useProperties();
+  const properties = data?.content ?? [];
 
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterBusy, setNewsletterBusy] = useState(false);
@@ -54,44 +55,6 @@ function Project() {
       setNewsletterBusy(false);
     }
   };
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadProperties = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const data = await propertyServices.getProperties();
-
-        if (!cancelled) {
-          setProperties(
-            data?.content?.length
-              ? data.content
-              : demoProperties
-          );
-        }
-      } catch (error) {
-        console.error("Properties loading error:", error);
-
-        if (!cancelled) {
-          setError(t("Unable to Load Properties"));
-          setProperties(demoProperties);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadProperties();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [t]);
 
   return (
     <div className="project-page">
@@ -167,8 +130,8 @@ function Project() {
               LOADING
           ========================= */}
 
-          {loading && (
-            <div className="project-loading">
+          {isPending && (
+            <div className="project-loading" role="status">
               <div className="project-spinner" />
 
               <p>
@@ -181,8 +144,8 @@ function Project() {
               ERROR
           ========================= */}
 
-          {!loading && error && (
-            <div className="project-message project-error">
+          {isError && !data && (
+            <div className="project-message project-error" role="alert">
               <span>
                 {t("ERROR")}
               </span>
@@ -192,8 +155,16 @@ function Project() {
               </h3>
 
               <p>
-                {error}
+                {toUserMessage(error, t("Unable to Load Properties"))}
               </p>
+
+              <button
+                type="button"
+                className="project-retry"
+                onClick={() => refetch()}
+              >
+                {t("TRY AGAIN")}
+              </button>
             </div>
           )}
 
@@ -201,8 +172,7 @@ function Project() {
               EMPTY
           ========================= */}
 
-          {!loading &&
-            !error &&
+          {data &&
             properties.length === 0 && (
               <div className="project-message project-empty">
                 <span>
@@ -225,8 +195,7 @@ function Project() {
               PROPERTY CARDS
           ========================= */}
 
-          {!loading &&
-            !error &&
+          {data &&
             properties.length > 0 && (
               <div className="project-properties-grid">
                 {properties.map((property, index) => {
