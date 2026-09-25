@@ -123,9 +123,15 @@ const apiClient = axios.create({
 /**
  * Attach the bearer token to every request that has one. Requests made before
  * login (the login call itself, the public forms) simply go out without it.
+ *
+ * Public reads pass `skipAuth: true`. The API is on another origin, so an
+ * Authorization header turns a plain GET into a CORS-preflighted one: every
+ * browser holding a token (anyone who has signed in to /admin) sent an OPTIONS
+ * and then the GET for the same /properties URL - the "duplicate" request in
+ * DevTools with no script initiator. Those endpoints ignore the token anyway.
  */
 apiClient.interceptors.request.use((config) => {
-  const token = getAccessToken();
+  const token = config.skipAuth ? null : getAccessToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

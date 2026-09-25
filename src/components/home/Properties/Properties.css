@@ -354,6 +354,34 @@
     font-size: 11px;
 }
 
+.properties-error {
+    flex-direction: column;
+    gap: 18px;
+    text-align: center;
+}
+
+.properties-error p {
+    margin: 0;
+}
+
+.properties-retry {
+    padding: 14px 28px;
+    border: 1px solid #31505c;
+    border-radius: 3px;
+    background: transparent;
+    color: #31505c;
+    font-family: inherit;
+    font-size: 9px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+.properties-retry:hover {
+    background: #31505c;
+    color: #ffffff;
+}
+
 
 /* =========================
    TABLET

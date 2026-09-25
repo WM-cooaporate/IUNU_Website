@@ -109,6 +109,7 @@ const translations = {
     "There are currently no published properties available.": "لا توجد حاليًا مشروعات منشورة.",
     "Unable to Load Properties": "تعذر تحميل المشروعات",
     "ERROR": "خطأ",
+    "TRY AGAIN": "حاول مرة أخرى",
     "EGP": "جنيه",
     "Price on request": "السعر عند الطلب",
     "Back to Properties": "العودة إلى المشروعات",

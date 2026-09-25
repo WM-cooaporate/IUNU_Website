@@ -512,6 +512,25 @@
     line-height: 1.7;
 }
 
+.project-retry {
+    margin-top: 22px;
+    padding: 14px 28px;
+    border: 1px solid #31505c;
+    border-radius: 3px;
+    background: transparent;
+    color: #31505c;
+    font-family: inherit;
+    font-size: 9px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+.project-retry:hover {
+    background: #31505c;
+    color: #ffffff;
+}
+
 
 /* =========================================
    FEATURES
