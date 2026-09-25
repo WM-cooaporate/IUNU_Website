@@ -28,7 +28,11 @@ function PropertyDetails() {
   );
 
   const [loading, setLoading] = useState(!demoProperty);
+  // "notFound" | "failed" | "" - translated at render, so switching language
+  // does not refetch the property.
   const [error, setError] = useState("");
+  // Bumped by "Try again" to re-run the load effect.
+  const [attempt, setAttempt] = useState(0);
 
   const [selectedImage, setSelectedImage] = useState(
     demoProperty?.coverImageUrl ||
@@ -78,13 +82,9 @@ function PropertyDetails() {
           } else if (
             error.response?.status === 404
           ) {
-            setError(
-              t("Property not found.")
-            );
+            setError("notFound");
           } else {
-            setError(
-              t("Failed to load property details.")
-            );
+            setError("failed");
           }
         }
       } finally {
@@ -99,7 +99,7 @@ function PropertyDetails() {
     return () => {
       cancelled = true;
     };
-  }, [id, demoProperty, t]);
+  }, [id, demoProperty, attempt]);
 
   if (loading) {
     return (
@@ -130,8 +130,20 @@ function PropertyDetails() {
           </span>
 
           <h1>
-            {error || t("Property not found.")}
+            {error === "failed"
+              ? t("Failed to load property details.")
+              : t("Property not found.")}
           </h1>
+
+          {error === "failed" && (
+            <button
+              type="button"
+              className="property-details-retry"
+              onClick={() => setAttempt((count) => count + 1)}
+            >
+              {t("TRY AGAIN")}
+            </button>
+          )}
 
           <Link to="/project">
             ← {t("Back to Properties")}

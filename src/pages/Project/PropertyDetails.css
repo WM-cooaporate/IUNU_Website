@@ -358,6 +358,25 @@
     color: #9a8a64;
 }
 
+.property-details-retry {
+    margin-bottom: 20px;
+    padding: 14px 28px;
+    border: 1px solid #31505c;
+    border-radius: 3px;
+    background: transparent;
+    color: #31505c;
+    font-family: inherit;
+    font-size: 9px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+.property-details-retry:hover {
+    background: #31505c;
+    color: #ffffff;
+}
+
 
 /* =========================
    TABLET

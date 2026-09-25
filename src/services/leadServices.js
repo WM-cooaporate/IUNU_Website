@@ -1,4 +1,4 @@
-import apiClient from "./apiClient";
+import { publicClient } from "./apiClient";
 
 /**
  * The public lead-capture forms: contact, quote request and newsletter.
@@ -14,7 +14,7 @@ const trim = (value) => (typeof value === "string" ? value.trim() : "");
 const leadServices = {
   /** POST /api/contact -> ContactRequest */
   submitContact: async ({ firstName, lastName, phone, email, message }) => {
-    const response = await apiClient.post("/contact", {
+    const response = await publicClient.post("/contact", {
       firstName: trim(firstName),
       lastName: trim(lastName),
       phone: trim(phone),
@@ -26,7 +26,7 @@ const leadServices = {
 
   /** POST /api/quotes -> QuoteRequestDto */
   submitQuote: async ({ name, phone, city, email, project, whatsapp, spaceType }) => {
-    const response = await apiClient.post("/quotes", {
+    const response = await publicClient.post("/quotes", {
       name: trim(name),
       phone: trim(phone),
       city: trim(city),
@@ -41,7 +41,7 @@ const leadServices = {
 
   /** POST /api/newsletter -> NewsletterRequest */
   subscribeNewsletter: async (email) => {
-    const response = await apiClient.post("/newsletter", { email: trim(email) });
+    const response = await publicClient.post("/newsletter", { email: trim(email) });
     return response.data;
   },
 };
