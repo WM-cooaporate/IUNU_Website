@@ -1,6 +1,7 @@
 package com.iunu.realestate.service.impl;
 
 import com.iunu.realestate.dto.request.PropertyRequest;
+import com.iunu.realestate.dto.response.PropertyPublicResponse;
 import com.iunu.realestate.dto.response.PropertyResponse;
 import com.iunu.realestate.entity.AuditAction;
 import com.iunu.realestate.entity.Property;
@@ -53,11 +54,11 @@ public class PropertyServiceImpl implements PropertyService {
     @Transactional(readOnly = true)
     @Cacheable(cacheNames = CacheConfig.PUBLIC_PROPERTY_LIST,
             key = "#type + ':' + #pageable.pageNumber + ':' + #pageable.pageSize + ':' + #pageable.sort")
-    public Page<PropertyResponse> listPublished(PropertyType type, Pageable pageable) {
+    public Page<PropertyPublicResponse> listPublished(PropertyType type, Pageable pageable) {
         Page<Property> page = (type != null)
                 ? propertyRepository.findByPublishedTrueAndType(type, pageable)
                 : propertyRepository.findByPublishedTrue(pageable);
-        return page.map(PropertyResponse::from);
+        return page.map(PropertyPublicResponse::from);
     }
 
     @Override
@@ -66,11 +67,11 @@ public class PropertyServiceImpl implements PropertyService {
     // and Spring's cache abstraction never stores the result of a method that
     // threw. Only a real, published property is ever cached.
     @Cacheable(cacheNames = CacheConfig.PUBLIC_PROPERTY_BY_ID, key = "#id")
-    public PropertyResponse getPublishedById(Long id) {
+    public PropertyPublicResponse getPublishedById(Long id) {
         Property property = propertyRepository.findById(id)
                 .filter(Property::isPublished)
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found"));
-        return PropertyResponse.from(property);
+        return PropertyPublicResponse.from(property);
     }
 
     @Override

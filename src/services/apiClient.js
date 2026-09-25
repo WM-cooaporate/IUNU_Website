@@ -1,7 +1,8 @@
 import axios from "axios";
 
 /**
- * The single axios instance every service goes through.
+ * The axios instance for admin and auth calls (publicClient below serves the
+ * public site).
  *
  * Centralising it fixes three things that used to be per-service decisions:
  * the base URL is always read from the environment, the bearer token is
@@ -121,17 +122,25 @@ const apiClient = axios.create({
 });
 
 /**
- * Attach the bearer token to every request that has one. Requests made before
- * login (the login call itself, the public forms) simply go out without it.
- *
- * Public reads pass `skipAuth: true`. The API is on another origin, so an
- * Authorization header turns a plain GET into a CORS-preflighted one: every
- * browser holding a token (anyone who has signed in to /admin) sent an OPTIONS
- * and then the GET for the same /properties URL - the "duplicate" request in
- * DevTools with no script initiator. Those endpoints ignore the token anyway.
+ * For the public site: published property reads and the lead forms. It never
+ * carries a token, so a visitor's page behaves the same whether or not an
+ * admin has signed in on this browser. That matters beyond tidiness - the API
+ * is on another origin, and an Authorization header turns a plain GET into a
+ * CORS-preflighted one (an OPTIONS before every new URL). It also has none of
+ * the session handling below: a public call can never end the admin session.
+ */
+export const publicClient = axios.create({
+  baseURL: API_URL,
+  timeout: REQUEST_TIMEOUT,
+  headers: { Accept: "application/json" },
+});
+
+/**
+ * Attach the bearer token to every admin and auth request that has one.
+ * Requests made before login (the login call itself) simply go out without it.
  */
 apiClient.interceptors.request.use((config) => {
-  const token = config.skipAuth ? null : getAccessToken();
+  const token = getAccessToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

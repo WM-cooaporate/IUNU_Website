@@ -1,6 +1,7 @@
 package com.iunu.realestate.controller;
 
 import com.iunu.realestate.dto.request.PropertyRequest;
+import com.iunu.realestate.dto.response.PropertyPublicResponse;
 import com.iunu.realestate.dto.response.PropertyResponse;
 import com.iunu.realestate.entity.AuditAction;
 import com.iunu.realestate.entity.PropertyType;
@@ -62,8 +63,13 @@ public class PropertyController {
         return ResponseEntity.ok(urls);
     }
 
+    /**
+     * Public: published rows only, in the public shape. There is no
+     * authenticated variant - an admin token gets exactly the same answer, and
+     * the dashboard reads drafts from /admin below.
+     */
     @GetMapping
-    public ResponseEntity<Page<PropertyResponse>> list(
+    public ResponseEntity<Page<PropertyPublicResponse>> list(
             @RequestParam(required = false) PropertyType type,
             @PageableDefault(size = 12) Pageable pageable
     ) {
@@ -72,8 +78,9 @@ public class PropertyController {
                 .body(propertyService.listPublished(type, pageable));
     }
 
+    /** Public: 404 for a missing id and for a draft alike, so drafts cannot be probed for. */
     @GetMapping("/{id}")
-    public ResponseEntity<PropertyResponse> getOne(@PathVariable Long id) {
+    public ResponseEntity<PropertyPublicResponse> getOne(@PathVariable Long id) {
         return ResponseEntity.ok()
                 .cacheControl(PUBLIC_READ_CACHE)
                 .body(propertyService.getPublishedById(id));
