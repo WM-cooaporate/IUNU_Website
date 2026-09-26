@@ -6,6 +6,8 @@ import com.iunu.realestate.support.IntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -15,11 +17,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -28,9 +32,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * chain.
  *
  * <p>The public site fetches {@code /api/properties} and
- * {@code /api/properties/{id}} without a token; those must answer anonymous
- * visitors with published rows only, in the public shape. Drafts are read
- * only through {@code /api/properties/admin/**}, and every write is ADMIN-only.
+ * {@code /api/properties/{id}} without a token; external clients (the k6 smoke
+ * test) use the {@code /api/v1/properties} alias of the same two reads. Both
+ * must answer anonymous visitors with published rows only, in the public
+ * shape - the public-read tests run against each. Drafts are read only through
+ * {@code /api/properties/admin/**}, and every write is ADMIN-only.
+ *
+ * <p>An invalid or expired token on a public read is treated as anonymous
+ * (200, published only), not refused: JwtAuthenticationFilter records the bad
+ * token and lets the request continue unauthenticated, and only a rule that
+ * needs authentication turns that into a 401. A visitor with a stale admin
+ * token in their browser must still see the site.
  *
  * <p>Rows are created through the admin API rather than the repository so the
  * public caches are evicted exactly as they are in production. The suite
@@ -57,10 +69,11 @@ class PropertyAccessIntegrationTest extends IntegrationTest {
     // Anonymous reads
     // ---------------------------------------------------------------------
 
-    @Test
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"/api/properties", "/api/v1/properties"})
     @DisplayName("anonymous list: 200, published rows only")
-    void anonymousListShowsOnlyPublished() throws Exception {
-        List<Long> ids = walkIds("/api/properties", null);
+    void anonymousListShowsOnlyPublished(String base) throws Exception {
+        List<Long> ids = walkIds(base, null);
 
         assertThat(ids).contains(publishedId).doesNotContain(draftId);
         // Not just "not this draft": no draft of any test is on the public list.
@@ -69,24 +82,27 @@ class PropertyAccessIntegrationTest extends IntegrationTest {
                 .allMatch(property -> property.isPublished());
     }
 
-    @Test
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"/api/properties", "/api/v1/properties"})
     @DisplayName("anonymous details of a draft: 404, not 403")
-    void anonymousDraftByIdIsNotFound() throws Exception {
-        mockMvc.perform(get("/api/properties/{id}", draftId))
+    void anonymousDraftByIdIsNotFound(String base) throws Exception {
+        mockMvc.perform(get(base + "/{id}", draftId))
                 .andExpect(status().isNotFound());
     }
 
-    @Test
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"/api/properties", "/api/v1/properties"})
     @DisplayName("anonymous details of a missing id: 404")
-    void anonymousMissingByIdIsNotFound() throws Exception {
-        mockMvc.perform(get("/api/properties/{id}", Long.MAX_VALUE))
+    void anonymousMissingByIdIsNotFound(String base) throws Exception {
+        mockMvc.perform(get(base + "/{id}", Long.MAX_VALUE))
                 .andExpect(status().isNotFound());
     }
 
-    @Test
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"/api/properties", "/api/v1/properties"})
     @DisplayName("anonymous details of a published row: 200 with no internal fields")
-    void anonymousPublishedByIdHasNoInternalFields() throws Exception {
-        mockMvc.perform(get("/api/properties/{id}", publishedId))
+    void anonymousPublishedByIdHasNoInternalFields(String base) throws Exception {
+        mockMvc.perform(get(base + "/{id}", publishedId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(publishedId))
                 .andExpect(jsonPath("$.title").isNotEmpty())
@@ -95,7 +111,7 @@ class PropertyAccessIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.updatedAt").doesNotExist());
 
         // Same shape on the list.
-        mockMvc.perform(get("/api/properties").param("size", "1"))
+        mockMvc.perform(get(base).param("size", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").exists())
                 .andExpect(jsonPath("$.content[0].published").doesNotExist())
@@ -157,22 +173,87 @@ class PropertyAccessIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.published").value(false));
     }
 
-    @Test
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"/api/properties", "/api/v1/properties"})
     @DisplayName("an admin token on the public endpoints still gets published rows only")
-    void adminTokenDoesNotWidenPublicEndpoints() throws Exception {
-        assertThat(walkIds("/api/properties", admin)).contains(publishedId).doesNotContain(draftId);
+    void adminTokenDoesNotWidenPublicEndpoints(String base) throws Exception {
+        assertThat(walkIds(base, admin)).contains(publishedId).doesNotContain(draftId);
 
-        mockMvc.perform(get("/api/properties/{id}", draftId)
+        mockMvc.perform(get(base + "/{id}", draftId)
                         .header(HttpHeaders.AUTHORIZATION, admin))
                 .andExpect(status().isNotFound());
     }
 
-    @Test
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"/api/properties", "/api/v1/properties"})
     @DisplayName("size=100000 is clamped to 50")
-    void pageSizeIsClamped() throws Exception {
-        mockMvc.perform(get("/api/properties").param("size", "100000"))
+    void pageSizeIsClamped(String base) throws Exception {
+        mockMvc.perform(get(base).param("size", "100000"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size").value(50));
+    }
+
+    // ---------------------------------------------------------------------
+    // The /api/v1 alias: public reads only
+    // ---------------------------------------------------------------------
+
+    @Test
+    @DisplayName("anonymous writes to /api/v1/properties: 401")
+    void anonymousV1WritesAreUnauthorized() throws Exception {
+        mockMvc.perform(post("/api/v1/properties")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body("Anonymous v1 create", true)))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(put("/api/v1/properties/{id}", draftId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body("Anonymous v1 publish", true)))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(delete("/api/v1/properties/{id}", publishedId))
+                .andExpect(status().isUnauthorized());
+
+        assertThat(propertyRepository.findById(draftId)).get()
+                .matches(property -> !property.isPublished());
+        assertThat(propertyRepository.existsById(publishedId)).isTrue();
+    }
+
+    @Test
+    @DisplayName("/api/v1 has no admin surface: nothing there ever returns a draft")
+    void v1HasNoAdminSurface() throws Exception {
+        // One segment: public by rule, but it is only the details handler, and
+        // "admin" is not an id - a 400, not the admin listing.
+        mockMvc.perform(get("/api/v1/properties/admin"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/v1/properties/admin").header(HttpHeaders.AUTHORIZATION, admin))
+                .andExpect(status().isBadRequest());
+        // Deeper paths are not covered by the public rule at all.
+        mockMvc.perform(get("/api/v1/properties/admin/{id}", draftId))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @ValueSource(strings = {"/api/properties", "/api/v1/properties"})
+    @DisplayName("an invalid token on a public read is treated as anonymous: 200, published only")
+    void invalidTokenOnPublicReadIsAnonymous(String base) throws Exception {
+        String garbage = "Bearer not.a.valid-token";
+
+        List<Long> ids = walkIds(base, garbage);
+        assertThat(ids).contains(publishedId).doesNotContain(draftId);
+
+        mockMvc.perform(get(base + "/{id}", draftId).header(HttpHeaders.AUTHORIZATION, garbage))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("401 and 403 error bodies are declared as UTF-8 JSON")
+    void errorResponsesAreUtf8() throws Exception {
+        mockMvc.perform(get("/api/properties/admin"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, containsString("application/json")))
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, containsString("charset=UTF-8")));
+
+        mockMvc.perform(get("/api/properties/admin").header(HttpHeaders.AUTHORIZATION, userBearer()))
+                .andExpect(status().isForbidden())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, containsString("charset=UTF-8")));
     }
 
     // ---------------------------------------------------------------------

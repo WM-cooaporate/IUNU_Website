@@ -141,6 +141,11 @@ public class SecurityConfig {
                         .hasRole("ADMIN")
                         // Public read of published properties/projects
                         .requestMatchers(readMatchers("/api/properties", "/api/properties/**")).permitAll()
+                        // The versioned alias of those two public reads (PropertyController.V1).
+                        // "/*", not "/**": exactly the list and one id - there is no admin
+                        // surface under /api/v1, and a deeper path stays deny-by-default.
+                        // GET/HEAD only; a write to /api/v1 falls through to authenticated().
+                        .requestMatchers(readMatchers("/api/v1/properties", "/api/v1/properties/*")).permitAll()
                         .requestMatchers(readMatchers("/api/projects", "/api/projects/**")).permitAll()
                         // Uploaded cover images are public assets
                         .requestMatchers(readMatchers("/uploads/**")).permitAll()

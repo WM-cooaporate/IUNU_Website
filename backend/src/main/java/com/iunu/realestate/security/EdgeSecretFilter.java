@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -118,7 +117,10 @@ public class EdgeSecretFilter extends OncePerRequestFilter {
                         "path", request.getRequestURI()));
 
         response.setStatus(HttpStatus.FORBIDDEN.value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        // Explicit UTF-8: without it the servlet default is ISO-8859-1, which
+        // mangles any non-ASCII text in the message and contradicts JSON.
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.setContentType("application/json;charset=UTF-8");
         // Deliberately says nothing about a header or an edge: a probe of the
         // origin should learn no more than "no".
         ApiError body = ApiError.of(
