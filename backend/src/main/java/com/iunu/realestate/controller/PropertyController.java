@@ -26,11 +26,25 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.Duration;
 import java.util.List;
 
+/**
+ * Properties. Every handler lives under {@link #BASE}; the two public reads
+ * are also served under {@link #V1} (see there). There is no class-level
+ * {@code @RequestMapping} so that the alias applies to those two handlers and
+ * nothing else - admin reads and every write exist only under {@link #BASE}.
+ */
 @Tag(name = "Properties")
 @RestController
-@RequestMapping("/api/properties")
 @RequiredArgsConstructor
 public class PropertyController {
+
+    static final String BASE = "/api/properties";
+
+    /**
+     * Versioned alias for the public reads only. External clients (the k6
+     * smoke test) call /api/v1/properties; the website calls BASE. Both reach
+     * the same handler, so both return published rows only, in the public shape.
+     */
+    static final String V1 = "/api/v1/properties";
 
     private final PropertyService propertyService;
     private final ImageStorage imageStorage;
@@ -53,7 +67,7 @@ public class PropertyController {
 
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping(value = "/images", consumes = "multipart/form-data")
+    @PostMapping(value = BASE + "/images", consumes = "multipart/form-data")
     public ResponseEntity<List<String>> uploadImages(@RequestParam("files") List<MultipartFile> files) {
         List<String> urls = files.stream().map(imageStorage::store).distinct().toList();
         // Written after every file is stored: a batch with one bad file
@@ -68,7 +82,7 @@ public class PropertyController {
      * authenticated variant - an admin token gets exactly the same answer, and
      * the dashboard reads drafts from /admin below.
      */
-    @GetMapping
+    @GetMapping({BASE, V1})
     public ResponseEntity<Page<PropertyPublicResponse>> list(
             @RequestParam(required = false) PropertyType type,
             @PageableDefault(size = 12) Pageable pageable
@@ -79,7 +93,7 @@ public class PropertyController {
     }
 
     /** Public: 404 for a missing id and for a draft alike, so drafts cannot be probed for. */
-    @GetMapping("/{id}")
+    @GetMapping({BASE + "/{id}", V1 + "/{id}"})
     public ResponseEntity<PropertyPublicResponse> getOne(@PathVariable Long id) {
         return ResponseEntity.ok()
                 .cacheControl(PUBLIC_READ_CACHE)
@@ -88,21 +102,21 @@ public class PropertyController {
 
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin")
+    @GetMapping(BASE + "/admin")
     public ResponseEntity<Page<PropertyResponse>> listAllForAdmin(@PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(propertyService.listAllForAdmin(pageable));
     }
 
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/admin/{id}")
+    @GetMapping(BASE + "/admin/{id}")
     public ResponseEntity<PropertyResponse> getOneForAdmin(@PathVariable Long id) {
         return ResponseEntity.ok(propertyService.getByIdForAdmin(id));
     }
 
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
+    @PostMapping(BASE)
     public ResponseEntity<PropertyResponse> create(@Valid @RequestBody PropertyRequest request) {
         // Translation happens here rather than in the service on purpose: the
         // controller is not transactional, so the call to Google finishes
@@ -113,14 +127,14 @@ public class PropertyController {
 
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}")
+    @PutMapping(BASE + "/{id}")
     public ResponseEntity<PropertyResponse> update(@PathVariable Long id, @Valid @RequestBody PropertyRequest request) {
         return ResponseEntity.ok(propertyService.update(id, translationFiller.fill(request)));
     }
 
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{id}")
+    @DeleteMapping(BASE + "/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         propertyService.delete(id);
         return ResponseEntity.noContent().build();

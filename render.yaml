@@ -1,8 +1,12 @@
 # Render Blueprint for the IUNU website: Spring Boot API + managed PostgreSQL
 # + the Vite frontend as a static site.
 #
-# `branch` is set to the branch this work lives on. Point both services at
-# whichever branch you actually deploy from before syncing the blueprint.
+# Both services deploy from `main`, where pull requests are merged. This used
+# to name the feature branch the blueprint was written on, which stopped
+# receiving commits once it was merged - a service still following it keeps
+# redeploying that old code. The branch a service actually builds from is the
+# one in Render -> service -> Settings -> Build & Deploy; this value only
+# reaches it when the blueprint is synced.
 #
 # Values marked `sync: false` are NOT stored here - Render prompts for each one
 # in the dashboard when the blueprint is first applied, and keeps them out of
@@ -20,7 +24,7 @@ services:
     name: iunu-api
     runtime: docker
     plan: free
-    branch: claude/dreamy-noether-6n7l8o
+    branch: main
     rootDir: backend
     dockerfilePath: ./Dockerfile
     healthCheckPath: /actuator/health
@@ -117,7 +121,7 @@ services:
   - type: web
     name: iunu-web
     runtime: static
-    branch: claude/dreamy-noether-6n7l8o
+    branch: main
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
     routes:

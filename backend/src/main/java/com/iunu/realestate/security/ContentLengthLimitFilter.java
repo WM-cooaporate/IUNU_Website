@@ -10,13 +10,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Locale;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Rejects an oversized non-multipart body before anything reads it.
@@ -66,7 +66,10 @@ public class ContentLengthLimitFilter extends OncePerRequestFilter {
 
         if (isOversized(request)) {
             response.setStatus(HttpStatus.PAYLOAD_TOO_LARGE.value());
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            // Explicit UTF-8: without it the servlet default is ISO-8859-1, which
+            // mangles any non-ASCII text in the message and contradicts JSON.
+            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+            response.setContentType("application/json;charset=UTF-8");
             ApiError body = ApiError.of(
                     HttpStatus.PAYLOAD_TOO_LARGE.value(),
                     "Payload Too Large",

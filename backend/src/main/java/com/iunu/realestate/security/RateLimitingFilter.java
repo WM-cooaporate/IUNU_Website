@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -28,6 +27,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Per-client rate limiting for everything an attacker would point a script at.
@@ -279,7 +279,10 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         long secondsToWait = Math.max(1, Duration.ofNanos(nanosToWait).toSeconds());
 
         response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        // Explicit UTF-8: without it the servlet default is ISO-8859-1, which
+        // mangles any non-ASCII text in the message and contradicts JSON.
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.setContentType("application/json;charset=UTF-8");
         response.setHeader(HttpHeaders.RETRY_AFTER, String.valueOf(secondsToWait));
 
         ApiError body = ApiError.of(

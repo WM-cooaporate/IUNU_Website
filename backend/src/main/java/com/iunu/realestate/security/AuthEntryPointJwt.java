@@ -9,13 +9,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Map;
+import java.nio.charset.StandardCharsets;
 
 /** Handles requests to protected endpoints with no/invalid credentials -> 401. */
 @Slf4j
@@ -37,7 +37,10 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
                 Map.of("status", "401", "method", request.getMethod(), "path", request.getRequestURI()));
 
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        // Explicit UTF-8: without it the servlet default is ISO-8859-1, which
+        // mangles any non-ASCII text in the message and contradicts JSON.
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.setContentType("application/json;charset=UTF-8");
 
         ApiError body = ApiError.of(
                 HttpStatus.UNAUTHORIZED.value(),
