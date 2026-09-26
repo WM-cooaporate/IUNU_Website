@@ -29,8 +29,7 @@ Nothing to type. Listed so the mapping is visible.
 | `DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PASSWORD` | Pulled off `iunu-db`. The `prod` profile assembles `jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}` from them, so no connection string is duplicated by hand. |
 | `JWT_SECRET` | `generateValue: true` — Render generates a 256-bit value on first sync and keeps it across deploys. `JwtService` refuses to start on anything shorter than 32 bytes. |
 | `RATE_LIMIT_TRUST_FORWARDED_HEADER` | Literal `true`. See **Rate limiting behind the proxy** below. |
-| `CLOUDINARY_FOLDER` | Literal `iunu/prod`. See **Project images: Cloudinary** below. |
-| `UPLOAD_DIR` | `/tmp/uploads`. Only used by the local storage provider and the one-off legacy migration. |
+| `UPLOAD_DIR` | `/var/data/uploads`, on the persistent disk. See **Project images: persistent disk** below. |
 | `PORT` | Injected by Render and read automatically — never set it by hand. |
 
 ### Prompted on first sync (`sync: false`)
@@ -39,43 +38,31 @@ Nothing to type. Listed so the mapping is visible.
 |---|---|---|
 | `CORS_ALLOWED_ORIGINS` | Comma-separated origins allowed to call the API. Must be the static site's origin, scheme included, **no trailing slash and no path**. Wildcards are rejected at startup. | `https://iunu-web.onrender.com` |
 | `FRONTEND_URL` | Base URL used to build password-reset links in outgoing mail. | `https://iunu-web.onrender.com` |
-| `PUBLIC_API_URL` | Public origin of this backend, **without** `/api`. Images uploaded before Cloudinary were handed out as `${PUBLIC_API_URL}/uploads/...`; the "Move images to cloud" migration finds them by that prefix. | `https://iunu-api.onrender.com` |
-| `CLOUDINARY_URL` | **Required in prod** — the container refuses to start without it. `cloudinary://<api_key>:<api_secret>@<cloud_name>`, from the Cloudinary dashboard → **API Keys** → "API environment variable". **Backend only.** Never put it in Vercel, Netlify, the `iunu-web` static site or any `VITE_` variable: the browser never talks to Cloudinary. | `cloudinary://123456789012345:abc...@iunu` |
+| `PUBLIC_API_URL` | Public origin of this backend, **without** `/api`. Uploaded images are handed out as `${PUBLIC_API_URL}/uploads/...`, so a wrong value saves URLs that never load. | `https://iunu-api.onrender.com` |
 
-### Project images: Cloudinary
+### Project images: persistent disk
 
-Render's free instances have no persistent disk, and they spin down when idle,
-so images written to the container's filesystem are lost on every redeploy and
-every cold start. Production therefore stores them on **Cloudinary**, which is
-also the CDN the public site loads them from, resized per screen.
+Uploaded images are files on the API's own disk, served from
+`${PUBLIC_API_URL}/uploads/...`. A container's filesystem is wiped on every
+deploy and restart, so production writes them to a **Render persistent disk**
+(`render.yaml` → `iunu-api` → `disk`, mounted at `/var/data`).
 
 | Variable | Description | Default |
 |---|---|---|
-| `FILE_STORAGE_PROVIDER` | `cloudinary` or `local`. `local` writes to `UPLOAD_DIR` and is for development and tests; under the `prod` profile it logs an ERROR at startup because uploads will be lost. Anything else stops startup. | `cloudinary` in `prod`, `local` otherwise |
-| `CLOUDINARY_URL` | See above. Required whenever the provider is `cloudinary`; a blank or malformed value stops startup with a message naming the variable. Never logged. | — (required in prod) |
-| `CLOUDINARY_FOLDER` | Folder root for this environment. Every upload goes under `<root>/properties` or `<root>/projects`, and deletes and the orphan sweep never touch anything outside it — so dev and prod can share one Cloudinary account safely. | `iunu/prod` in `prod`, `iunu/dev` otherwise |
+| `UPLOAD_DIR` | Where images are written in `prod`. Must be under the disk's mount path. The API refuses to start if it cannot create or write to it. | `/var/data/uploads` in `prod` |
+| `UPLOAD_LOCATION` | The same setting outside `prod` (local development, Docker Compose). | `uploads` |
 
-**Deploy order for the switch** (first deploy of the Cloudinary change):
+**Requirements and trade-offs of the disk:**
 
-1. Create a Cloudinary account. Turn on **MFA** for it.
-2. On Render, set `CLOUDINARY_URL` on `iunu-api` (and `CLOUDINARY_FOLDER=iunu/prod`, which the Blueprint sets). Do this **before** deploying, or the new build fails to start.
-3. Merge and deploy.
-4. In the dashboard, click **Move images to cloud**. Images whose files still exist on the instance are copied to Cloudinary and their URLs rewritten. Files already wiped by an earlier redeploy are listed by project title — re-upload photos for those projects.
-
-**Watch:** the free-tier usage page in the Cloudinary console (storage,
-bandwidth, transformations). Delivery only ever requests four widths
-(400/800/1200/1600), so transformations grow by at most four per photo.
+- A disk needs a **paid** instance type (`plan: starter` in `render.yaml`); the free plan has none.
+- A service with a disk runs as **one instance** and has **no zero-downtime deploys**: the old instance stops before the new one starts, so each deploy has a short outage.
+- Render snapshots disks daily. Restoring one is done from the service's **Disks** page.
+- Images are served by the API itself, with `Cache-Control: public, max-age=31536000, immutable` (filenames are content hashes). There is no CDN or resizing: the dashboard already shrinks photos to 2000px WebP before upload.
 
 **Orphaned uploads.** Photos upload as soon as they are picked, before Save, so
-an abandoned edit leaves unreferenced images behind. A sweep deletes them daily
-at 03:00 Cairo time — only images older than 24 hours, only under this
-environment's `CLOUDINARY_FOLDER`, never one referenced by any project, at most
-200 per run. To inspect it by hand (ADMIN token):
-
-```
-POST /api/admin/images/sweep?dryRun=true    # lists counts, deletes nothing (default)
-POST /api/admin/images/sweep?dryRun=false   # deletes; recorded in the audit log
-```
+an abandoned edit leaves unreferenced files on the disk. Nothing deletes them
+automatically. They are content-addressed (re-picking the same photo reuses the
+file), so growth is slow; check the disk usage on the service's **Disks** page.
 
 ### Client IP behind the proxy — get this right or the rate limits do nothing
 
@@ -222,8 +209,8 @@ uses `Authorization: Bearer` tokens, not cookies, so the frontend never sets
    reset does not work.
 8. Free instances spin down when idle; the first request after that waits for a
    cold start. The dashboard pings the backend when it opens so it is awake by
-   the first upload. Project images live on Cloudinary, so a cold start no
-   longer loses them — set `CLOUDINARY_URL` before the first deploy.
+   the first upload. Project images live on the persistent disk, so a restart
+   or redeploy does not lose them.
 
 ## Before this is load-bearing for a client
 

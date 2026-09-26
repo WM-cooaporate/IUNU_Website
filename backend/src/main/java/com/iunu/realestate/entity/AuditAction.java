@@ -19,6 +19,8 @@ public enum AuditAction {
     ADMIN_USER_CREATED,
     PASSWORD_CHANGED,
     TRANSLATION_BACKFILL_RUN,
+    // No longer written (the Cloudinary migration and sweep were removed).
+    // Kept so any audit rows already stored with them still load.
     IMAGES_MIGRATED,
     IMAGES_SWEPT,
     LEAD_MARKED_HANDLED

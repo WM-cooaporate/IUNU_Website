@@ -20,7 +20,7 @@ import java.util.Map;
  * runs before it keeps a byte: allow-listed content type, a file signature
  * that agrees with it, and the SHA-256 the stored name is derived from.
  *
- * <p>One implementation for every provider, so moving storage to Cloudinary
+ * <p>One implementation for every provider, so moving storage elsewhere
  * cannot quietly loosen what an upload is allowed to be.
  */
 @Component

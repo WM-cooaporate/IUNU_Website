@@ -22,7 +22,7 @@ const wait = (ms) => new Promise((resolve) => { window.setTimeout(resolve, ms); 
 
 /**
  * Worth one more try: no response at all (network drop, timeout) or a 5xx
- * (including the 502 the backend sends when Cloudinary hiccups). A 4xx is the
+ * (the server failed or is still waking up). A 4xx is the
  * server saying no - a retry would only get the same answer.
  */
 const isRetryable = (error) => !error?.response || error.response.status >= 500;
@@ -158,15 +158,6 @@ const adminServices = {
   /** Fills the Arabic of existing projects that have none yet. */
   backfillTranslations: async () => {
     const response = await apiClient.post("/admin/translations/properties/backfill");
-    return response.data;
-  },
-
-  /**
-   * Copies images still served from the backend's own /uploads/ to Cloudinary.
-   * Returns { enabled, migrated, missing: [{ type, id, title, url }] }.
-   */
-  migrateImagesToCloud: async () => {
-    const response = await apiClient.post("/admin/images/migrate-to-cloud", null, { timeout: UPLOAD_TIMEOUT });
     return response.data;
   },
 };

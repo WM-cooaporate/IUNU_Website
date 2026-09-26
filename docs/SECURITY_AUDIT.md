@@ -222,6 +222,8 @@ On Render's free plan there is no persistent disk. Every deploy, and every wake 
 
 **Update 2026-09-23 — resolved.** Production now stores images on Cloudinary (`CloudinaryImageStorage`, selected by `FILE_STORAGE_PROVIDER`, default `cloudinary` under `prod`; startup fails without `CLOUDINARY_URL`). Uploads still pass through the backend (admin-only, magic-byte validation, rate limiting unchanged) and no Cloudinary credential reaches the browser. Deletes only touch this environment's folder on this cloud, parsed with `java.net.URI` and compared exactly. Legacy `/uploads/` images are moved with the dashboard's "Move images to cloud". Uploads now also **strip EXIF, including GPS**: the dashboard re-encodes every photo through a canvas before upload, so a phone's location is no longer published with its pictures.
 
+**Update 2026-09-26 — Cloudinary removed.** Production stores images with `LocalImageStorage` on a Render persistent disk mounted at `/var/data` (`UPLOAD_DIR=/var/data/uploads`, paid `starter` plan). The same upload path applies: admin-only, magic-byte validation, content-addressed filenames. The migration and orphan-sweep endpoints under `/api/admin/images` are gone, and `res.cloudinary.com` is no longer in the CSP.
+
 ### M11. `PageImpl` is serialised directly
 
 **Severity:** Medium (stability, not security)
@@ -416,7 +418,7 @@ Each directive is derived from something the app actually does:
 | `script-src 'self'` | Vite emits a single module bundle; there are no inline scripts. No `unsafe-inline`, no `unsafe-eval` — this is what makes the CSP worth having against M7 |
 | `style-src 'self' https://fonts.googleapis.com` | `global.css` `@import`s Google Fonts. No `unsafe-inline`: nothing in the bundle injects `<style>` elements (framer-motion and react-hot-toast are dependencies but never imported), and React `style={{}}` props are applied through the CSSOM, which CSP does not block. A library that injects `<style>` at runtime would need it back |
 | `font-src 'self' https://fonts.gstatic.com` | Where the Google Fonts stylesheet fetches the woff2 files from |
-| `img-src 'self' data: https://res.cloudinary.com https://iunu-api.onrender.com` | Bundled `/images`, `data:` upload previews in the dashboard (`prepareImage.js` avoids `blob:` on purpose), Cloudinary delivery URLs, and legacy `/uploads/` files on the API origin. The dashboard's "add by URL" field accepts only these origins (`isAllowedImageUrl`), so a pasted link cannot be saved and then blocked. **Update the API origin here too if the backend moves** |
+| `img-src 'self' data: https://iunu-api.onrender.com` | Bundled `/images`, `data:` upload previews in the dashboard (`prepareImage.js` avoids `blob:` on purpose), and uploaded `/uploads/` files on the API origin. **Update the API origin here too if the backend moves** |
 | `connect-src 'self' https://iunu-api.onrender.com` | The only host the app calls. **Update this if the backend moves to a custom domain** — the API will silently stop working otherwise |
 | `frame-ancestors 'none'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'` | Clickjacking, plugin content, base-tag hijacking and form exfiltration |
 

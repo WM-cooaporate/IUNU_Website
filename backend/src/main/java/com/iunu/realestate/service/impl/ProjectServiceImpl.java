@@ -116,9 +116,9 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     /**
-     * Not @Transactional, on purpose: the upload goes to Cloudinary in
-     * production and can take seconds, and a transaction held around it holds
-     * a database connection from a pool of five for all that time. So:
+     * Not @Transactional, on purpose: a transaction held around the file write
+     * holds a database connection from a pool of five for all that time, for
+     * work the database has no part in. So:
      * <ol>
      *   <li>store the image, no transaction open;</li>
      *   <li>point the row at it in one short transaction;</li>

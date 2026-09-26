@@ -296,17 +296,6 @@ public class GlobalExceptionHandler {
     // --- 5xx -----------------------------------------------------------------
 
     /**
-     * Cloudinary refused or timed out. The cause was already logged, redacted,
-     * where it happened; the admin gets a message that says "try again" rather
-     * than a 500 that says "we are broken".
-     */
-    @ExceptionHandler(ImageServiceUnavailableException.class)
-    public ResponseEntity<ProblemDetail> handleImageServiceUnavailable(
-            ImageServiceUnavailableException ex, HttpServletRequest request) {
-        return problem(HttpStatus.BAD_GATEWAY, ex.getMessage(), request);
-    }
-
-    /**
      * Any other exception Spring itself has already given a status to
      * (ResponseStatusException, an async timeout). The status is kept; its
      * reason text is not.

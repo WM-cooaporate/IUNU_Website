@@ -92,19 +92,12 @@ app:
     allowed-origins: ${CORS_ALLOWED_ORIGINS}
 
   file-storage:
-    # Cloudinary in production: Render's free plan has no persistent disk, so
-    # anything written locally is lost on every deploy and every wake from a
-    # spin-down. Choosing `local` here logs an ERROR at startup.
-    provider: ${FILE_STORAGE_PROVIDER:cloudinary}
-    # Only read by the local provider, and by the one-off migration of legacy
-    # /uploads/ files. Optional now.
-    location: ${UPLOAD_DIR:/tmp/uploads}
+    # Uploaded images live on the Render persistent disk mounted at /var/data
+    # (render.yaml -> iunu-api -> disk). Anywhere else in the container is
+    # wiped on every deploy and restart. LocalImageStorage refuses to start
+    # if this directory cannot be created or written.
+    location: ${UPLOAD_DIR:/var/data/uploads}
     public-base-url: ${PUBLIC_API_URL}
-    cloudinary:
-      # Required, no default: with the cloudinary provider a missing value stops
-      # startup with a message naming CLOUDINARY_URL.
-      url: ${CLOUDINARY_URL}
-      folder-root: ${CLOUDINARY_FOLDER:iunu/prod}
 
   frontend-url: ${FRONTEND_URL}
 

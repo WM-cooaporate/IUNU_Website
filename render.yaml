@@ -23,11 +23,19 @@ services:
   - type: web
     name: iunu-api
     runtime: docker
-    plan: free
+    # A persistent disk needs a paid instance type; the free plan has none.
+    plan: starter
     branch: main
     rootDir: backend
     dockerfilePath: ./Dockerfile
     healthCheckPath: /actuator/health
+    # Uploaded project images. Survives deploys and restarts. A service with a
+    # disk runs as a single instance and has no zero-downtime deploys (the
+    # old instance stops before the new one starts).
+    disk:
+      name: iunu-uploads
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
@@ -74,27 +82,15 @@ services:
       - key: FRONTEND_URL
         sync: false
       # Public origin of this API, e.g. https://iunu-api.onrender.com (no /api
-      # suffix). Legacy /uploads/ image URLs start with it; the "Move images to
-      # cloud" migration uses it to find them.
+      # suffix). Uploaded image URLs start with it: <origin>/uploads/...
       - key: PUBLIC_API_URL
         sync: false
 
-      # Image storage + CDN. The prod profile uses Cloudinary by default and
-      # REFUSES TO START without CLOUDINARY_URL - set it before deploying.
-      # cloudinary://<api_key>:<api_secret>@<cloud_name>, from the Cloudinary
-      # dashboard -> API Keys -> "API environment variable". Backend only:
-      # never on the static site, never a VITE_ variable. See ENV_VARS.md.
-      - key: CLOUDINARY_URL
-        sync: false
-      # Everything this environment uploads, deletes or sweeps lives here.
-      - key: CLOUDINARY_FOLDER
-        value: iunu/prod
-
-      # Only used by the local storage provider (FILE_STORAGE_PROVIDER=local)
-      # and by the one-off migration of legacy /uploads/ files. The free plan
-      # has no persistent disk, so anything written here is lost on redeploy.
+      # Uploaded images are written here, on the persistent disk above, and
+      # served from https://<api-host>/uploads/... Must be under the disk's
+      # mountPath: anywhere else in the container is wiped on every deploy.
       - key: UPLOAD_DIR
-        value: /tmp/uploads
+        value: /var/data/uploads
 
       # Optional. Enables English -> Arabic auto-translation of project content
       # on save. Left unset, saves still work and the site shows English.
@@ -135,8 +131,8 @@ services:
     # deployment. KEEP ALL THREE IN SYNC.
     #
     # Every CSP directive is derived from something the app actually loads
-    # (Google Fonts, Cloudinary and legacy /uploads/ images, the backend
-    # origin). See docs/SECURITY_AUDIT.md, and re-verify in a browser after any
+    # (Google Fonts, /uploads/ images on the backend origin, the backend
+    # API). See docs/SECURITY_AUDIT.md, and re-verify in a browser after any
     # change - a wrong CSP is a white screen with no server-side error to find.
     #
     # style-src has no 'unsafe-inline': nothing in the bundle injects <style>
@@ -160,13 +156,12 @@ services:
         name: Permissions-Policy
         value: camera=(), microphone=(), geolocation=(), payment=()
       # connect-src and img-src must name the backend origin (img-src for
-      # legacy /uploads/ images). Update both here, in vercel.json and in
+      # uploaded /uploads/ images). Update both here, in vercel.json and in
       # public/_headers when the API moves to a custom domain, or the browser
-      # blocks every API call. img-src also names Cloudinary's delivery host;
-      # the dashboard only accepts pasted image URLs from these origins.
+      # blocks every API call and every project image.
       - path: /*
         name: Content-Security-Policy
-        value: "default-src 'self'; img-src 'self' data: https://res.cloudinary.com https://iunu-api.onrender.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self' https://iunu-api.onrender.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+        value: "default-src 'self'; img-src 'self' data: https://iunu-api.onrender.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self' https://iunu-api.onrender.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
 
     envVars:
       # The variable the code reads is VITE_API_URL, and the value MUST include

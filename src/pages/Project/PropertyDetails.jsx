@@ -8,8 +8,6 @@ import demoProperties from "../../data/demoProperties";
 
 import { useLanguage } from "../../i18n/LanguageContext";
 import {
-  imageSrcSet,
-  imageUrl,
   showPlaceholderOnError,
 } from "../../utils/imageUrl";
 
@@ -218,9 +216,7 @@ function PropertyDetails() {
                     // Keyed on the image so switching thumbnails gets a
                     // fresh element - and a fresh onError guard - each time.
                     key={selectedImage}
-                    src={imageUrl(selectedImage, 1600)}
-                    srcSet={imageSrcSet(selectedImage) || undefined}
-                    sizes="(max-width: 1024px) 100vw, 70vw"
+                    src={selectedImage}
                     alt={localize(property, "title")}
                     loading="eager"
                     fetchPriority="high"
@@ -257,7 +253,7 @@ function PropertyDetails() {
                         }
                       >
                         <img
-                          src={imageUrl(image, 400)}
+                          src={image}
                           alt={`${localize(property, "title")} ${
                             index + 1
                           }`}

@@ -6,9 +6,8 @@ import org.springframework.web.multipart.MultipartFile;
  * Somewhere to put uploaded images, addressed only by public URL.
  *
  * Callers never see paths, buckets or filenames - which is the point: moving
- * from the local filesystem to Cloudinary or S3 becomes a second
- * implementation of this interface selected by {@code app.file-storage.provider},
- * with no change at any call site.
+ * from the local filesystem to an object store would be a second
+ * implementation of this interface, with no change at any call site.
  *
  * @see com.iunu.realestate.service.impl.LocalImageStorage
  */
