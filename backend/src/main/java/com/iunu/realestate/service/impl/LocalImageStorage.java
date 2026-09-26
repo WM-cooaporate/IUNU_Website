@@ -6,9 +6,6 @@ import com.iunu.realestate.service.image.ImageValidator.ValidatedImage;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,30 +25,25 @@ import java.nio.file.Paths;
  * Validation (allow-list, file signature, hashing) is shared with the other
  * providers through {@link ImageValidator}.
  *
- * NOTE: a container filesystem is ephemeral. This provider is for local
- * development and the test suite; production uses
- * {@link CloudinaryImageStorage}. Run under the prod profile with no mounted
- * volume and every image uploaded since the last deploy is lost while the
+ * NOTE: a container filesystem is ephemeral. In production the upload root
+ * must be a persistent disk (Render: /var/data, see render.yaml); anywhere
+ * else, every image uploaded since the last deploy is lost while the
  * database rows keep pointing at it. See ENV_VARS.md.
  */
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "app.file-storage.provider", havingValue = "local", matchIfMissing = true)
 public class LocalImageStorage implements ImageStorage {
 
     private final Path uploadRoot;
     private final String publicBaseUrl;
     private final ImageValidator imageValidator;
-    private final Environment environment;
 
     public LocalImageStorage(
             @Value("${app.file-storage.location:uploads}") String uploadLocation,
             @Value("${app.file-storage.public-base-url:http://localhost:8080}") String publicBaseUrl,
-            ImageValidator imageValidator,
-            Environment environment
+            ImageValidator imageValidator
     ) {
         this.imageValidator = imageValidator;
-        this.environment = environment;
         this.uploadRoot = Paths.get(uploadLocation).toAbsolutePath().normalize();
         this.publicBaseUrl = publicBaseUrl.replaceAll("/$", "");
     }
@@ -63,11 +55,7 @@ public class LocalImageStorage implements ImageStorage {
      */
     @PostConstruct
     void prepareUploadRoot() {
-        if (environment.acceptsProfiles(Profiles.of("prod"))) {
-            log.error("FILE_STORAGE_PROVIDER=local under the prod profile: uploaded images are written to {} "
-                    + "and will be lost on the next redeploy or restart. Set FILE_STORAGE_PROVIDER=cloudinary "
-                    + "and CLOUDINARY_URL. See ENV_VARS.md.", uploadRoot);
-        }
+        log.info("Storing uploaded images under {}", uploadRoot);
         try {
             Files.createDirectories(uploadRoot);
         } catch (IOException exception) {

@@ -9,8 +9,6 @@ import { useProperties } from "../../hooks/useProperties";
 
 import { useLanguage } from "../../i18n/LanguageContext";
 import {
-  imageSrcSet,
-  imageUrl,
   showPlaceholderOnError,
 } from "../../utils/imageUrl";
 
@@ -219,9 +217,7 @@ function Project() {
                       <div className="project-property-image">
                         {property.coverImageUrl ? (
                           <img
-                            src={imageUrl(property.coverImageUrl, 800)}
-                            srcSet={imageSrcSet(property.coverImageUrl) || undefined}
-                            sizes="(max-width: 768px) 100vw, 33vw"
+                            src={property.coverImageUrl}
                             alt={localize(property, "title")}
                             loading="lazy"
                             decoding="async"

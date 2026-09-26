@@ -10,7 +10,7 @@ import {
 } from "../../services/apiClient";
 import { getDemoProperties, saveDemoProperties } from "../../data/demoPropertyStorage";
 import { prepareImage, thumbnailDataUrl } from "../../utils/prepareImage";
-import { imageUrl, isAllowedImageUrl, showPlaceholderOnError } from "../../utils/imageUrl";
+import { showPlaceholderOnError } from "../../utils/imageUrl";
 import "./AdminDashboard.css";
 
 const emptyForm = {
@@ -45,7 +45,7 @@ const formatBytes = (bytes) => (bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)
  * dashboard owns it, because Save needs it - so this is only the markup.
  * Reordering uses buttons rather than drag so it works on a phone.
  */
-function GallerySection({ gallery, coverUrl, demoMode, wakeNotice, galleryError, urlInput, onUrlInput, onAddUrl, onAddFiles, onSetCover, onMove, onRemove, onRetry }) {
+function GallerySection({ gallery, coverUrl, demoMode, wakeNotice, galleryError, onAddFiles, onSetCover, onMove, onRemove, onRetry }) {
   const [dragActive, setDragActive] = useState(false);
   const readyUrls = gallery.filter((tile) => tile.status === "ready" && tile.url).map((tile) => tile.url);
   const effectiveCover = coverUrl && readyUrls.includes(coverUrl) ? coverUrl : readyUrls[0] || "";
@@ -57,8 +57,8 @@ function GallerySection({ gallery, coverUrl, demoMode, wakeNotice, galleryError,
       <div className="gallery-header"><span>Project photos</span><small>{gallery.length} / {MAX_IMAGES}</small></div>
       {wakeNotice && !demoMode && <p className="gallery-notice" role="status">Waking up the server — the first upload may take a moment.</p>}
       {galleryError && <p className="gallery-error" role="alert">{galleryError}</p>}
-      {gallery.length === 0 ? <p className="gallery-empty">No photos yet. Choose files or drop them here. The first photo becomes the cover unless you pick another with the star.</p> : <ul className="gallery-grid">{gallery.map((tile, index) => <li key={tile.id} className={`gallery-tile gallery-tile-${tile.status}`}><div className="gallery-thumb">{tile.url ? <img src={imageUrl(tile.url, 400)} alt={`Photo ${index + 1}`} loading="lazy" decoding="async" onError={showPlaceholderOnError} /> : tile.localPreview ? <img src={tile.localPreview} alt={`Photo ${index + 1}`} /> : <span className="gallery-thumb-name">{tile.name || "Photo"}</span>}{tile.url && tile.url === effectiveCover && <span className="gallery-cover-badge">Cover</span>}{isBusy(tile) && <div className="gallery-progress"><span>{tile.status === "preparing" ? "Preparing..." : `Uploading ${tile.progress}%`}</span><div className="gallery-progress-bar"><div style={{ width: `${tile.status === "uploading" ? tile.progress : 0}%` }} /></div></div>}{tile.status === "error" && <div className="gallery-error-overlay"><span>{tile.error}</span>{tile.file && <button type="button" onClick={() => onRetry(tile.id)}>Retry</button>}</div>}</div>{tile.sizeNote && tile.status !== "error" && <small className="gallery-size">{tile.sizeNote}</small>}<div className="gallery-actions"><button type="button" title="Set as cover" aria-label={`Set photo ${index + 1} as cover`} aria-pressed={tile.url !== "" && tile.url === effectiveCover} disabled={tile.status !== "ready" || tile.url === effectiveCover} onClick={() => onSetCover(tile.url)}>★</button><button type="button" title="Move left" aria-label={`Move photo ${index + 1} left`} disabled={index === 0} onClick={() => onMove(tile.id, -1)}>←</button><button type="button" title="Move right" aria-label={`Move photo ${index + 1} right`} disabled={index === gallery.length - 1} onClick={() => onMove(tile.id, 1)}>→</button><button type="button" title="Remove" aria-label={`Remove photo ${index + 1}`} className="gallery-remove" onClick={() => onRemove(tile.id)}>×</button></div></li>)}</ul>}
-      <div className="gallery-add"><label className={demoMode || full ? "gallery-file-button gallery-file-button-disabled" : "gallery-file-button"}>Add photos<input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={demoMode || full} onChange={(event) => { onAddFiles(event.target.files); event.target.value = ""; }} /></label><div className="gallery-url"><input type="url" value={urlInput} onChange={(event) => onUrlInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); onAddUrl(); } }} placeholder="Add Cloudinary image URL (https://res.cloudinary.com/...)" aria-label="Add image by URL" disabled={full} /><button type="button" className="cancel-button" onClick={onAddUrl} disabled={full || !urlInput.trim()}>Add URL</button></div></div>
+      {gallery.length === 0 ? <p className="gallery-empty">No photos yet. Choose files or drop them here. The first photo becomes the cover unless you pick another with the star.</p> : <ul className="gallery-grid">{gallery.map((tile, index) => <li key={tile.id} className={`gallery-tile gallery-tile-${tile.status}`}><div className="gallery-thumb">{tile.url ? <img src={tile.url} alt={`Photo ${index + 1}`} loading="lazy" decoding="async" onError={showPlaceholderOnError} /> : tile.localPreview ? <img src={tile.localPreview} alt={`Photo ${index + 1}`} /> : <span className="gallery-thumb-name">{tile.name || "Photo"}</span>}{tile.url && tile.url === effectiveCover && <span className="gallery-cover-badge">Cover</span>}{isBusy(tile) && <div className="gallery-progress"><span>{tile.status === "preparing" ? "Preparing..." : `Uploading ${tile.progress}%`}</span><div className="gallery-progress-bar"><div style={{ width: `${tile.status === "uploading" ? tile.progress : 0}%` }} /></div></div>}{tile.status === "error" && <div className="gallery-error-overlay"><span>{tile.error}</span>{tile.file && <button type="button" onClick={() => onRetry(tile.id)}>Retry</button>}</div>}</div>{tile.sizeNote && tile.status !== "error" && <small className="gallery-size">{tile.sizeNote}</small>}<div className="gallery-actions"><button type="button" title="Set as cover" aria-label={`Set photo ${index + 1} as cover`} aria-pressed={tile.url !== "" && tile.url === effectiveCover} disabled={tile.status !== "ready" || tile.url === effectiveCover} onClick={() => onSetCover(tile.url)}>★</button><button type="button" title="Move left" aria-label={`Move photo ${index + 1} left`} disabled={index === 0} onClick={() => onMove(tile.id, -1)}>←</button><button type="button" title="Move right" aria-label={`Move photo ${index + 1} right`} disabled={index === gallery.length - 1} onClick={() => onMove(tile.id, 1)}>→</button><button type="button" title="Remove" aria-label={`Remove photo ${index + 1}`} className="gallery-remove" onClick={() => onRemove(tile.id)}>×</button></div></li>)}</ul>}
+      <div className="gallery-add"><label className={demoMode || full ? "gallery-file-button gallery-file-button-disabled" : "gallery-file-button"}>Add photos<input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={demoMode || full} onChange={(event) => { onAddFiles(event.target.files); event.target.value = ""; }} /></label></div>
       <small className="gallery-hint">Photos are resized automatically before upload. JPG, PNG or WebP. iPhone: Settings → Camera → Formats → Most Compatible.</small>
       {demoMode && <small className="gallery-hint">Image upload requires the backend. Exit demo mode and sign in to upload local files. You can still add images by URL.</small>}
     </section>
@@ -277,14 +277,12 @@ function AdminDashboard() {
   /** Ordered photos in the open form: { id, url, status, progress, error, localPreview, name, file?, sizeNote? }. */
   const [gallery, setGallery] = useState([]);
   const [coverUrl, setCoverUrl] = useState("");
-  /** URLs uploaded since the form opened - the ones the orphan sweep may later collect if the edit is abandoned. */
+  /** URLs uploaded since the form opened - left unused on the server if the edit is abandoned. */
   const [sessionUploads, setSessionUploads] = useState([]);
   const [galleryError, setGalleryError] = useState("");
-  const [urlInput, setUrlInput] = useState("");
   /** Progress of the current run of uploads, for the "Uploading 2 of 5..." label. */
   const [uploadBatch, setUploadBatch] = useState({ total: 0, done: 0 });
   const [wakeNotice, setWakeNotice] = useState(false);
-  const [migrating, setMigrating] = useState(false);
   /** Files waiting to be prepared and uploaded, strictly one at a time. */
   const queueRef = useRef([]);
   const processingRef = useRef(false);
@@ -394,7 +392,6 @@ function AdminDashboard() {
     setCoverUrl(cover);
     setSessionUploads([]);
     setGalleryError("");
-    setUrlInput("");
     setUploadBatch({ total: 0, done: 0 });
   };
 
@@ -406,7 +403,8 @@ function AdminDashboard() {
   /**
    * Cancel, ×, or a click outside. Photos upload as soon as they are picked,
    * so abandoning the form leaves them stored but unused; say so before
-   * throwing the edit away. The nightly sweep removes them after 24h.
+   * throwing the edit away. Nothing removes them later: they stay on the
+   * server's disk (content-addressed, so re-picking the same photo reuses it).
    */
   const requestCloseModal = () => {
     const pending = gallery.filter(isBusy).length;
@@ -509,28 +507,6 @@ function AdminDashboard() {
     }
   };
 
-  const handleMigrateImages = async () => {
-    if (migrating) return;
-    setMigrating(true);
-    setError("");
-    setSuccess("");
-    try {
-      const result = await adminServices.migrateImagesToCloud();
-      if (result?.enabled === false) {
-        setError("Cloud image storage is not configured on the server.");
-        return;
-      }
-      const missing = result?.missing || [];
-      const titles = [...new Set(missing.map((item) => item.title).filter(Boolean))];
-      setSuccess(`Moved ${result?.migrated ?? 0} image(s).${missing.length ? ` ${missing.length} image(s) were already lost — re-upload photos for: ${titles.join(", ")}` : ""}`);
-      await loadProperties();
-    } catch (requestError) {
-      setError(toUserMessage(requestError, "Unable to move the images to the cloud."));
-    } finally {
-      setMigrating(false);
-    }
-  };
-
   const updateTile = (id, patch) => setGallery((current) => current.map((tile) => (tile.id === id ? { ...tile, ...patch } : tile)));
 
   /** Resize, then upload, one file. Results for a form that has since closed are dropped. */
@@ -612,28 +588,6 @@ function AdminDashboard() {
     if (!tile?.file) return;
     updateTile(id, { status: "preparing", progress: 0, error: "" });
     enqueue([{ id, file: tile.file }]);
-  };
-
-  const handleAddUrl = () => {
-    const url = urlInput.trim();
-    if (!url) return;
-    // The site's CSP only loads images from Cloudinary and the API, so a link
-    // to anywhere else would save fine and then never display.
-    if (!/^https?:\/\/\S+$/i.test(url) || !isAllowedImageUrl(url)) {
-      setGalleryError("Only Cloudinary image links (https://res.cloudinary.com/...) can be added by URL. Use \"Add photos\" to upload anything else.");
-      return;
-    }
-    if (gallery.length >= MAX_IMAGES) {
-      setGalleryError(`A project can have at most ${MAX_IMAGES} images. Remove one to add another.`);
-      return;
-    }
-    if (gallery.some((tile) => tile.url === url)) {
-      setGalleryError("That image is already in the gallery.");
-      return;
-    }
-    setGalleryError("");
-    setGallery((current) => [...current, readyTile(url)]);
-    setUrlInput("");
   };
 
   const handleMoveTile = (id, direction) => setGallery((current) => {
@@ -800,7 +754,7 @@ function AdminDashboard() {
         {wakeNotice && !demoMode && <div className="admin-wake-notice" role="status">Waking up the server — the first upload may take a moment.</div>}
         {error && <div className="admin-alert admin-alert-error">{error}</div>}
         {success && <div className="admin-alert admin-alert-success">{success}</div>}
-        <div className="admin-page-heading"><div><span className="admin-eyebrow">CONTENT MANAGEMENT</span><h2>Projects</h2><p>Create, update and publish the projects visitors see.</p></div><div className="admin-heading-actions">{!demoMode && <button className="backfill-button" type="button" onClick={handleBackfillTranslations} disabled={backfilling}>{backfilling ? "Translating..." : "Translate missing Arabic"}</button>}{!demoMode && <button className="backfill-button" type="button" onClick={handleMigrateImages} disabled={migrating}>{migrating ? "Moving images..." : "Move images to cloud"}</button>}<button className="add-property-button" type="button" onClick={openCreate}><span>+</span> Add project</button></div></div>
+        <div className="admin-page-heading"><div><span className="admin-eyebrow">CONTENT MANAGEMENT</span><h2>Projects</h2><p>Create, update and publish the projects visitors see.</p></div><div className="admin-heading-actions">{!demoMode && <button className="backfill-button" type="button" onClick={handleBackfillTranslations} disabled={backfilling}>{backfilling ? "Translating..." : "Translate missing Arabic"}</button>}<button className="add-property-button" type="button" onClick={openCreate}><span>+</span> Add project</button></div></div>
         <section className="admin-stats">
           <div className="admin-stat-card"><span>Total projects</span><strong>{stats.total}</strong></div>
           <div className="admin-stat-card"><span>Published projects</span><strong>{stats.published}</strong></div>
@@ -809,11 +763,11 @@ function AdminDashboard() {
         {!demoMode && <div className="admin-tabs" role="tablist"><button type="button" role="tab" aria-selected={tab === "projects"} className={tab === "projects" ? "admin-tab admin-tab-active" : "admin-tab"} onClick={() => setTab("projects")}>Projects</button><button type="button" role="tab" aria-selected={tab === "activity"} className={tab === "activity" ? "admin-tab admin-tab-active" : "admin-tab"} onClick={() => setTab("activity")}>Activity</button></div>}
         {!demoMode && tab === "activity" ? <AdminActivity /> : <section className="admin-properties">
           <div className="admin-section-header"><div><span className="admin-eyebrow">PROJECT CATALOGUE</span><h2>All projects</h2><p>{filteredProperties.length} project{filteredProperties.length === 1 ? "" : "s"} shown</p></div><input className="admin-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search projects..." aria-label="Search projects" /></div>
-          {loading ? <div className="admin-loading"><div className="admin-spinner" /><p>Loading projects...</p></div> : filteredProperties.length === 0 ? <div className="empty-properties"><h3>No projects found</h3><p>Create your first project or try another search.</p><button className="add-property-button" type="button" onClick={openCreate}>Add project</button></div> : <div className="properties-table-wrapper"><table className="properties-table"><thead><tr><th>Project</th><th>Location</th><th>Area</th><th>Status</th><th>Published</th><th>Created</th><th>Actions</th></tr></thead><tbody>{filteredProperties.map((property) => <tr key={property.id}><td><div className="property-name">{property.coverImageUrl ? <img src={imageUrl(property.coverImageUrl, 400)} alt="" loading="lazy" decoding="async" onError={showPlaceholderOnError} /> : <div className="property-thumb-placeholder">I</div>}<div><strong>{property.title}</strong><span>{property.type}</span></div></div></td><td>{property.location || "-"}</td><td>{property.area != null ? `${Number(property.area).toLocaleString()} m²` : "-"}</td><td><span className={`status-badge status-${property.status?.toLowerCase()}`}>{property.status?.replaceAll("_", " ")}</span></td><td><span className={property.published ? "published-yes" : "published-no"}>{property.published ? "Published" : "Draft"}</span></td><td>{formatDate(property.createdAt)}</td><td><div className="property-actions"><Link className="view-button" to={`/project/${property.id}`} target="_blank">View</Link><button className="edit-button" type="button" onClick={() => openEdit(property)}>Edit</button><button className="delete-button" type="button" onClick={() => handleDelete(property)}>Delete</button></div></td></tr>)}</tbody></table></div>}
+          {loading ? <div className="admin-loading"><div className="admin-spinner" /><p>Loading projects...</p></div> : filteredProperties.length === 0 ? <div className="empty-properties"><h3>No projects found</h3><p>Create your first project or try another search.</p><button className="add-property-button" type="button" onClick={openCreate}>Add project</button></div> : <div className="properties-table-wrapper"><table className="properties-table"><thead><tr><th>Project</th><th>Location</th><th>Area</th><th>Status</th><th>Published</th><th>Created</th><th>Actions</th></tr></thead><tbody>{filteredProperties.map((property) => <tr key={property.id}><td><div className="property-name">{property.coverImageUrl ? <img src={property.coverImageUrl} alt="" loading="lazy" decoding="async" onError={showPlaceholderOnError} /> : <div className="property-thumb-placeholder">I</div>}<div><strong>{property.title}</strong><span>{property.type}</span></div></div></td><td>{property.location || "-"}</td><td>{property.area != null ? `${Number(property.area).toLocaleString()} m²` : "-"}</td><td><span className={`status-badge status-${property.status?.toLowerCase()}`}>{property.status?.replaceAll("_", " ")}</span></td><td><span className={property.published ? "published-yes" : "published-no"}>{property.published ? "Published" : "Draft"}</span></td><td>{formatDate(property.createdAt)}</td><td><div className="property-actions"><Link className="view-button" to={`/project/${property.id}`} target="_blank">View</Link><button className="edit-button" type="button" onClick={() => openEdit(property)}>Edit</button><button className="delete-button" type="button" onClick={() => handleDelete(property)}>Delete</button></div></td></tr>)}</tbody></table></div>}
         </section>}
       </main>
 
-      {modal && <div className="admin-modal-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) requestCloseModal(); }}><section className="admin-modal" role="dialog" aria-modal="true" aria-labelledby="project-form-title"><div className="admin-modal-header"><div><span className="admin-eyebrow">{modal.type === "edit" ? "UPDATE PROJECT" : "NEW PROJECT"}</span><h2 id="project-form-title">{modal.type === "edit" ? "Edit project" : "Add project"}</h2></div><button className="modal-close" type="button" onClick={requestCloseModal} aria-label="Close form">×</button></div><form className="property-form" onSubmit={handleSave}><div className="form-grid"><label className="form-field"><span>Project name *</span><input name="title" value={form.title} onChange={updateField} placeholder="IUNU Residence" required maxLength={200} /></label><label className="form-field"><span>Location</span><input name="location" value={form.location} onChange={updateField} placeholder="New Cairo" maxLength={200} /></label><label className="form-field form-field-full"><span>Description</span><textarea name="description" value={form.description} onChange={updateField} placeholder="Describe the project..." rows="5" maxLength={20000} /></label><fieldset className="form-field form-field-full arabic-fieldset"><legend>Arabic version</legend><p className="arabic-hint">Leave blank to translate automatically from English when you save. You can edit the Arabic before saving.</p><div className="arabic-grid"><label className="form-field"><span>اسم المشروع</span><input name="titleAr" value={form.titleAr} onChange={updateField} placeholder="اسم المشروع" dir="rtl" lang="ar" maxLength={400} /></label><label className="form-field"><span>الموقع</span><input name="locationAr" value={form.locationAr} onChange={updateField} placeholder="الموقع" dir="rtl" lang="ar" maxLength={400} /></label><label className="form-field form-field-full"><span>وصف المشروع</span><textarea name="descriptionAr" value={form.descriptionAr} onChange={updateField} placeholder="وصف المشروع" dir="rtl" lang="ar" rows="5" maxLength={40000} /></label></div><div className="arabic-actions"><button className="translate-button" type="button" onClick={handleTranslatePreview} disabled={translating || demoMode}>{translating ? "Translating..." : "Translate from English"}</button>{demoMode && <small>Translation requires the backend. Exit demo mode to use it.</small>}{translationNotice && <small className="arabic-notice">{translationNotice}</small>}</div></fieldset><label className="form-field"><span>Area of unit (m²)</span><input name="area" type="number" min="0" step="0.01" value={form.area} onChange={updateField} placeholder="120000" /></label><label className="form-field"><span>Project type *</span><select name="type" value={form.type} onChange={updateField}><option value="RESIDENTIAL">Residential</option><option value="COMMERCIAL">Commercial</option><option value="ADMINISTRATIVE">Administrative</option></select></label><label className="form-field"><span>Status</span><select name="status" value={form.status} onChange={updateField}><option value="AVAILABLE">Available</option><option value="COMING_SOON">Coming soon</option><option value="SOLD_OUT">Sold out</option></select></label><label className="form-field"><span>Price (optional)</span><input name="price" type="number" min="0" step="0.01" value={form.price} onChange={updateField} placeholder="Price on request" /></label><GallerySection gallery={gallery} coverUrl={coverUrl} demoMode={demoMode} wakeNotice={wakeNotice} galleryError={galleryError} urlInput={urlInput} onUrlInput={setUrlInput} onAddUrl={handleAddUrl} onAddFiles={handleAddFiles} onSetCover={setCoverUrl} onMove={handleMoveTile} onRemove={handleRemoveTile} onRetry={handleRetryTile} /><label className="form-checkbox"><input name="published" type="checkbox" checked={form.published} onChange={updateField} /><span>Publish this project on the website</span></label></div><div className="admin-modal-actions"><button className="cancel-button" type="button" onClick={requestCloseModal}>Cancel</button><button className="save-button" type="submit" disabled={saving || busyCount > 0}>{busyCount > 0 ? `Uploading ${Math.min(uploadBatch.done + 1, Math.max(uploadBatch.total, 1))} of ${Math.max(uploadBatch.total, 1)}...` : saving ? "Saving..." : modal.type === "edit" ? "Update project" : "Save project"}</button></div></form></section></div>}
+      {modal && <div className="admin-modal-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) requestCloseModal(); }}><section className="admin-modal" role="dialog" aria-modal="true" aria-labelledby="project-form-title"><div className="admin-modal-header"><div><span className="admin-eyebrow">{modal.type === "edit" ? "UPDATE PROJECT" : "NEW PROJECT"}</span><h2 id="project-form-title">{modal.type === "edit" ? "Edit project" : "Add project"}</h2></div><button className="modal-close" type="button" onClick={requestCloseModal} aria-label="Close form">×</button></div><form className="property-form" onSubmit={handleSave}><div className="form-grid"><label className="form-field"><span>Project name *</span><input name="title" value={form.title} onChange={updateField} placeholder="IUNU Residence" required maxLength={200} /></label><label className="form-field"><span>Location</span><input name="location" value={form.location} onChange={updateField} placeholder="New Cairo" maxLength={200} /></label><label className="form-field form-field-full"><span>Description</span><textarea name="description" value={form.description} onChange={updateField} placeholder="Describe the project..." rows="5" maxLength={20000} /></label><fieldset className="form-field form-field-full arabic-fieldset"><legend>Arabic version</legend><p className="arabic-hint">Leave blank to translate automatically from English when you save. You can edit the Arabic before saving.</p><div className="arabic-grid"><label className="form-field"><span>اسم المشروع</span><input name="titleAr" value={form.titleAr} onChange={updateField} placeholder="اسم المشروع" dir="rtl" lang="ar" maxLength={400} /></label><label className="form-field"><span>الموقع</span><input name="locationAr" value={form.locationAr} onChange={updateField} placeholder="الموقع" dir="rtl" lang="ar" maxLength={400} /></label><label className="form-field form-field-full"><span>وصف المشروع</span><textarea name="descriptionAr" value={form.descriptionAr} onChange={updateField} placeholder="وصف المشروع" dir="rtl" lang="ar" rows="5" maxLength={40000} /></label></div><div className="arabic-actions"><button className="translate-button" type="button" onClick={handleTranslatePreview} disabled={translating || demoMode}>{translating ? "Translating..." : "Translate from English"}</button>{demoMode && <small>Translation requires the backend. Exit demo mode to use it.</small>}{translationNotice && <small className="arabic-notice">{translationNotice}</small>}</div></fieldset><label className="form-field"><span>Area of unit (m²)</span><input name="area" type="number" min="0" step="0.01" value={form.area} onChange={updateField} placeholder="120000" /></label><label className="form-field"><span>Project type *</span><select name="type" value={form.type} onChange={updateField}><option value="RESIDENTIAL">Residential</option><option value="COMMERCIAL">Commercial</option><option value="ADMINISTRATIVE">Administrative</option></select></label><label className="form-field"><span>Status</span><select name="status" value={form.status} onChange={updateField}><option value="AVAILABLE">Available</option><option value="COMING_SOON">Coming soon</option><option value="SOLD_OUT">Sold out</option></select></label><label className="form-field"><span>Price (optional)</span><input name="price" type="number" min="0" step="0.01" value={form.price} onChange={updateField} placeholder="Price on request" /></label><GallerySection gallery={gallery} coverUrl={coverUrl} demoMode={demoMode} wakeNotice={wakeNotice} galleryError={galleryError} onAddFiles={handleAddFiles} onSetCover={setCoverUrl} onMove={handleMoveTile} onRemove={handleRemoveTile} onRetry={handleRetryTile} /><label className="form-checkbox"><input name="published" type="checkbox" checked={form.published} onChange={updateField} /><span>Publish this project on the website</span></label></div><div className="admin-modal-actions"><button className="cancel-button" type="button" onClick={requestCloseModal}>Cancel</button><button className="save-button" type="submit" disabled={saving || busyCount > 0}>{busyCount > 0 ? `Uploading ${Math.min(uploadBatch.done + 1, Math.max(uploadBatch.total, 1))} of ${Math.max(uploadBatch.total, 1)}...` : saving ? "Saving..." : modal.type === "edit" ? "Update project" : "Save project"}</button></div></form></section></div>}
     </div>
   );
 }

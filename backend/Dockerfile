@@ -19,6 +19,11 @@ RUN mvn -B -q -DskipTests package
 # --- Runtime stage -----------------------------------------------------------
 FROM eclipse-temurin:21-jre
 RUN groupadd --system app && useradd --system --gid app --create-home app
+# Upload root on the Render persistent disk (render.yaml mounts it at
+# /var/data). Created and owned by the runtime user so the app can write to it
+# when the disk is mounted with the image's ownership, and so a run without a
+# disk still has a writable directory for LocalImageStorage's startup check.
+RUN mkdir -p /var/data/uploads && chown -R app:app /var/data
 WORKDIR /app
 
 COPY --from=build /app/target/real-estate-backend.jar app.jar

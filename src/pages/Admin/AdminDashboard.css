@@ -1369,18 +1369,6 @@
     box-shadow: 0 0 0 2px rgba(154, 138, 100, 0.4);
 }
 
-.gallery-url {
-    display: flex;
-    flex: 1 1 260px;
-    gap: 8px;
-    min-width: 0;
-}
-
-.gallery-url input {
-    flex: 1;
-    min-width: 0;
-}
-
 .gallery-hint {
     display: block;
 }

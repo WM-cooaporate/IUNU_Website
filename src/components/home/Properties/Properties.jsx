@@ -4,8 +4,6 @@ import { useProperties } from "../../../hooks/useProperties";
 import { toUserMessage } from "../../../services/apiClient";
 import { useLanguage } from "../../../i18n/LanguageContext";
 import {
-  imageSrcSet,
-  imageUrl,
   PLACEHOLDER_IMAGE,
   showPlaceholderOnError,
 } from "../../../utils/imageUrl";
@@ -122,11 +120,9 @@ function Properties() {
               >
                 <img
                   src={
-                    imageUrl(property.coverImageUrl, 800) ||
+                    property.coverImageUrl ||
                     PLACEHOLDER_IMAGE
                   }
-                  srcSet={imageSrcSet(property.coverImageUrl) || undefined}
-                  sizes="(max-width: 768px) 100vw, 33vw"
                   alt={localize(property, "title")}
                   className="property-image"
                   loading="lazy"

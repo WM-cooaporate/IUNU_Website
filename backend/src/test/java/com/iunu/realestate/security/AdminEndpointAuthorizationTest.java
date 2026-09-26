@@ -56,8 +56,6 @@ class AdminEndpointAuthorizationTest extends IntegrationTest {
             "POST,   /api/admin/translations/preview",
             "POST,   /api/admin/translations/properties/backfill",
             "GET,    /api/admin/audit-log",
-            "POST,   /api/admin/images/migrate-to-cloud",
-            "POST,   /api/admin/images/sweep",
             // Operational data: request rates, cache hit ratios, pool depth,
             // the JVM's own configuration. Only /actuator/health is anonymous.
             "GET,    /actuator/metrics",
@@ -92,8 +90,6 @@ class AdminEndpointAuthorizationTest extends IntegrationTest {
             "POST,   /api/admin/translations/preview",
             "POST,   /api/admin/translations/properties/backfill",
             "GET,    /api/admin/audit-log",
-            "POST,   /api/admin/images/migrate-to-cloud",
-            "POST,   /api/admin/images/sweep",
             // Operational data: request rates, cache hit ratios, pool depth,
             // the JVM's own configuration. Only /actuator/health is anonymous.
             "GET,    /actuator/metrics",

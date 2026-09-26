@@ -206,7 +206,6 @@ class ErrorHandlingIntegrationTest extends IntegrationTest {
         cases.add(new Case("GET /api/admin/audit-log?page=abc", asAdmin(get("/api/admin/audit-log").param("page", "abc")), 400));
         cases.add(new Case("GET /api/admin/audit-log?size=99999999999", asAdmin(get("/api/admin/audit-log").param("size", "99999999999")), 400));
         cases.add(new Case("GET /api/admin/audit-log?action=NOPE", asAdmin(get("/api/admin/audit-log").param("action", "NOPE")), 400));
-        cases.add(new Case("POST /api/admin/images/sweep?dryRun=maybe", asAdmin(post("/api/admin/images/sweep").param("dryRun", "maybe")), 400));
         return cases;
     }
 

@@ -106,18 +106,4 @@ class ImageUploadApiTest extends IntegrationTest {
         assertThat(projectRepository.findById(project.getId()).orElseThrow().getCoverImageUrl())
                 .startsWith("http://localhost:8080/uploads/projects/");
     }
-
-    @Test
-    @DisplayName("with the local provider, migrate and sweep answer enabled=false and do nothing")
-    void maintenanceIsDisabledLocally() throws Exception {
-        String admin = adminBearer();
-        mockMvc.perform(post("/api/admin/images/migrate-to-cloud").header(HttpHeaders.AUTHORIZATION, admin))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.enabled").value(false))
-                .andExpect(jsonPath("$.migrated").value(0));
-        mockMvc.perform(post("/api/admin/images/sweep").header(HttpHeaders.AUTHORIZATION, admin))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.enabled").value(false))
-                .andExpect(jsonPath("$.dryRun").value(true));
-    }
 }

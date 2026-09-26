@@ -228,26 +228,11 @@ app:
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
 
   file-storage:
-    # local: files under `location`, served from /uploads/** (development and
-    # tests). cloudinary: Cloudinary storage + CDN (production). See
-    # FileStorageConfig and ENV_VARS.md.
-    provider: ${FILE_STORAGE_PROVIDER:local}
+    # Uploaded images are files under `location`, served from /uploads/** by
+    # WebConfig. In production this is the Render persistent disk (see
+    # application-prod.yml and render.yaml).
     location: ${UPLOAD_LOCATION:uploads}
     public-base-url: ${PUBLIC_API_URL:http://localhost:8080}
-    cloudinary:
-      # cloudinary://<api_key>:<api_secret>@<cloud_name> - Cloudinary dashboard
-      # -> API Keys -> "API environment variable". Backend only; never a VITE_ var.
-      url: ${CLOUDINARY_URL:}
-      # Everything this environment uploads, deletes or sweeps lives under here.
-      folder-root: ${CLOUDINARY_FOLDER:iunu/dev}
-      connect-timeout-ms: 5000
-      read-timeout-ms: 30000
-      # Incoming transformation cap on the long edge - a backstop for the
-      # browser's own resize to 2000px.
-      max-dimension: 2400
-      # An unreferenced upload younger than this is an edit still in progress,
-      # not an orphan. The sweep never deletes it.
-      sweep-min-age: 24h
 
   mail:
     enabled: ${MAIL_ENABLED:false}
