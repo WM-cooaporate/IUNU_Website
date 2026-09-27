@@ -1148,7 +1148,7 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    color: #31505c;
+    color: #ffffff;
     font-size: 10px;
     font-weight: 600;
     letter-spacing: 0.6px;
@@ -1242,7 +1242,7 @@
     left: 0;
     padding: 6px 8px;
     background: rgba(255, 255, 255, 0.92);
-    color: #31505c;
+    color: #ffffff;
     font-size: 10px;
 }
 
