@@ -1,0 +1,114 @@
+/* =========================================
+   IUNU ANIMATIONS
+========================================= */
+
+
+/* =========================
+   FADE UP
+========================= */
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(35px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* =========================
+   FADE IN
+========================= */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+
+/* =========================
+   SCALE IN
+========================= */
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+
+/* =========================
+   IMAGE REVEAL
+========================= */
+
+@keyframes imageReveal {
+    from {
+        opacity: 0;
+        transform: scale(1.08);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+
+/* =========================
+   HERO TITLE
+========================= */
+
+@keyframes heroTitle {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* =========================
+   HERO SUBTITLE
+========================= */
+
+@keyframes heroSubtitle {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* =========================
+   UTILITY CLASSES
+========================= */
+
+.animate-fade-up {
+    animation: fadeUp 0.8s ease forwards;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.8s ease forwards;
+}
+
+.animate-scale-in {
+    animation: scaleIn 0.8s ease forwards;
+}

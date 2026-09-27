@@ -1,0 +1,62 @@
+.notfound-main {
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 24px;
+}
+
+.notfound-eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    color: #8b805f;
+    margin-bottom: 18px;
+}
+
+.notfound-main h1 {
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 400;
+    margin: 0 0 16px;
+}
+
+.notfound-main p {
+    max-width: 480px;
+    margin: 0 0 32px;
+    line-height: 1.7;
+    color: #6b6b6b;
+}
+
+.notfound-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: center;
+}
+
+.notfound-actions a {
+    padding: 14px 28px;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-decoration: none;
+    border: 1px solid #8b805f;
+    transition: background 0.25s ease, color 0.25s ease;
+}
+
+.notfound-primary {
+    background: #8b805f;
+    color: #fff;
+}
+
+.notfound-primary:hover {
+    background: #6f654b;
+}
+
+.notfound-secondary {
+    color: #8b805f;
+}
+
+.notfound-secondary:hover {
+    background: #f5f2e9;
+}

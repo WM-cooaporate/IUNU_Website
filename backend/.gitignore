@@ -1,0 +1,18 @@
+target/
+*.class
+
+# Locally stored uploads (UPLOAD_LOCATION)
+uploads/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store

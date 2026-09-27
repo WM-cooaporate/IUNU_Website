@@ -1,0 +1,237 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap");
+
+/* =====================================================
+   GLOBAL
+===================================================== */
+
+html,
+body {
+    font-family: var(--font-primary);
+    color: var(--color-text);
+    background: var(--color-surface-warm);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+}
+
+
+/* =====================================================
+   RESET
+===================================================== */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+
+/* =====================================================
+   HTML
+===================================================== */
+
+html {
+    width: 100%;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+    scroll-behavior: smooth;
+}
+
+
+/* =====================================================
+   BODY
+===================================================== */
+
+body {
+    width: 100%;
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+
+/* =====================================================
+   ROOT
+===================================================== */
+
+#root {
+    width: 100%;
+    min-height: 100vh;
+}
+
+html[dir="rtl"] body,
+html[dir="rtl"] input,
+html[dir="rtl"] textarea,
+html[dir="rtl"] select,
+html[dir="rtl"] button {
+    direction: rtl;
+}
+
+html[dir="rtl"] input,
+html[dir="rtl"] textarea,
+html[dir="rtl"] select {
+    text-align: right;
+}
+
+
+/* =====================================================
+   IMAGES
+===================================================== */
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+html[dir="rtl"] body {
+    font-family: "Tahoma", "Arial", sans-serif;
+}
+
+html[dir="rtl"] .navbar-container,
+html[dir="rtl"] .footer-container {
+    direction: rtl;
+}
+
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+::selection {
+    background: var(--color-gold);
+    color: var(--color-white);
+}
+
+:focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 3px;
+}
+
+.page-transition {
+    animation: pageEnter 420ms var(--ease-smooth) both;
+}
+
+@keyframes pageEnter {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* =====================================================
+   PAGES
+===================================================== */
+
+.about-page,
+.contact-page,
+.project-page {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    overflow-x: clip;
+}
+
+
+/* =====================================================
+   SECTIONS
+===================================================== */
+
+section {
+    width: 100%;
+    max-width: 100%;
+}
+
+
+/* =====================================================
+   HOME PAGE
+===================================================== */
+
+.home-page {
+    width: 100%;
+    min-height: 100vh;
+    background: #f7f6f2;
+}
+
+
+/* =====================================================
+   HOME CONTENT
+===================================================== */
+
+.home-content {
+    width: 100%;
+    background: #f7f6f2;
+}
+
+
+/* =====================================================
+   MAIN
+===================================================== */
+
+.home-page main {
+    width: 100%;
+    background: #f7f6f2;
+}
+
+
+/* =====================================================
+   LARGE SCREENS
+===================================================== */
+
+@media (min-width: 1600px) {
+    .navbar-container {
+        max-width: 1400px;
+    }
+}
+
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 1024px) {
+    body {
+        overflow-x: hidden;
+    }
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 650px) {
+    html,
+    body,
+    #root {
+        width: 100%;
+        min-width: 320px;
+    }
+    body {
+        overflow-x: hidden;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+    .page-transition {
+        animation: none;
+    }
+}
+html[dir="rtl"] body {
+    font-family: "Tahoma", "Arial", sans-serif;
+}
+
+html[dir="rtl"] .nav-link-active::after {
+    transform-origin: center;
+}
