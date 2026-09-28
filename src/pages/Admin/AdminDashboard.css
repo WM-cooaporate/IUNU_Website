@@ -595,7 +595,7 @@
 .modal-close:hover {
     background: #31505c;
     border-color: #31505c;
-    color: #ffffff;
+    color: #31505c;
 }
 
 
@@ -1092,7 +1092,7 @@
 .translate-button:hover:not(:disabled),
 .backfill-button:hover:not(:disabled) {
     background: #9a8a64;
-    color: #000000;
+    color: #31505c;
 }
 
 .translate-button:disabled,
