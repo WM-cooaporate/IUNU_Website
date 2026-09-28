@@ -624,7 +624,7 @@
 }
 
 .form-field label {
-    color: #ffffff;
+    color: #31505c;
     font-size: 10px;
     font-weight: 600;
     letter-spacing: 0.6px;
@@ -638,7 +638,7 @@
     padding: 11px 12px;
     border: 1px solid #dcd8ce;
     background: #ffffff;
-    color: #ffffff;
+    color: #31505c;
     font-family: inherit;
     font-size: 12px;
     outline: none;
@@ -1092,7 +1092,7 @@
 .translate-button:hover:not(:disabled),
 .backfill-button:hover:not(:disabled) {
     background: #9a8a64;
-    color: #ffffff;
+    color: #000000;
 }
 
 .translate-button:disabled,
