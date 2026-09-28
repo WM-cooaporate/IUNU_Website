@@ -516,3 +516,30 @@
     outline: 2px solid #d9d3c2;
     outline-offset: 4px;
 }
+
+
+/* =====================================================
+   WM_SOLUTIONS LINK
+===================================================== */
+
+.footer-wm-link {
+    margin-left: 6px;
+    color: #9a8f72;
+    text-decoration: none;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid transparent;
+    transition: color 0.3s ease, border-color 0.3s ease;
+}
+
+.footer-wm-link:hover,
+.footer-wm-link:focus-visible {
+    color: #ffffff;
+    border-bottom-color: #9a8f72;
+}
+
+.footer-wm-link:focus-visible {
+    outline: 2px solid #d9d3c2;
+    outline-offset: 3px;
+    border-radius: 2px;
+}
