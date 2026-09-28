@@ -149,7 +149,16 @@ function Footer() {
 
         <div className="footer-bottom">
           <span className="footer-copyright">
-            © {currentYear} IUNU Developments
+            © {currentYear} {t("All Rights Reserved")}, IUNU Developments,{" "}
+            {t("Carefully crafted by")}{" "}
+            <a
+              href="https://wm-cooaporate.github.io/demo-repository/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-wm-link"
+            >
+              WM_Solutions
+            </a>
           </span>
 
           <div className="footer-social">
@@ -253,15 +262,6 @@ function Footer() {
 
           <span className="footer-legal">
             {t("All Rights Reserved.")}
-            {" — "}
-            <a
-              href="https://wm-cooaporate.github.io/demo-repository/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="footer-wm-link"
-            >
-              WM_Solutions
-            </a>
           </span>
         </div>
       </div>
