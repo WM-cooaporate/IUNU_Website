@@ -70,7 +70,8 @@ const translations = {
 "Spaces": "مساحات",
 "Back to home":"أرجع الي الصفحة الرئيسية",
 "View our projects":"شاهد مشاريعنا",
-
+"All Rights Reserved":"جميع الحقوق محفوظة",
+"Carefully crafted by":"تم إنجازه بعناية بواسطة",
 "Quiet": "ثقة",
 "Confidence": "هادئة",
 "in Projects": "في المشروعات",
