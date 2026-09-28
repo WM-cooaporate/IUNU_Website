@@ -253,6 +253,15 @@ function Footer() {
 
           <span className="footer-legal">
             {t("All Rights Reserved.")}
+            {" — "}
+            <a
+              href="https://wm-cooaporate.github.io/demo-repository/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-wm-link"
+            >
+              WM_Solutions
+            </a>
           </span>
         </div>
       </div>
