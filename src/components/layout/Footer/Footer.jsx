@@ -99,19 +99,19 @@ function Footer() {
               {t("CONTACT")}
             </span>
 
-            <a href="tel:17337">
+            <a href="tel:17337" className="footer-ltr-text">
               17337
             </a>
 
-            <a href="tel:0225371444">
+            <a href="tel:0225371444" className="footer-ltr-text">
               02 253 71 444
             </a>
 
-            <a href="tel:0225371443">
+            <a href="tel:0225371443" className="footer-ltr-text">
               02 253 71 443
             </a>
 
-            <a href="mailto:info@iunu-eg.com">
+            <a href="mailto:info@iunu-eg.com" className="footer-ltr-text">
               info@iunu-eg.com
             </a>
           </div>
@@ -149,16 +149,7 @@ function Footer() {
 
         <div className="footer-bottom">
           <span className="footer-copyright">
-            © {currentYear} {t("All Rights Reserved")}, IUNU Developments,{" "}
-            {t("Carefully crafted by")}{" "}
-            <a
-              href="https://wm-cooaporate.github.io/demo-repository/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="footer-wm-link"
-            >
-              WM_Solutions
-            </a>
+            © {currentYear} IUNU Developments
           </span>
 
           <div className="footer-social">
