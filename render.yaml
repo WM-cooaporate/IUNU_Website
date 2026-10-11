@@ -169,3 +169,8 @@ services:
       # Vite inlines it at build time, so changing it requires a rebuild.
       - key: VITE_API_URL
         sync: false
+      # cypress is a devDependency for the E2E tests in CI. Without this,
+      # `npm ci` downloads its test browser (several hundred MB) on every
+      # deploy, and a slow or failed download fails the build.
+      - key: CYPRESS_INSTALL_BINARY
+        value: "0"

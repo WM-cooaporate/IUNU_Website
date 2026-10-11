@@ -27,7 +27,7 @@ edit, publish and photograph projects.
 ├── load-tests/       k6 load-test scripts
 ├── monitoring/       Alert rules
 ├── render.yaml       Render Blueprint: database, API and static site
-├── vercel.json       Vercel config for the frontend (Netlify reads public/_headers)
+├── vercel.json       Vercel config (not the live host; Netlify reads public/_headers)
 └── ENV_VARS.md       Every environment variable, what it does, and its default
 ```
 
@@ -125,19 +125,19 @@ Blueprint, following `main`:
 - `iunu-api`: the backend as a Docker service, with a persistent disk at
   `/var/data` for uploaded project images.
 
-**Frontend:** a static build (`npm run build`, publishing `dist/`) with
-configuration for three hosts. Which one serves the production domain is
-decided in the hosts' dashboards and DNS, not in this repository:
+**Frontend:** Render, as the `iunu-web` static site in the same Blueprint
+(<https://iunu-web.onrender.com>). It builds with `npm ci && npm run build`
+and publishes `dist/`.
 
-- Render: the `iunu-web` static site in `render.yaml`.
-- Netlify: the `iunuwebsite` site, which also posts a deploy preview on every
-  pull request. It reads `public/_headers`.
-- Vercel: `vercel.json`.
+The repository also carries frontend configuration for Netlify
+(`public/_headers`; the `iunuwebsite` site posts a deploy preview on every pull
+request) and Vercel (`vercel.json`). Neither serves the live site.
 
 Each host reads its security headers from its own file, so `render.yaml`,
 `public/_headers` and `vercel.json` must stay in sync. CI checks this
-(`security/check-headers-sync.mjs`). Whichever host serves the site needs
-`VITE_API_URL` set in its build environment.
+(`security/check-headers-sync.mjs`). The build needs `VITE_API_URL`, and
+`CYPRESS_INSTALL_BINARY=0` keeps it from downloading the Cypress test
+browser; `render.yaml` sets the second for `iunu-web`.
 
 See [`ENV_VARS.md`](ENV_VARS.md) for the deploy checklist. Operations docs:
 
