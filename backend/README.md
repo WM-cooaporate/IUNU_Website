@@ -83,8 +83,9 @@ it to this backend (not done here, per "don't touch the frontend"):
 
 - Point axios at `http://localhost:8080/api` (or your deployed URL) and add
   it to `CORS_ALLOWED_ORIGINS`.
-- `POST /api/auth/register` expects `{ fullName, email, phone, password }`
-  matching `Register.jsx`'s form fields.
+- `POST /api/auth/register` is off by default and answers 404 (see
+  `APP_REGISTRATION_ENABLED` in `ENV_VARS.md`). Accounts come from the admin
+  bootstrap and `POST /api/admin/users`.
 - `POST /api/auth/login` expects `{ email, password }` and returns
   `{ accessToken, refreshToken, tokenType, expiresInSeconds, expiresAt, user }`
   — see **Projects & admin API** below for a full example.
@@ -102,7 +103,7 @@ Swagger UI; this is the shape of the surface.
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| POST | `/auth/register` | public | Create account |
+| POST | `/auth/register` | public | Create a USER account. **404 unless `APP_REGISTRATION_ENABLED=true`** (off by default) |
 | POST | `/auth/login` | public | Get access + refresh token |
 | POST | `/auth/refresh` | public (valid refresh token) | Rotate tokens |
 | POST | `/auth/logout` | public (valid refresh token) | Revoke a refresh token |
@@ -428,7 +429,7 @@ is a migration, not a rewrite.
 
 - Access tokens can't be revoked before they expire (stateless JWT trade-off) — kept the TTL short (15 min) to bound the blast radius; refresh tokens *are* individually revocable.
 - **Single instance only — read this before scaling out.** Both the public property cache (Caffeine) and the rate limiter's bucket store are **in-process**. With a second instance: an admin's save evicts one instance's cache and the other keeps serving the stale listing for up to 10 minutes, and every rate limit is effectively multiplied by the instance count. Moving both to Redis is a *prerequisite* for running more than one instance, not an optimisation to do afterwards. The cache is `CacheConfig`; the limiter is `RateLimitingFilter`.
-- No email verification step on registration (frontend doesn't currently ask for one either) — accounts are immediately usable after `/auth/register`.
+- Public registration is off by default (`APP_REGISTRATION_ENABLED`, see `RegistrationGate`). If it is ever switched on, there is no email verification step — accounts are immediately usable after `/auth/register`.
 - Swagger and `/v3/api-docs` now default to **off** (`SWAGGER_ENABLED`), so nothing is published unless someone opts in.
 - Account lockout is per-account, which makes it a denial-of-service vector against a known admin address. Deliberately unchanged — see M9 in `docs/SECURITY_AUDIT.md` for the three options.
 - TLS termination is expected to happen at the load balancer/reverse proxy in front of this app (HSTS is sent assuming that's the case).

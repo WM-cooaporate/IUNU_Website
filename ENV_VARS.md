@@ -116,6 +116,7 @@ stays reachable) carries whatever the caller typed, end to end.
 | `RATE_LIMIT_ENABLED` | Master switch for the in-app rate limiter. Leave on. Exists so the test suite can disable it. | `true` |
 | `RATE_LIMIT_MAX_TRACKED_CLIENTS` | Ceiling on the limiter's bucket store. Bounded so a flood from many addresses cannot grow it until the JVM runs out of memory. | `100000` |
 | `MAX_JSON_REQUEST_BYTES` | Largest non-multipart body accepted, checked against `Content-Length` before the stream is read. | `1048576` (1MB) |
+| `APP_REGISTRATION_ENABLED` | Backend only. Public self-registration at `POST /api/auth/register`. **Off by default**: the endpoint answers 404 as if it did not exist. Nobody signs themselves up — the first admin comes from `ADMIN_EMAIL` / `ADMIN_PASSWORD` (see **One-time admin bootstrap** below) and further admins from `POST /api/admin/users`. Leave unset. | `false` |
 
 ### Monitoring and security tuning — all optional, all off or defaulted when unset
 

@@ -1,12 +1,14 @@
 package com.iunu.realestate.config;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.CacheControl;
 import org.springframework.web.filter.ShallowEtagHeaderFilter;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -14,10 +16,19 @@ import java.nio.file.Paths;
 import java.time.Duration;
 
 @Configuration
+@RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
+
+    private final RegistrationGate registrationGate;
 
     @Value("${app.file-storage.location:uploads}")
     private String uploadLocation;
+
+    /** Answers 404 on POST /api/auth/register unless registration is switched on. See RegistrationGate. */
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(registrationGate).addPathPatterns(RegistrationGate.PATH);
+    }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {

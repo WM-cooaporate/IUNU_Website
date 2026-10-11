@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.util.ArrayList;
@@ -46,6 +47,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * where the API answered ~35% of fuzzed requests with a 5xx. Each case is a
  * separate dynamic test, so a regression names the exact request.
  */
+// Registration is off by default (404, see RegistrationDisabledTest). The
+// /api/auth/register cases here cover the endpoint for when it is switched on.
+@TestPropertySource(properties = "app.auth.registration-enabled=true")
 @DisplayName("Error handling: malformed input is a clean 4xx")
 class ErrorHandlingIntegrationTest extends IntegrationTest {
 
