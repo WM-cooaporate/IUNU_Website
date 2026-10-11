@@ -1,6 +1,7 @@
 # IUNU Real Estate — Backend
 
-Spring Boot 3 / Java 21 REST API backing the `projects/iunu-website` frontend.
+Spring Boot 3 / Java 21 REST API behind the IUNU website, whose React/Vite
+frontend lives at the repository root.
 PostgreSQL for persistence, JWT for auth. Covers the public site (published
 projects and properties, lead-capture forms) and the authenticated admin
 dashboard behind it.
@@ -74,27 +75,35 @@ can mint an ADMIN.
 
 ### API docs
 
-Swagger UI: `http://localhost:8080/swagger-ui.html`
+Swagger UI: `http://localhost:8080/swagger-ui.html`, only when started with
+`SWAGGER_ENABLED=true` (off by default).
 
-## Connecting the existing frontend
+## How the frontend uses this API
 
-`projects/iunu-website` currently calls a mocked `authServices.js`. To wire
-it to this backend (not done here, per "don't touch the frontend"):
+The frontend (repository root, `src/`) reaches the API through one axios
+setup in `src/services/apiClient.js`, whose base URL comes from `VITE_API_URL`
+(see `ENV_VARS.md`). The frontend's origin must be in `CORS_ALLOWED_ORIGINS`.
 
-- Point axios at `http://localhost:8080/api` (or your deployed URL) and add
-  it to `CORS_ALLOWED_ORIGINS`.
-- `POST /api/auth/register` is off by default and answers 404 (see
-  `APP_REGISTRATION_ENABLED` in `ENV_VARS.md`). Accounts come from the admin
-  bootstrap and `POST /api/admin/users`.
-- `POST /api/auth/login` expects `{ email, password }` and returns
+- **Admin sign-in** (`/admin`): `POST /api/auth/login` with
+  `{ email, password }` returns
   `{ accessToken, refreshToken, tokenType, expiresInSeconds, expiresAt, user }`
-  — see **Projects & admin API** below for a full example.
-- `POST /api/auth/forgot-password` expects `{ email }` and always returns a
-  generic success message, matching the existing UI copy.
-- The contact form (`Contact.jsx`), quote form (`QuoteForm.jsx`), and
-  newsletter field (`Project.jsx`) currently have no submit wiring at all;
-  `POST /api/contact`, `POST /api/quotes`, `POST /api/newsletter` are ready
-  for them respectively.
+  (full example under **Projects & admin API** below). The dashboard admits
+  only `role: "ADMIN"`.
+- **Session refresh:** when an admin call gets a 401 (the 15-minute access
+  token expired), the frontend calls `POST /api/auth/refresh` once and replays
+  the request. A refused refresh, or a second 401, signs the admin out.
+  Sign-out calls `POST /api/auth/logout` to revoke the refresh token.
+- **Accounts:** `POST /api/auth/register` is off by default and answers 404
+  (see `APP_REGISTRATION_ENABLED` in `ENV_VARS.md`). Accounts come from the
+  admin bootstrap and `POST /api/admin/users`. The frontend has no
+  forgot-password page; `POST /api/auth/forgot-password` exists but is unused.
+- **Public reads:** the home and Projects pages use `GET /api/properties`, and
+  the details page uses `GET /api/properties/{id}`. These go out without a
+  token, so an admin signed in on the same browser sees exactly what visitors
+  see.
+- **Lead forms:** contact (`POST /api/contact`), quote (`POST /api/quotes`),
+  newsletter (`POST /api/newsletter`) and careers with a CV upload
+  (`POST /api/careers`).
 
 ## API overview
 
@@ -437,14 +446,16 @@ is a migration, not a rewrite.
 ## Verification performed
 
 ```bash
-mvn test
+mvn test      # the fast suite
+mvn verify    # also runs the PostgreSQL tests through Testcontainers (needs Docker)
 ```
 
-197 tests (7 skipped where no Docker daemon is available). The fast suite runs against in-memory H2 in PostgreSQL
-compatibility mode (`test` profile, `src/test/resources/application-test.yml`)
-with Hibernate generating the schema. `MigrationSchemaTest` is the exception:
-it runs the real migrations against a real PostgreSQL container, and is
-skipped where no Docker daemon is available.
+The fast suite runs against in-memory H2 in PostgreSQL compatibility mode
+(`test` profile, `src/test/resources/application-test.yml`) with Hibernate
+generating the schema. `MigrationSchemaTest` and `RefreshTokenRacePostgresTest`
+are the exceptions: they run against a real PostgreSQL container and are
+skipped where no Docker daemon is available. CI (`.github/workflows/ci.yml`)
+runs `mvn verify` and fails if they were skipped.
 
 What they cover:
 
@@ -478,23 +489,13 @@ What they cover:
   checks that catch a migration/entity mismatch, which would otherwise only
   surface at boot as a `ddl-auto=validate` failure.
 
-### Not covered here
-
-No Docker daemon was available in the sandbox the PostgreSQL migration was
-done in, so `MigrationSchemaTest` was skipped there and the `Dockerfile` has
-not been built. The packaged jar *was* booted under the `prod` profile against
-a real PostgreSQL 16: all three migrations applied, `ddl-auto=validate`
-accepted the schema, `/actuator/health` returned `UP`, and admin bootstrap,
-login, project create/read and the public forms were exercised end to end.
-Run `mvn verify` somewhere with Docker to get the container test itself.
-
 ## TODO / follow-ups
 
 - **Redis before a second instance.** The cache and the rate limiter are both
   in-process. See the trade-offs section above — this is the one item here
   that is a correctness blocker rather than a nice-to-have.
-- Password reset and email verification exist for `USER` accounts but were
-  out of scope for the admin flow — an admin who loses their password
+- Password reset exists in the API but the frontend has no page for it, so
+  it is out of reach for admins — an admin who loses their password
   currently needs another admin, or a fresh bootstrap against an empty
   `users` table. Note that password reset needs `MAIL_ENABLED=true` and real
   SMTP credentials; without them it silently does nothing in production.
@@ -507,6 +508,6 @@ Run `mvn verify` somewhere with Docker to get the container test itself.
 - The production frontend origin still needs adding to
   `CORS_ALLOWED_ORIGINS` when the domain is known.
 - Access tokens live in the browser's `localStorage`, so any XSS on the
-  frontend takes the admin session with it. The strict CSP in `vercel.json`
-  is the mitigation; httpOnly cookies are the structural fix and a larger
+  frontend takes the admin session with it. The strict CSP (kept in sync
+  across `vercel.json`, `public/_headers` and `render.yaml`) is the mitigation; httpOnly cookies are the structural fix and a larger
   change. See M7 in `docs/SECURITY_AUDIT.md`.

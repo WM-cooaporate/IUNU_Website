@@ -27,6 +27,7 @@ edit, publish and photograph projects.
 ├── load-tests/       k6 load-test scripts
 ├── monitoring/       Alert rules
 ├── render.yaml       Render Blueprint: database, API and static site
+├── vercel.json       Vercel config for the frontend (Netlify reads public/_headers)
 └── ENV_VARS.md       Every environment variable, what it does, and its default
 ```
 
@@ -117,14 +118,26 @@ GitHub Actions runs all of this on every pull request: `ci.yml` (backend
 
 ## Deployment
 
-The backend, the database and the frontend all deploy to **Render** from the
-[`render.yaml`](render.yaml) Blueprint, following `main`:
+**Backend and database:** Render, from the [`render.yaml`](render.yaml)
+Blueprint, following `main`:
 
 - `iunu-db`: managed PostgreSQL.
 - `iunu-api`: the backend as a Docker service, with a persistent disk at
   `/var/data` for uploaded project images.
-- `iunu-web`: the frontend as a static site (`npm ci && npm run build`,
-  publishing `dist/`).
+
+**Frontend:** a static build (`npm run build`, publishing `dist/`) with
+configuration for three hosts. Which one serves the production domain is
+decided in the hosts' dashboards and DNS, not in this repository:
+
+- Render: the `iunu-web` static site in `render.yaml`.
+- Netlify: the `iunuwebsite` site, which also posts a deploy preview on every
+  pull request. It reads `public/_headers`.
+- Vercel: `vercel.json`.
+
+Each host reads its security headers from its own file, so `render.yaml`,
+`public/_headers` and `vercel.json` must stay in sync. CI checks this
+(`security/check-headers-sync.mjs`). Whichever host serves the site needs
+`VITE_API_URL` set in its build environment.
 
 See [`ENV_VARS.md`](ENV_VARS.md) for the deploy checklist. Operations docs:
 
