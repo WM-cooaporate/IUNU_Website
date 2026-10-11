@@ -5,3 +5,7 @@
 # base64 of {"alg":"HS256"} - a JWT header with no payload or signature,
 # truncated by hand for the docs. Not a credential.
 f329dc1f747def920cf058f2df276b63e4ad2e03:backend/README.md:generic-api-key:146
+
+# Same example login response after the README was edited (5dcb086): the line
+# moved to 147. Still the truncated {"alg":"HS256"} JWT header, not a credential.
+5dcb0868e9555b7d723ff254cb2a60997392b93b:backend/README.md:generic-api-key:147
