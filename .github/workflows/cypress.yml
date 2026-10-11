@@ -1,33 +1,47 @@
-name: Cypress Tests
-on: [push]
+# End-to-end smoke tests: the production build (vite build + vite preview)
+# driven by Cypress. No backend runs here - every API call is stubbed with
+# cy.intercept and the fixtures in cypress/fixtures, so these prove the
+# frontend renders and navigates. Backend behaviour is the JUnit suite's job
+# (ci.yml). Run locally with `npm run build && npm run preview`, then
+# `npm run cy:run`.
+name: E2E
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  cypress-run:
+  cypress:
+    name: Cypress (stubbed API)
     runs-on: ubuntu-latest
-    # Runs tests in parallel with matrix strategy https://on.cypress.io/parallelization
-    # https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
-    # Also see warning here https://github.com/cypress-io/github-action#parallel
-    strategy:
-      fail-fast: false # https://github.com/cypress-io/github-action/issues/48
-      matrix:
-        containers: [1, 2] # Uses 2 parallel instances
+    timeout-minutes: 15
+    env:
+      # Vite inlines this at build time. Nothing listens on it in CI: every
+      # request to it is intercepted by the specs.
+      VITE_API_URL: http://localhost:8080/api
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-      - name: Cypress run
-        # Uses the official Cypress GitHub action https://github.com/cypress-io/github-action
-        uses: cypress-io/github-action@v7
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          # Starts web server for E2E tests - replace with your own server invocation
-          # https://docs.cypress.io/app/continuous-integration/overview#Boot-your-server
-          start: npm start
-          wait-on: 'http://localhost:3000' # Waits for above
-          # Records to Cypress Cloud 
-          # https://docs.cypress.io/cloud/get-started/setup
-          record: true
-          parallel: true # Runs test in parallel using settings above
-        env:
-          # For recording and parallelization you must set your CYPRESS_RECORD_KEY
-          # in GitHub repo → Settings → Secrets → Actions
-          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-          # Create a token https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          node-version: lts/*
+          cache: npm
+      - uses: cypress-io/github-action@v7
+        with:
+          build: npm run build
+          start: npm run preview
+          wait-on: "http://localhost:4173"
+          wait-on-timeout: 120
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+          if-no-files-found: ignore
