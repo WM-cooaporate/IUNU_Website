@@ -7,7 +7,9 @@
         "dev": "vite",
         "build": "vite build",
         "lint": "eslint .",
-        "preview": "vite preview"
+        "preview": "vite preview --port 4173 --strictPort",
+        "cy:open": "cypress open",
+        "cy:run": "cypress run"
     },
     "dependencies": {
         "@tanstack/react-query": "^5.103.2",
@@ -25,6 +27,7 @@
         "@types/react": "^19.2.17",
         "@types/react-dom": "^19.2.3",
         "@vitejs/plugin-react": "^6.0.4",
+        "cypress": "^16.1.1",
         "eslint": "^10.8.0",
         "eslint-plugin-react-hooks": "^7.1.1",
         "eslint-plugin-react-refresh": "^0.5.3",

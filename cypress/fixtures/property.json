@@ -1,0 +1,15 @@
+{
+  "id": 101,
+  "title": "Cypress Test Tower",
+  "description": "A fixture property that only exists in the Cypress suite.",
+  "type": "RESIDENTIAL",
+  "status": "AVAILABLE",
+  "location": "Fixture City",
+  "titleAr": "برج اختبار سايبرس",
+  "descriptionAr": "عقار تجريبي موجود فقط في اختبارات سايبرس.",
+  "locationAr": "مدينة الاختبار",
+  "area": 1200,
+  "price": 5000000,
+  "coverImageUrl": null,
+  "imageUrls": []
+}

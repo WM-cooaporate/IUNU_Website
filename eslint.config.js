@@ -28,4 +28,12 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  {
+    // Cypress specs run in Cypress's own runtime, which supplies cy, Cypress
+    // and Mocha's describe/it/beforeEach as globals.
+    files: ['cypress/**/*.js'],
+    languageOptions: {
+      globals: { ...globals.mocha, cy: 'readonly', Cypress: 'readonly' },
+    },
+  },
 ])

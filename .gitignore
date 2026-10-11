@@ -30,3 +30,7 @@ dist-ssr
 
 # Attack lab output (security/run-lab.sh)
 security/reports/
+
+# Cypress run output
+cypress/videos/
+cypress/screenshots/
