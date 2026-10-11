@@ -1,0 +1,15 @@
+{
+  "accessToken": "cypress.fake.access-token",
+  "refreshToken": "cypress-fake-refresh-token",
+  "tokenType": "Bearer",
+  "expiresInSeconds": 900,
+  "expiresAt": "2099-01-01T00:00:00Z",
+  "user": {
+    "id": 1,
+    "fullName": "Cypress Admin",
+    "email": "admin@cypress.test",
+    "phone": "+20 100 000 0000",
+    "role": "ADMIN",
+    "createdAt": "2026-01-01T00:00:00Z"
+  }
+}

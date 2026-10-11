@@ -149,22 +149,82 @@ apiClient.interceptors.request.use((config) => {
 
 const SESSION_EXPIRED_EVENT = "iunu:session-expired";
 
+/** Auth calls answer 401 for their own reasons (wrong password, bad refresh token); never refresh on those. */
+const isAuthCall = (config) => /^\/?auth\//.test(config?.url ?? "");
+
 /**
- * A 401 means the token is missing, expired or has been tampered with - there
- * is nothing a retry can fix, so the session is dropped and anything listening
- * (the admin route guard) can send the user back to the login screen. A 403 is
- * left alone: the caller is authenticated, just not allowed here.
+ * Trades the stored refresh token for a new pair. The backend rotates refresh
+ * tokens, so the old one is spent once this succeeds.
+ *
+ * Goes through publicClient so the call itself can never trigger this
+ * interceptor again.
+ *
+ * Every tab shares localStorage. If another tab rotated the token first, this
+ * call is refused (the backend's reuse grace window makes that a plain 401) -
+ * but the other tab has already stored a fresh session, so use that instead of
+ * signing everyone out.
+ */
+const refreshSession = async () => {
+  const usedRefreshToken = getRefreshToken();
+  try {
+    const response = await publicClient.post("/auth/refresh", { refreshToken: usedRefreshToken });
+    storeSession(response.data);
+    return response.data.accessToken;
+  } catch (error) {
+    const currentRefreshToken = getRefreshToken();
+    if (currentRefreshToken && currentRefreshToken !== usedRefreshToken) return getAccessToken();
+    throw error;
+  }
+};
+
+/** One refresh at a time: every request that 401s while it runs waits for the same one. */
+let refreshInFlight = null;
+
+/**
+ * A 401 on an admin call usually means the 15-minute access token expired.
+ * Refresh it once and replay the request, so an admin working in the dashboard
+ * is not signed out mid-task. If there is no refresh token, the refresh is
+ * refused, or the replayed request 401s again, the session is dropped and
+ * anything listening (the admin route guard) sends the user back to the login
+ * screen. A 403 is left alone: the caller is authenticated, just not allowed
+ * here.
  */
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401 && getAccessToken()) {
-      clearSession();
-      window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+  async (error) => {
+    const original = error.config;
+
+    if (error.response?.status !== 401 || !getAccessToken()) {
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
+
+    const canRefresh = original && !original._retriedAfterRefresh && !isAuthCall(original) && getRefreshToken();
+
+    if (canRefresh) {
+      original._retriedAfterRefresh = true;
+      try {
+        refreshInFlight ??= refreshSession().finally(() => {
+          refreshInFlight = null;
+        });
+        await refreshInFlight;
+      } catch {
+        return endSession(error);
+      }
+      // The request interceptor attaches the new access token. A second 401 on
+      // the replay comes back through here, is not refreshed again, and ends
+      // the session.
+      return apiClient(original);
+    }
+
+    return endSession(error);
   }
 );
+
+function endSession(error) {
+  clearSession();
+  window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+  return Promise.reject(error);
+}
 
 export const onSessionExpired = (handler) => {
   window.addEventListener(SESSION_EXPIRED_EVENT, handler);

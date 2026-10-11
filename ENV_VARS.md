@@ -116,6 +116,7 @@ stays reachable) carries whatever the caller typed, end to end.
 | `RATE_LIMIT_ENABLED` | Master switch for the in-app rate limiter. Leave on. Exists so the test suite can disable it. | `true` |
 | `RATE_LIMIT_MAX_TRACKED_CLIENTS` | Ceiling on the limiter's bucket store. Bounded so a flood from many addresses cannot grow it until the JVM runs out of memory. | `100000` |
 | `MAX_JSON_REQUEST_BYTES` | Largest non-multipart body accepted, checked against `Content-Length` before the stream is read. | `1048576` (1MB) |
+| `APP_REGISTRATION_ENABLED` | Backend only. Public self-registration at `POST /api/auth/register`. **Off by default**: the endpoint answers 404 as if it did not exist. Nobody signs themselves up — the first admin comes from `ADMIN_EMAIL` / `ADMIN_PASSWORD` (see **One-time admin bootstrap** below) and further admins from `POST /api/admin/users`. Leave unset. | `false` |
 
 ### Monitoring and security tuning — all optional, all off or defaulted when unset
 
@@ -180,6 +181,7 @@ The Vite project lives at the repository root (`package.json`, `vite.config.js`)
 
 | Variable | Description | Example (dummy) |
 |---|---|---|
+| `CYPRESS_INSTALL_BINARY` | Set to `0` by `render.yaml`. Stops `npm ci` downloading the Cypress test browser, which only the E2E tests in CI use. Set the same on any other host that builds the site. | `0` |
 | `VITE_API_URL` | Backend API base URL. `src/services/apiClient.js` normalises it in one place - trailing slashes are stripped and `/api` is appended when the value does not already end in `/api`, so `https://iunu-api.onrender.com` and `https://iunu-api.onrender.com/api` both reach `/api/properties`. A production build with this unset logs an error and every API call fails. | `https://iunu-api.onrender.com/api` |
 
 Vite inlines `VITE_*` variables into the shipped bundle **at build time**, so

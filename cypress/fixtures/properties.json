@@ -1,0 +1,42 @@
+{
+  "content": [
+    {
+      "id": 101,
+      "title": "Cypress Test Tower",
+      "description": "A fixture property that only exists in the Cypress suite.",
+      "type": "RESIDENTIAL",
+      "status": "AVAILABLE",
+      "location": "Fixture City",
+      "titleAr": "برج اختبار سايبرس",
+      "descriptionAr": "عقار تجريبي موجود فقط في اختبارات سايبرس.",
+      "locationAr": "مدينة الاختبار",
+      "area": 1200,
+      "price": 5000000,
+      "coverImageUrl": null,
+      "imageUrls": []
+    },
+    {
+      "id": 102,
+      "title": "Cypress Fixture Plaza",
+      "description": "A second fixture property for the listing tests.",
+      "type": "COMMERCIAL",
+      "status": "COMING_SOON",
+      "location": "Fixture Bay",
+      "titleAr": "بلازا اختبار سايبرس",
+      "descriptionAr": "عقار تجريبي ثانٍ لاختبارات القائمة.",
+      "locationAr": "خليج الاختبار",
+      "area": 800,
+      "price": null,
+      "coverImageUrl": null,
+      "imageUrls": []
+    }
+  ],
+  "totalElements": 2,
+  "totalPages": 1,
+  "size": 50,
+  "number": 0,
+  "first": true,
+  "last": true,
+  "numberOfElements": 2,
+  "empty": false
+}

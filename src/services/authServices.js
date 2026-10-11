@@ -19,11 +19,6 @@ const authServices = {
     return { success: true, ...response.data };
   },
 
-  register: async (registerData) => {
-    const response = await apiClient.post("/auth/register", registerData);
-    return response.data;
-  },
-
   /**
    * Revokes the refresh token server-side so a stolen copy is useless, then
    * clears local state. The local clear happens either way - a failed network

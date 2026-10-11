@@ -5,6 +5,7 @@ import com.iunu.realestate.support.IntegrationTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -21,6 +22,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * exception name is a free map of the implementation, and a stack trace in a
  * response is a free map of the dependency versions.
  */
+// Registration is off by default (404, see RegistrationDisabledTest). The
+// /api/auth/register cases here cover the endpoint for when it is switched on.
+@TestPropertySource(properties = "app.auth.registration-enabled=true")
 @DisplayName("Input handling")
 class InputHandlingTest extends IntegrationTest {
 
