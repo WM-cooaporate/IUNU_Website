@@ -20,7 +20,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <jjwt.version>0.12.6</jjwt.version>
+        <jjwt.version>0.13.0</jjwt.version>
         <!-- Overrides the 1.19.8 Boot 3.3.5 manages. That version talks Docker
              API 1.32, which Docker Engine 29 refuses ("client version 1.32 is
              too old") - and because MigrationSchemaTest is disabledWithoutDocker,
