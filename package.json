@@ -12,12 +12,12 @@
         "cy:run": "cypress run"
     },
     "dependencies": {
-        "@tanstack/react-query": "^5.104.1",
+        "@tanstack/react-query": "^5.104.4",
         "axios": "^1.19.0",
         "framer-motion": "^13.4.1",
         "jwt-decode": "^4.0.0",
-        "react": "^19.3.0",
-        "react-dom": "^19.3.0",
+        "react": "^19.3.1",
+        "react-dom": "^19.3.1",
         "react-hot-toast": "^2.6.1",
         "react-icons": "^5.7.0",
         "react-router-dom": "^7.18.4"
@@ -27,12 +27,12 @@
         "@types/react": "^19.3.0",
         "@types/react-dom": "^19.3.0",
         "@vitejs/plugin-react": "^6.1.2",
-        "cypress": "^16.1.1",
-        "eslint": "^10.12.0",
+        "cypress": "^16.2.0",
+        "eslint": "^10.13.0",
         "eslint-plugin-react-hooks": "^7.1.1",
         "eslint-plugin-react-refresh": "^0.5.7",
         "globals": "^17.13.0",
-        "prettier": "^3.9.9",
+        "prettier": "^3.9.10",
         "vite": "^8.3.4"
     }
 }
