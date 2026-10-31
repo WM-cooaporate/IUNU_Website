@@ -40,7 +40,7 @@ jobs:
       - run: npm ci
       # The NVD feed dependency-check downloads is large; keep it between
       # weekly runs so only the delta is fetched.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.m2/repository/org/owasp/dependency-check-data
           key: nvd-${{ github.run_id }}
