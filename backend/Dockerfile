@@ -17,7 +17,7 @@ COPY src ./src
 RUN mvn -B -q -DskipTests package
 
 # --- Runtime stage -----------------------------------------------------------
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:24-jre
 RUN groupadd --system app && useradd --system --gid app --create-home app
 # Upload root on the Render persistent disk (render.yaml mounts it at
 # /var/data). Created and owned by the runtime user so the app can write to it
